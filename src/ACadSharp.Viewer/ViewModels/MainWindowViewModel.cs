@@ -423,9 +423,13 @@ namespace ACadSharp.Viewer.ViewModels
         /// </summary>
         private void ClearSearch()
         {
-            SearchText = string.Empty;
-            RestoreTreeViewState();
-            ClearSearchResults();
+            // Ensure this runs on the main thread to avoid threading issues
+            Dispatcher.UIThread.Post(() =>
+            {
+                SearchText = string.Empty;
+                ClearSearchResults();
+                RestoreTreeViewState();
+            });
         }
 
         /// <summary>

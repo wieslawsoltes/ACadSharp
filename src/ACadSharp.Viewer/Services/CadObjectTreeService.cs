@@ -627,7 +627,7 @@ namespace ACadSharp.Viewer.Services
             switch (criteria.SearchType)
             {
                 case SearchType.Handle:
-                    return obj.Handle.ToString("X").Contains(searchText, comparison);
+                    return obj.Handle.ToString("X").Equals(searchText, comparison);
 
                 case SearchType.ObjectType:
                     return obj.GetType().Name.Contains(searchText, comparison);
@@ -654,12 +654,12 @@ namespace ACadSharp.Viewer.Services
                 case SearchType.TagCode:
                     // For tag code search, we'll search in the object's basic properties
                     // This is a simplified implementation - you might want to enhance this
-                    return obj.Handle.ToString("X").Contains(searchText, comparison) ||
+                    return obj.Handle.ToString("X").Equals(searchText, comparison) ||
                            obj.GetType().Name.Contains(searchText, comparison);
 
                 case SearchType.All:
                     // Search in handle, type, and properties
-                    if (obj.Handle.ToString("X").Contains(searchText, comparison))
+                    if (obj.Handle.ToString("X").Equals(searchText, comparison))
                         return true;
                     if (obj.GetType().Name.Contains(searchText, comparison))
                         return true;

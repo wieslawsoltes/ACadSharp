@@ -37,13 +37,23 @@ namespace ACadSharp.Viewer.Services
                     if (IsDwgFile(filePath))
                     {
                         OnLoadProgressChanged(20, "Loading DWG file...");
-                        document = DwgReader.Read(filePath);
+                        var configuration = new DwgReaderConfiguration
+                        {
+                            KeepUnknownEntities = true,
+                            KeepUnknownNonGraphicalObjects = true
+                        };
+                        document = DwgReader.Read(filePath, configuration);
                         OnLoadProgressChanged(90, "DWG file loaded successfully");
                     }
                     else if (IsDxfFile(filePath))
                     {
                         OnLoadProgressChanged(20, "Loading DXF file...");
-                        document = DxfReader.Read(filePath);
+                        var configuration = new DxfReaderConfiguration
+                        {
+                            KeepUnknownEntities = true,
+                            KeepUnknownNonGraphicalObjects = true
+                        };
+                        document = DxfReader.Read(filePath, configuration);
                         OnLoadProgressChanged(90, "DXF file loaded successfully");
                     }
                     else
@@ -87,7 +97,7 @@ namespace ACadSharp.Viewer.Services
         /// <summary>
         /// Raises the LoadProgressChanged event
         /// </summary>
-        /// <param name="progressPercentage">Progress percentage</param>
+        /// <param name="progressPercentage">Progress percentage (0-100)</param>
         /// <param name="statusMessage">Status message</param>
         protected virtual void OnLoadProgressChanged(int progressPercentage, string statusMessage)
         {

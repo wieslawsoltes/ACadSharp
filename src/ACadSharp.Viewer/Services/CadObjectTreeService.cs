@@ -238,6 +238,34 @@ namespace ACadSharp.Viewer.Services
                     documentNode.Children.Add(objectsNode);
                 }
 
+                // Unknown Objects (Proxy Objects and Unsupported Objects)
+                var unknownObjects = GetUnknownObjects(document);
+                if (unknownObjects.Any())
+                {
+                    var unknownObjectsNode = new CadObjectTreeNode
+                    {
+                        Name = "Unknown Objects (Proxy/Unsupported)",
+                        ObjectType = "Unknown Objects",
+                        HasChildren = true,
+                        IsExpanded = false
+                    };
+
+                    var unknownObjectNodes = unknownObjects.Select(obj => new CadObjectTreeNode
+                    {
+                        Name = GetObjectDisplayName(obj),
+                        CadObject = obj,
+                        ObjectType = GetObjectTypeName(obj),
+                        Handle = obj.Handle,
+                        HasChildren = false
+                    });
+
+                    foreach (var node in unknownObjectNodes)
+                    {
+                        unknownObjectsNode.Children.Add(node);
+                    }
+                    documentNode.Children.Add(unknownObjectsNode);
+                }
+
                 // Model Space Entities
                 if (document.ModelSpace != null && document.ModelSpace.Entities != null)
                 {
@@ -251,9 +279,9 @@ namespace ACadSharp.Viewer.Services
 
                     var modelSpaceEntityNodes = document.ModelSpace.Entities.Select(entity => new CadObjectTreeNode
                     {
-                        Name = $"{entity.GetType().Name} ({entity.Handle:X})",
+                        Name = GetEntityDisplayName(entity),
                         CadObject = entity,
-                        ObjectType = entity.GetType().Name,
+                        ObjectType = GetEntityTypeName(entity),
                         Handle = entity.Handle,
                         HasChildren = false
                     });
@@ -278,9 +306,9 @@ namespace ACadSharp.Viewer.Services
 
                     var paperSpaceEntityNodes = document.PaperSpace.Entities.Select(entity => new CadObjectTreeNode
                     {
-                        Name = $"{entity.GetType().Name} ({entity.Handle:X})",
+                        Name = GetEntityDisplayName(entity),
                         CadObject = entity,
-                        ObjectType = entity.GetType().Name,
+                        ObjectType = GetEntityTypeName(entity),
                         Handle = entity.Handle,
                         HasChildren = false
                     });
@@ -437,9 +465,9 @@ namespace ACadSharp.Viewer.Services
             {
                 var childNode = new CadObjectTreeNode
                 {
-                    Name = $"{item.GetType().Name} ({item.Handle:X})",
+                    Name = GetObjectDisplayName(item),
                     CadObject = item,
-                    ObjectType = item.GetType().Name,
+                    ObjectType = GetObjectTypeName(item),
                     Handle = item.Handle,
                     HasChildren = false
                 };
@@ -452,9 +480,9 @@ namespace ACadSharp.Viewer.Services
 
                     var entityNodes = blockRecord.Entities.Select(entity => new CadObjectTreeNode
                     {
-                        Name = $"{entity.GetType().Name} ({entity.Handle:X})",
+                        Name = GetEntityDisplayName(entity),
                         CadObject = entity,
-                        ObjectType = entity.GetType().Name,
+                        ObjectType = GetEntityTypeName(entity),
                         Handle = entity.Handle,
                         HasChildren = false
                     });
@@ -487,9 +515,9 @@ namespace ACadSharp.Viewer.Services
 
             var children = collection.Select(item => new CadObjectTreeNode
             {
-                Name = $"{item.GetType().Name} ({item.Handle:X})",
+                Name = GetObjectDisplayName(item),
                 CadObject = item,
-                ObjectType = item.GetType().Name,
+                ObjectType = GetObjectTypeName(item),
                 Handle = item.Handle,
                 HasChildren = false
             });
@@ -519,9 +547,9 @@ namespace ACadSharp.Viewer.Services
                 {
                     var entryNode = new CadObjectTreeNode
                     {
-                        Name = $"{entryName} ({entry.GetType().Name})",
+                        Name = $"{entryName} ({GetObjectTypeName(entry)})",
                         CadObject = entry,
-                        ObjectType = entry.GetType().Name,
+                        ObjectType = GetObjectTypeName(entry),
                         Handle = entry.Handle,
                         HasChildren = entry is CadDictionary nestedDict && nestedDict.Any(),
                         IsExpanded = false
@@ -687,6 +715,117 @@ namespace ACadSharp.Viewer.Services
                 default:
                     return false;
             }
+        }
+
+        private string GetEntityDisplayName(Entity entity)
+        {
+            if (entity == null) return "Unknown Entity";
+
+            if (entity is UnknownEntity unknownEntity)
+            {
+                if (unknownEntity.DxfClass != null)
+                {
+                    return $"{unknownEntity.DxfClass.DxfName} (Proxy Entity) ({entity.Handle:X})";
+                }
+                return $"Unknown Entity ({entity.Handle:X})";
+            }
+
+            if (!string.IsNullOrEmpty(entity.ObjectName))
+            {
+                return $"{entity.ObjectName} ({entity.Handle:X})";
+            }
+
+            return $"{entity.GetType().Name} ({entity.Handle:X})";
+        }
+
+        private string GetEntityTypeName(Entity entity)
+        {
+            if (entity == null) return "Unknown Entity";
+
+            if (entity is UnknownEntity unknownEntity)
+            {
+                if (unknownEntity.DxfClass != null)
+                {
+                    return $"{unknownEntity.DxfClass.DxfName} (Proxy Entity)";
+                }
+                return "Unknown Entity";
+            }
+
+            if (!string.IsNullOrEmpty(entity.ObjectName))
+            {
+                return entity.ObjectName;
+            }
+
+            return entity.GetType().Name;
+        }
+
+        private string GetObjectDisplayName(CadObject obj)
+        {
+            if (obj == null) return "Unknown Object";
+
+            if (obj is UnknownNonGraphicalObject unknownObj)
+            {
+                if (unknownObj.DxfClass != null)
+                {
+                    return $"{unknownObj.DxfClass.DxfName} (Proxy Object) ({obj.Handle:X})";
+                }
+                return $"Unknown Object ({obj.Handle:X})";
+            }
+
+            if (!string.IsNullOrEmpty(obj.ObjectName))
+            {
+                return $"{obj.ObjectName} ({obj.Handle:X})";
+            }
+
+            return $"{obj.GetType().Name} ({obj.Handle:X})";
+        }
+
+        private string GetObjectTypeName(CadObject obj)
+        {
+            if (obj == null) return "Unknown Object";
+
+            if (obj is UnknownNonGraphicalObject unknownObj)
+            {
+                if (unknownObj.DxfClass != null)
+                {
+                    return $"{unknownObj.DxfClass.DxfName} (Proxy Object)";
+                }
+                return "Unknown Object";
+            }
+
+            if (!string.IsNullOrEmpty(obj.ObjectName))
+            {
+                return obj.ObjectName;
+            }
+
+            return obj.GetType().Name;
+        }
+
+        private IEnumerable<CadObject> GetUnknownObjects(CadDocument document)
+        {
+            var unknownObjects = new List<CadObject>();
+
+            // Get all objects from the document's internal collection
+            var allObjects = document.GetType()
+                .GetField("_cadObjects", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(document) as Dictionary<ulong, IHandledCadObject>;
+
+            if (allObjects != null)
+            {
+                foreach (var obj in allObjects.Values)
+                {
+                    if (obj is CadObject cadObj)
+                    {
+                        // Check if it's an unknown object
+                        if (cadObj is UnknownEntity || cadObj is UnknownNonGraphicalObject)
+                        {
+                            unknownObjects.Add(cadObj);
+                        }
+                    }
+                }
+            }
+
+            return unknownObjects;
         }
     }
 } 

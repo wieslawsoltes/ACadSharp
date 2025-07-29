@@ -1,0 +1,196 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ACadSharp.Viewer.ViewModels"
+        xmlns:views="using:ACadSharp.Viewer.Views"
+        xmlns:controls="using:Avalonia.Controls"
+
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="ACadSharp.Viewer.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}">
+
+    <Window.Styles>
+        <Style Selector="Border.drag-over">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+            <Setter Property="BorderThickness" Value="3" />
+            <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight1}" />
+        </Style>
+    </Window.Styles>
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="10,5">
+                <!-- File Loading Buttons -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <Button Content="Load DWG" Click="LoadDwgButton_Click" 
+                            IsEnabled="{Binding IsBusy, Converter={x:Static BoolConverters.Not}}"/>
+                    <Button Content="Load DXF" Click="LoadDxfButton_Click" 
+                            IsEnabled="{Binding IsBusy, Converter={x:Static BoolConverters.Not}}"/>
+                </StackPanel>
+
+                <!-- Search Box -->
+                <Grid Grid.Column="1" ColumnDefinitions="Auto,*" Margin="20,0,0,0">
+                    <TextBlock Grid.Column="0" Text="Search:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding SearchText}" 
+                             Watermark="Search by tag code, handle, or object data..."
+                             IsEnabled="{Binding IsSearching, Converter={x:Static BoolConverters.Not}}"/>
+                </Grid>
+
+                <!-- Status -->
+                <TextBlock Grid.Column="2" Text="Ready" 
+                           VerticalAlignment="Center" Margin="10,0"/>
+                <ProgressBar Grid.Column="3" IsIndeterminate="{Binding IsSearching}" 
+                             Width="100" Height="4" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,*">
+            <!-- Left Panel (DWG) -->
+            <Border x:Name="LeftPanel" Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                    BorderThickness="0,0,1,0" Margin="0,0,5,0"
+                    DragDrop.AllowDrop="True">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Left Panel Header -->
+                    <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                            Padding="10,5">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="DWG File" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="1" Text="{Binding LeftDocument.FileName}" 
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Left Panel Content -->
+                    <Grid Grid.Row="1" ColumnDefinitions="250,Auto,*">
+                        <!-- Object Tree -->
+                        <Border Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                BorderThickness="0,0,1,0">
+                            <Grid RowDefinitions="Auto,*">
+                                <TextBlock Grid.Row="0" Text="Object Tree" FontWeight="SemiBold" 
+                                           Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+                                <TreeView Grid.Row="1" ItemsSource="{Binding LeftDocument.ObjectTreeNodes}" 
+                                         SelectedItem="{Binding LeftDocument.SelectedTreeNode}">
+                                    <TreeView.ItemTemplate>
+                                        <TreeDataTemplate ItemsSource="{Binding Children}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}"/>
+                                                <TextBlock Text=" (" Foreground="Gray"/>
+                                                <TextBlock Text="{Binding ObjectType}" Foreground="Gray"/>
+                                                <TextBlock Text=")" Foreground="Gray"/>
+                                            </StackPanel>
+                                        </TreeDataTemplate>
+                                    </TreeView.ItemTemplate>
+                                </TreeView>
+                            </Grid>
+                        </Border>
+
+                        <!-- Vertical Splitter -->
+                        <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+                        <!-- Properties Panel -->
+                        <Grid Grid.Column="2" RowDefinitions="Auto,*">
+                            <TextBlock Grid.Row="0" Text="Properties" FontWeight="SemiBold" 
+                                       Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding LeftDocument.SelectedObjectProperties}" 
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Property" Binding="{Binding Name}" Width="*" CanUserResize="True"/>
+                                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*" CanUserResize="True"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*" CanUserResize="True"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+            <!-- Right Panel (DXF) -->
+            <Border x:Name="RightPanel" Grid.Column="2" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                    BorderThickness="1,0,0,0" Margin="5,0,0,0"
+                    DragDrop.AllowDrop="True">
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Right Panel Header -->
+                    <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                            Padding="10,5">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="DXF File" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="1" Text="{Binding RightDocument.FileName}" 
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Right Panel Content -->
+                    <Grid Grid.Row="1" ColumnDefinitions="250,Auto,*">
+                        <!-- Object Tree -->
+                        <Border Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                BorderThickness="0,0,1,0">
+                            <Grid RowDefinitions="Auto,*">
+                                <TextBlock Grid.Row="0" Text="Object Tree" FontWeight="SemiBold" 
+                                           Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+                                <TreeView Grid.Row="1" ItemsSource="{Binding RightDocument.ObjectTreeNodes}" 
+                                         SelectedItem="{Binding RightDocument.SelectedTreeNode}">
+                                    <TreeView.ItemTemplate>
+                                        <TreeDataTemplate ItemsSource="{Binding Children}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}"/>
+                                                <TextBlock Text=" (" Foreground="Gray"/>
+                                                <TextBlock Text="{Binding ObjectType}" Foreground="Gray"/>
+                                                <TextBlock Text=")" Foreground="Gray"/>
+                                            </StackPanel>
+                                        </TreeDataTemplate>
+                                    </TreeView.ItemTemplate>
+                                </TreeView>
+                            </Grid>
+                        </Border>
+
+                        <!-- Vertical Splitter -->
+                        <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+                        <!-- Properties Panel -->
+                        <Grid Grid.Column="2" RowDefinitions="Auto,*">
+                            <TextBlock Grid.Row="0" Text="Properties" FontWeight="SemiBold" 
+                                       Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding RightDocument.SelectedObjectProperties}" 
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Property" Binding="{Binding Name}" Width="*" CanUserResize="True"/>
+                                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*" CanUserResize="True"/>
+                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*" CanUserResize="True"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="10,5">
+                <TextBlock Grid.Column="0" Text="{Binding LeftDocument.StatusMessage}" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBlock Grid.Column="1" Text="|" Margin="10,0" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBlock Grid.Column="2" Text="{Binding RightDocument.StatusMessage}" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </Grid>
+        </Border>
+    </Grid>
+
+    <!-- File picker functionality is handled in code-behind using StorageProvider -->
+</Window> 

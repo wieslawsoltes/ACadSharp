@@ -41,14 +41,15 @@ namespace ACadSharp.Viewer.Services
                 // Header
                 if (document.Header != null)
                 {
-                    documentNode.Children = documentNode.Children.Append(new CadObjectTreeNode
+                    var headerNode = new CadObjectTreeNode
                     {
                         Name = "Header",
                         CadObject = null, // Header is not a CadObject
                         ObjectType = "Header",
                         Handle = 0, // Header doesn't have a Handle property
                         HasChildren = false
-                    });
+                    };
+                    documentNode.Children.Add(headerNode);
                 }
 
                 // Tables
@@ -116,8 +117,11 @@ namespace ACadSharp.Viewer.Services
                     tableNodes.Add(CreateTableNode<AppId>("AppIds", document.AppIds));
                 }
 
-                tablesNode.Children = tableNodes;
-                documentNode.Children = documentNode.Children.Append(tablesNode);
+                foreach (var node in tableNodes)
+                {
+                    tablesNode.Children.Add(node);
+                }
+                documentNode.Children.Add(tablesNode);
 
                 // Objects
                 if (document.RootDictionary != null)
@@ -132,7 +136,7 @@ namespace ACadSharp.Viewer.Services
                         IsExpanded = true
                     };
 
-                    documentNode.Children = documentNode.Children.Append(objectsNode);
+                    documentNode.Children.Add(objectsNode);
                 }
 
                 // Entities
@@ -155,8 +159,11 @@ namespace ACadSharp.Viewer.Services
                         HasChildren = false
                     });
 
-                    entitiesNode.Children = entityNodes;
-                    documentNode.Children = documentNode.Children.Append(entitiesNode);
+                    foreach (var node in entityNodes)
+                    {
+                        entitiesNode.Children.Add(node);
+                    }
+                    documentNode.Children.Add(entitiesNode);
                 }
 
                 rootNodes.Add(documentNode);
@@ -259,7 +266,10 @@ namespace ACadSharp.Viewer.Services
                 HasChildren = false
             });
 
-            node.Children = children;
+            foreach (var child in children)
+            {
+                node.Children.Add(child);
+            }
             return node;
         }
 

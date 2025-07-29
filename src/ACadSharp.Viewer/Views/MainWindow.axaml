@@ -5,18 +5,26 @@
         xmlns:vm="using:ACadSharp.Viewer.ViewModels"
         xmlns:views="using:ACadSharp.Viewer.Views"
         xmlns:controls="using:Avalonia.Controls"
+        xmlns:converters="using:ACadSharp.Viewer.Converters"
 
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="ACadSharp.Viewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}">
 
+    <Window.Resources>
+        <converters:SearchHighlightConverter x:Key="SearchHighlightConverter"/>
+        <converters:DataGridRowHighlightConverter x:Key="DataGridRowHighlightConverter"/>
+    </Window.Resources>
+    
     <Window.Styles>
         <Style Selector="Border.drag-over">
             <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
             <Setter Property="BorderThickness" Value="3" />
             <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight1}" />
         </Style>
+        
+
     </Window.Styles>
 
     <Design.DataContext>
@@ -41,8 +49,7 @@
                 <Grid Grid.Column="1" ColumnDefinitions="Auto,*" Margin="20,0,0,0">
                     <TextBlock Grid.Column="0" Text="Search:" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBox Grid.Column="1" Text="{Binding SearchText}" 
-                             Watermark="Search by tag code, handle, or object data..."
-                             IsEnabled="{Binding IsSearching, Converter={x:Static BoolConverters.Not}}"/>
+                             Watermark="Search by tag code, handle, or object data..."/>
                 </Grid>
 
                 <!-- Status -->
@@ -82,8 +89,9 @@
                                          SelectedItem="{Binding LeftDocument.SelectedTreeNode}">
                                     <TreeView.ItemTemplate>
                                         <TreeDataTemplate ItemsSource="{Binding Children}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Name}"/>
+                                            <StackPanel Orientation="Horizontal" IsVisible="{Binding IsVisible}">
+                                                <TextBlock Text="{Binding Name}" 
+                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"/>
                                                 <TextBlock Text=" (" Foreground="Gray"/>
                                                 <TextBlock Text="{Binding ObjectType}" Foreground="Gray"/>
                                                 <TextBlock Text=")" Foreground="Gray"/>
@@ -144,8 +152,9 @@
                                          SelectedItem="{Binding RightDocument.SelectedTreeNode}">
                                     <TreeView.ItemTemplate>
                                         <TreeDataTemplate ItemsSource="{Binding Children}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Name}"/>
+                                            <StackPanel Orientation="Horizontal" IsVisible="{Binding IsVisible}">
+                                                <TextBlock Text="{Binding Name}" 
+                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"/>
                                                 <TextBlock Text=" (" Foreground="Gray"/>
                                                 <TextBlock Text="{Binding ObjectType}" Foreground="Gray"/>
                                                 <TextBlock Text=")" Foreground="Gray"/>

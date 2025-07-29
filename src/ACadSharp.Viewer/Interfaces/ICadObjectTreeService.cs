@@ -1,6 +1,9 @@
 using ACadSharp;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace ACadSharp.Viewer.Interfaces
 {
@@ -35,15 +38,92 @@ namespace ACadSharp.Viewer.Interfaces
     /// <summary>
     /// Represents a node in the CAD object tree
     /// </summary>
-    public class CadObjectTreeNode
+    public class CadObjectTreeNode : INotifyPropertyChanged
     {
-        public string Name { get; set; } = string.Empty;
-        public CadObject? CadObject { get; set; }
-        public string ObjectType { get; set; } = string.Empty;
-        public ulong? Handle { get; set; }
-        public bool IsExpanded { get; set; }
-        public bool HasChildren { get; set; }
-        public IEnumerable<CadObjectTreeNode> Children { get; set; } = new List<CadObjectTreeNode>();
+        private string _name = string.Empty;
+        private CadObject? _cadObject;
+        private string _objectType = string.Empty;
+        private ulong? _handle;
+        private bool _isExpanded;
+        private bool _hasChildren;
+        private ObservableCollection<CadObjectTreeNode> _children = new ObservableCollection<CadObjectTreeNode>();
+        private bool _isHighlighted;
+        private bool _isVisible = true;
+
+        public string Name 
+        { 
+            get => _name; 
+            set => SetProperty(ref _name, value); 
+        }
+        
+        public CadObject? CadObject 
+        { 
+            get => _cadObject; 
+            set => SetProperty(ref _cadObject, value); 
+        }
+        
+        public string ObjectType 
+        { 
+            get => _objectType; 
+            set => SetProperty(ref _objectType, value); 
+        }
+        
+        public ulong? Handle 
+        { 
+            get => _handle; 
+            set => SetProperty(ref _handle, value); 
+        }
+        
+        public bool IsExpanded 
+        { 
+            get => _isExpanded; 
+            set => SetProperty(ref _isExpanded, value); 
+        }
+        
+        public bool HasChildren 
+        { 
+            get => _hasChildren; 
+            set => SetProperty(ref _hasChildren, value); 
+        }
+        
+        public ObservableCollection<CadObjectTreeNode> Children 
+        { 
+            get => _children; 
+            set => SetProperty(ref _children, value); 
+        }
+
+        /// <summary>
+        /// Indicates if this node should be highlighted due to search results
+        /// </summary>
+        public bool IsHighlighted 
+        { 
+            get => _isHighlighted; 
+            set => SetProperty(ref _isHighlighted, value); 
+        }
+
+        /// <summary>
+        /// Indicates if this node should be visible in the filtered view
+        /// </summary>
+        public bool IsVisible 
+        { 
+            get => _isVisible; 
+            set => SetProperty(ref _isVisible, value); 
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
     }
 
     /// <summary>
@@ -61,11 +141,60 @@ namespace ACadSharp.Viewer.Interfaces
     /// <summary>
     /// Represents a property of a CAD object
     /// </summary>
-    public class ObjectProperty
+    public class ObjectProperty : INotifyPropertyChanged
     {
-        public string Name { get; set; } = string.Empty;
-        public string Value { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public bool IsReadOnly { get; set; }
+        private string _name = string.Empty;
+        private string _value = string.Empty;
+        private string _type = string.Empty;
+        private bool _isReadOnly;
+        private bool _isHighlighted;
+
+        public string Name 
+        { 
+            get => _name; 
+            set => SetProperty(ref _name, value); 
+        }
+        
+        public string Value 
+        { 
+            get => _value; 
+            set => SetProperty(ref _value, value); 
+        }
+        
+        public string Type 
+        { 
+            get => _type; 
+            set => SetProperty(ref _type, value); 
+        }
+        
+        public bool IsReadOnly 
+        { 
+            get => _isReadOnly; 
+            set => SetProperty(ref _isReadOnly, value); 
+        }
+
+        /// <summary>
+        /// Indicates if this property should be highlighted due to search results
+        /// </summary>
+        public bool IsHighlighted 
+        { 
+            get => _isHighlighted; 
+            set => SetProperty(ref _isHighlighted, value); 
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
     }
 } 

@@ -4,6 +4,7 @@ using ACadSharp.Viewer.Models;
 using ACadSharp.Viewer.Services;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -72,6 +73,15 @@ namespace ACadSharp.Viewer.ViewModels
             this.WhenAnyValue(x => x.RightDocument)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe();
+
+            // Highlight properties when search text changes and a node is selected
+            this.WhenAnyValue(x => x.SearchText, x => x.LeftDocument.SelectedTreeNode)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(_ => HighlightSelectedNodeProperties());
+
+            this.WhenAnyValue(x => x.SearchText, x => x.RightDocument.SelectedTreeNode)
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(_ => HighlightSelectedNodeProperties());
         }
 
         /// <summary>
@@ -175,6 +185,8 @@ namespace ACadSharp.Viewer.ViewModels
                     {
                         LeftDocument.ObjectTreeNodes.Add(node);
                     }
+                    // Clear search results when new file is loaded
+                    ClearSearchResults();
                 });
             }
             catch (Exception ex)
@@ -232,6 +244,8 @@ namespace ACadSharp.Viewer.ViewModels
                     {
                         RightDocument.ObjectTreeNodes.Add(node);
                     }
+                    // Clear search results when new file is loaded
+                    ClearSearchResults();
                 });
             }
             catch (Exception ex)
@@ -257,17 +271,22 @@ namespace ACadSharp.Viewer.ViewModels
         private async Task SearchAsync()
         {
             if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                // Clear search results when search text is empty
+                ClearSearchResults();
                 return;
+            }
 
             try
             {
                 IsSearching = true;
 
+                var searchText = SearchText.Trim();
                 var searchCriteria = new SearchCriteria
                 {
-                    ObjectData = SearchText,
-                    ObjectHandle = SearchText,
-                    ObjectType = SearchText,
+                    ObjectData = searchText,
+                    ObjectHandle = searchText,
+                    ObjectType = searchText,
                     CaseSensitive = false
                 };
 
@@ -275,21 +294,20 @@ namespace ACadSharp.Viewer.ViewModels
                 if (LeftDocument.Document != null)
                 {
                     var leftResults = await _cadObjectTreeService.SearchObjectsAsync(LeftDocument.Document, searchCriteria);
-                    // Highlight results in tree
-                    HighlightSearchResults(LeftDocument.ObjectTreeNodes, leftResults);
+                    await FilterAndHighlightTree(LeftDocument.ObjectTreeNodes, leftResults, searchText);
                 }
 
                 // Search in right document
                 if (RightDocument.Document != null)
                 {
                     var rightResults = await _cadObjectTreeService.SearchObjectsAsync(RightDocument.Document, searchCriteria);
-                    // Highlight results in tree
-                    HighlightSearchResults(RightDocument.ObjectTreeNodes, rightResults);
+                    await FilterAndHighlightTree(RightDocument.ObjectTreeNodes, rightResults, searchText);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Handle search errors
+                // Handle search errors silently for now
+                System.Diagnostics.Debug.WriteLine($"Search error: {ex.Message}");
             }
             finally
             {
@@ -347,9 +365,7 @@ namespace ACadSharp.Viewer.ViewModels
         private void ClearSearch()
         {
             SearchText = string.Empty;
-            // Clear highlighting from trees
-            ClearSearchHighlighting(LeftDocument.ObjectTreeNodes);
-            ClearSearchHighlighting(RightDocument.ObjectTreeNodes);
+            ClearSearchResults();
         }
 
         /// <summary>
@@ -368,44 +384,177 @@ namespace ACadSharp.Viewer.ViewModels
         }
 
         /// <summary>
-        /// Highlights search results in the object tree
+        /// Filters and highlights the tree based on search results
         /// </summary>
-        /// <param name="nodes">Tree nodes to search</param>
-        /// <param name="searchResults">Search results to highlight</param>
-        private void HighlightSearchResults(ObservableCollection<CadObjectTreeNode> nodes, System.Collections.Generic.IEnumerable<CadObject> searchResults)
+        /// <param name="nodes">Tree nodes to filter</param>
+        /// <param name="searchResults">Search results</param>
+        /// <param name="searchText">Search text for property highlighting</param>
+        private async Task FilterAndHighlightTree(ObservableCollection<CadObjectTreeNode> nodes, System.Collections.Generic.IEnumerable<CadObject> searchResults, string searchText)
         {
-            var resultHandles = searchResults.Select(r => r.Handle).ToHashSet();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var resultHandles = searchResults.Select(r => r.Handle).ToHashSet();
+                FilterAndHighlightNodes(nodes, resultHandles, searchText);
+            });
+        }
+
+        /// <summary>
+        /// Recursively filters and highlights nodes
+        /// </summary>
+        /// <param name="nodes">Nodes to process</param>
+        /// <param name="resultHandles">Set of handles that match the search</param>
+        /// <param name="searchText">Search text for property highlighting</param>
+        /// <returns>True if any node in this branch has a match</returns>
+        private bool FilterAndHighlightNodes(ObservableCollection<CadObjectTreeNode> nodes, HashSet<ulong> resultHandles, string searchText)
+        {
+            bool anyMatch = false;
             
             foreach (var node in nodes)
             {
+                bool hasMatchingChild = false;
+                bool isDirectMatch = false;
+
+                // Check if this node directly matches
                 if (node.CadObject != null && resultHandles.Contains(node.CadObject.Handle))
                 {
-                    // Highlight this node (you would add a property for this)
+                    isDirectMatch = true;
+                    hasMatchingChild = true;
                 }
-                
-                // Recursively search children
+
+                // Check if node name or type matches search text
+                if (!isDirectMatch && !string.IsNullOrEmpty(searchText))
+                {
+                    var searchLower = searchText.ToLowerInvariant();
+                    if (node.Name.ToLowerInvariant().Contains(searchLower) || 
+                        node.ObjectType.ToLowerInvariant().Contains(searchLower))
+                    {
+                        isDirectMatch = true;
+                        hasMatchingChild = true;
+                    }
+                }
+
+                // Recursively check children
                 if (node.Children.Any())
                 {
-                    HighlightSearchResults(new ObservableCollection<CadObjectTreeNode>(node.Children), searchResults);
+                    var childHasMatch = FilterAndHighlightNodes(node.Children, resultHandles, searchText);
+                    hasMatchingChild = hasMatchingChild || childHasMatch;
+                }
+
+                // Set visibility and highlighting
+                node.IsVisible = hasMatchingChild;
+                node.IsHighlighted = isDirectMatch;
+                node.IsExpanded = hasMatchingChild; // Auto-expand nodes with matches
+
+                // Highlight properties if this node is selected
+                if (isDirectMatch && node == LeftDocument.SelectedTreeNode)
+                {
+                    HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
+                }
+                else if (isDirectMatch && node == RightDocument.SelectedTreeNode)
+                {
+                    HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
+                }
+
+                anyMatch = anyMatch || hasMatchingChild;
+            }
+
+            return anyMatch;
+        }
+
+        /// <summary>
+        /// Highlights properties that match the search text
+        /// </summary>
+        /// <param name="properties">Properties to highlight</param>
+        /// <param name="searchText">Search text</param>
+        private void HighlightProperties(ObservableCollection<ObjectProperty> properties, string searchText)
+        {
+            if (string.IsNullOrEmpty(searchText))
+            {
+                foreach (var prop in properties)
+                {
+                    prop.IsHighlighted = false;
+                }
+                return;
+            }
+
+            var searchLower = searchText.ToLowerInvariant();
+            foreach (var prop in properties)
+            {
+                prop.IsHighlighted = prop.Name.ToLowerInvariant().Contains(searchLower) ||
+                                   prop.Value.ToLowerInvariant().Contains(searchLower) ||
+                                   prop.Type.ToLowerInvariant().Contains(searchLower);
+            }
+        }
+
+        /// <summary>
+        /// Clears all search results and highlighting
+        /// </summary>
+        private void ClearSearchResults()
+        {
+            // Clear tree highlighting and visibility
+            ClearTreeHighlighting(LeftDocument.ObjectTreeNodes);
+            ClearTreeHighlighting(RightDocument.ObjectTreeNodes);
+
+            // Clear property highlighting
+            ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
+            ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
+        }
+
+        /// <summary>
+        /// Clears highlighting from tree nodes
+        /// </summary>
+        /// <param name="nodes">Nodes to clear</param>
+        private void ClearTreeHighlighting(ObservableCollection<CadObjectTreeNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                node.IsHighlighted = false;
+                node.IsVisible = true;
+                node.IsExpanded = false; // Reset expansion state
+
+                if (node.Children.Any())
+                {
+                    ClearTreeHighlighting(node.Children);
                 }
             }
         }
 
         /// <summary>
-        /// Clears search highlighting from the object tree
+        /// Clears highlighting from properties
         /// </summary>
-        /// <param name="nodes">Tree nodes to clear</param>
-        private void ClearSearchHighlighting(ObservableCollection<CadObjectTreeNode> nodes)
+        /// <param name="properties">Properties to clear</param>
+        private void ClearPropertyHighlighting(ObservableCollection<ObjectProperty> properties)
         {
-            foreach (var node in nodes)
+            foreach (var prop in properties)
             {
-                // Clear highlighting from this node
-                
-                // Recursively clear children
-                if (node.Children.Any())
-                {
-                    ClearSearchHighlighting(new ObservableCollection<CadObjectTreeNode>(node.Children));
-                }
+                prop.IsHighlighted = false;
+            }
+        }
+
+        /// <summary>
+        /// Highlights properties of the currently selected node based on search text
+        /// </summary>
+        private void HighlightSelectedNodeProperties()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
+                ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
+                return;
+            }
+
+            var searchText = SearchText.Trim();
+            
+            // Highlight properties for left document
+            if (LeftDocument.SelectedTreeNode != null)
+            {
+                HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
+            }
+
+            // Highlight properties for right document
+            if (RightDocument.SelectedTreeNode != null)
+            {
+                HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
             }
         }
     }

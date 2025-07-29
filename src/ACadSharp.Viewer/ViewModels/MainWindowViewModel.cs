@@ -32,6 +32,8 @@ namespace ACadSharp.Viewer.ViewModels
         private bool _isSearching;
         private readonly object _highlightLock = new object();
         private bool _isHighlighting = false;
+        private DateTime _lastRestoreTime = DateTime.MinValue;
+        private readonly TimeSpan _restoreDebounceTime = TimeSpan.FromMilliseconds(100);
 
         public MainWindowViewModel(IFileDialogService? fileDialogService = null)
         {
@@ -63,8 +65,14 @@ namespace ACadSharp.Viewer.ViewModels
                 {
                     try
                     {
+                        // Prevent multiple simultaneous operations
+                        if (IsSearching) return;
+                        
                         if (string.IsNullOrWhiteSpace(tuple.Item1))
                         {
+                            // Clear search results immediately
+                            ClearSearchResults();
+                            // Then restore tree view state
                             RestoreTreeViewState();
                         }
                         else
@@ -225,6 +233,9 @@ namespace ACadSharp.Viewer.ViewModels
                 var treeNodes = await _cadObjectTreeService.BuildObjectTreeAsync(document);
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
+                    // Clear any existing nodes first
+                    LeftDocument.ObjectTreeNodes.Clear();
+                    
                     foreach (var node in treeNodes)
                     {
                         LeftDocument.ObjectTreeNodes.Add(node);
@@ -288,6 +299,9 @@ namespace ACadSharp.Viewer.ViewModels
                 var treeNodes = await _cadObjectTreeService.BuildObjectTreeAsync(document);
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
+                    // Clear any existing nodes first
+                    RightDocument.ObjectTreeNodes.Clear();
+                    
                     foreach (var node in treeNodes)
                     {
                         RightDocument.ObjectTreeNodes.Add(node);
@@ -584,24 +598,52 @@ namespace ACadSharp.Viewer.ViewModels
         /// </summary>
         private void RestoreTreeViewState()
         {
+            // Debounce rapid successive calls to prevent duplicate root documents
+            var now = DateTime.UtcNow;
+            if ((now - _lastRestoreTime) < _restoreDebounceTime)
+            {
+                System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Skipped due to debouncing (last call: {_lastRestoreTime:HH:mm:ss.fff})");
+                return;
+            }
+            _lastRestoreTime = now;
+
+            System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Starting restoration at {now:HH:mm:ss.fff}");
+
+            // Clear selected nodes first to prevent issues with filtered nodes
+            if (LeftDocument?.SelectedTreeNode != null)
+            {
+                LeftDocument.SelectedTreeNode = null;
+            }
+            
+            if (RightDocument?.SelectedTreeNode != null)
+            {
+                RightDocument.SelectedTreeNode = null;
+            }
+
             // Ensure all nodes are visible and update the filtered collection
             if (LeftDocument?.ObjectTreeNodes != null)
             {
+                System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Left document has {LeftDocument.ObjectTreeNodes.Count} root nodes");
                 foreach (var node in LeftDocument.ObjectTreeNodes)
                 {
                     RestoreNodeState(node);
                 }
                 LeftDocument.UpdateFilteredTreeNodes();
+                System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Left document filtered collection has {LeftDocument.FilteredObjectTreeNodes.Count} root nodes");
             }
             
             if (RightDocument?.ObjectTreeNodes != null)
             {
+                System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Right document has {RightDocument.ObjectTreeNodes.Count} root nodes");
                 foreach (var node in RightDocument.ObjectTreeNodes)
                 {
                     RestoreNodeState(node);
                 }
                 RightDocument.UpdateFilteredTreeNodes();
+                System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Right document filtered collection has {RightDocument.FilteredObjectTreeNodes.Count} root nodes");
             }
+
+            System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Completed at {DateTime.UtcNow:HH:mm:ss.fff}");
         }
 
         /// <summary>
@@ -633,10 +675,6 @@ namespace ACadSharp.Viewer.ViewModels
                     ClearTreeHighlighting(LeftDocument.ObjectTreeNodes);
                 if (RightDocument?.ObjectTreeNodes != null)
                     ClearTreeHighlighting(RightDocument.ObjectTreeNodes);
-
-                // Update filtered collections to show all nodes
-                LeftDocument?.UpdateFilteredTreeNodes();
-                RightDocument?.UpdateFilteredTreeNodes();
 
                 // Clear property highlighting
                 if (LeftDocument?.SelectedObjectProperties != null)

@@ -896,7 +896,17 @@ namespace ACadSharp.Viewer.Models
         /// </summary>
         public void UpdateFilteredTreeNodes()
         {
+            System.Diagnostics.Debug.WriteLine($"UpdateFilteredTreeNodes: Starting update, original nodes count: {ObjectTreeNodes?.Count ?? 0}");
+            
+            // Clear the filtered collection completely to prevent duplicates
             FilteredObjectTreeNodes.Clear();
+            
+            // Only proceed if we have original nodes
+            if (ObjectTreeNodes == null || !ObjectTreeNodes.Any())
+            {
+                System.Diagnostics.Debug.WriteLine("UpdateFilteredTreeNodes: No original nodes to process");
+                return;
+            }
             
             // Create filtered copies of nodes that are visible or have visible children
             foreach (var node in ObjectTreeNodes)
@@ -907,6 +917,8 @@ namespace ACadSharp.Viewer.Models
                     FilteredObjectTreeNodes.Add(filteredNode);
                 }
             }
+            
+            System.Diagnostics.Debug.WriteLine($"UpdateFilteredTreeNodes: Completed, filtered nodes count: {FilteredObjectTreeNodes.Count}");
         }
 
         /// <summary>
@@ -916,6 +928,9 @@ namespace ACadSharp.Viewer.Models
         /// <returns>A filtered node copy or null if the node and all its children are not visible</returns>
         private CadObjectTreeNode? CreateFilteredNodeCopy(CadObjectTreeNode originalNode)
         {
+            if (originalNode == null)
+                return null;
+
             // If the node itself is visible, include it
             if (originalNode.IsVisible)
             {
@@ -932,12 +947,15 @@ namespace ACadSharp.Viewer.Models
                 };
 
                 // Add visible children
-                foreach (var child in originalNode.Children)
+                if (originalNode.Children != null)
                 {
-                    var filteredChild = CreateFilteredNodeCopy(child);
-                    if (filteredChild != null)
+                    foreach (var child in originalNode.Children)
                     {
-                        filteredNode.Children.Add(filteredChild);
+                        var filteredChild = CreateFilteredNodeCopy(child);
+                        if (filteredChild != null)
+                        {
+                            filteredNode.Children.Add(filteredChild);
+                        }
                     }
                 }
 
@@ -945,7 +963,7 @@ namespace ACadSharp.Viewer.Models
             }
 
             // If the node is not visible but has children, check if any children are visible
-            if (originalNode.Children.Any())
+            if (originalNode.Children != null && originalNode.Children.Any())
             {
                 var visibleChildren = new List<CadObjectTreeNode>();
                 

@@ -92,6 +92,11 @@ namespace ACadSharp.Viewer.Models
         public ObservableCollection<CadObjectTreeNode> ObjectTreeNodes { get; } = new();
 
         /// <summary>
+        /// Filtered collection of tree nodes for the object tree (used for search filtering)
+        /// </summary>
+        public ObservableCollection<CadObjectTreeNode> FilteredObjectTreeNodes { get; } = new();
+
+        /// <summary>
         /// Collection of properties for the selected object
         /// </summary>
         public ObservableCollection<ObjectProperty> SelectedObjectProperties { get; } = new();
@@ -887,6 +892,21 @@ namespace ACadSharp.Viewer.Models
         }
 
         /// <summary>
+        /// Updates the filtered tree nodes collection based on visibility
+        /// </summary>
+        public void UpdateFilteredTreeNodes()
+        {
+            FilteredObjectTreeNodes.Clear();
+            foreach (var node in ObjectTreeNodes)
+            {
+                if (node.IsVisible)
+                {
+                    FilteredObjectTreeNodes.Add(node);
+                }
+            }
+        }
+
+        /// <summary>
         /// Clears the document and resets all properties
         /// </summary>
         public void Clear()
@@ -899,6 +919,7 @@ namespace ACadSharp.Viewer.Models
             StatusMessage = string.Empty;
             LoadProgress = 0;
             ObjectTreeNodes.Clear();
+            FilteredObjectTreeNodes.Clear();
             SelectedObjectProperties.Clear();
             BreadcrumbItems.Clear();
             SelectedObject = null;

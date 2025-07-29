@@ -590,69 +590,103 @@ namespace ACadSharp.Viewer.Services
 
         private bool MatchesSearchCriteria(CadObject obj, SearchCriteria criteria)
         {
+            if (string.IsNullOrEmpty(criteria.SearchText))
+                return false;
+
             var comparison = criteria.CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            var searchText = criteria.SearchText;
 
-            // Search by handle
-            if (!string.IsNullOrEmpty(criteria.ObjectHandle))
+            switch (criteria.SearchType)
             {
-                if (obj.Handle.ToString("X").Contains(criteria.ObjectHandle, comparison))
-                    return true;
-            }
+                case SearchType.Handle:
+                    return obj.Handle.ToString("X").Contains(searchText, comparison);
 
-            // Search by object type
-            if (!string.IsNullOrEmpty(criteria.ObjectType))
-            {
-                if (obj.GetType().Name.Contains(criteria.ObjectType, comparison))
-                    return true;
-            }
+                case SearchType.ObjectType:
+                    return obj.GetType().Name.Contains(searchText, comparison);
 
-            // Search by object data (basic properties)
-            if (!string.IsNullOrEmpty(criteria.ObjectData))
-            {
-                var type = obj.GetType();
-                var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                case SearchType.ObjectData:
+                    var type = obj.GetType();
+                    var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-                foreach (var prop in properties)
-                {
-                    try
+                    foreach (var prop in properties)
                     {
-                        var value = prop.GetValue(obj)?.ToString();
-                        if (!string.IsNullOrEmpty(value) && value.Contains(criteria.ObjectData, comparison))
-                            return true;
+                        try
+                        {
+                            var value = prop.GetValue(obj)?.ToString();
+                            if (!string.IsNullOrEmpty(value) && value.Contains(searchText, comparison))
+                                return true;
+                        }
+                        catch
+                        {
+                            // Skip properties that can't be read
+                        }
                     }
-                    catch
-                    {
-                        // Skip properties that can't be read
-                    }
-                }
-            }
+                    return false;
 
-            return false;
+                case SearchType.TagCode:
+                    // For tag code search, we'll search in the object's basic properties
+                    // This is a simplified implementation - you might want to enhance this
+                    return obj.Handle.ToString("X").Contains(searchText, comparison) ||
+                           obj.GetType().Name.Contains(searchText, comparison);
+
+                case SearchType.All:
+                    // Search in handle, type, and properties
+                    if (obj.Handle.ToString("X").Contains(searchText, comparison))
+                        return true;
+                    if (obj.GetType().Name.Contains(searchText, comparison))
+                        return true;
+                    
+                    var allType = obj.GetType();
+                    var allProperties = allType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                    foreach (var prop in allProperties)
+                    {
+                        try
+                        {
+                            var value = prop.GetValue(obj)?.ToString();
+                            if (!string.IsNullOrEmpty(value) && value.Contains(searchText, comparison))
+                                return true;
+                        }
+                        catch
+                        {
+                            // Skip properties that can't be read
+                        }
+                    }
+                    return false;
+
+                default:
+                    return false;
+            }
         }
 
         private bool MatchesSearchCriteriaForClass(DxfClass cls, SearchCriteria criteria)
         {
+            if (string.IsNullOrEmpty(criteria.SearchText))
+                return false;
+
             var comparison = criteria.CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            var searchText = criteria.SearchText;
 
-            // Search by object type
-            if (!string.IsNullOrEmpty(criteria.ObjectType))
+            switch (criteria.SearchType)
             {
-                if (cls.GetType().Name.Contains(criteria.ObjectType, comparison) ||
-                    cls.DxfName.Contains(criteria.ObjectType, comparison) ||
-                    cls.CppClassName.Contains(criteria.ObjectType, comparison))
-                    return true;
-            }
+                case SearchType.ObjectType:
+                    return cls.GetType().Name.Contains(searchText, comparison) ||
+                           cls.DxfName.Contains(searchText, comparison) ||
+                           cls.CppClassName.Contains(searchText, comparison);
 
-            // Search by object data (basic properties)
-            if (!string.IsNullOrEmpty(criteria.ObjectData))
-            {
-                if (cls.DxfName.Contains(criteria.ObjectData, comparison) ||
-                    cls.CppClassName.Contains(criteria.ObjectData, comparison) ||
-                    cls.ApplicationName?.Contains(criteria.ObjectData, comparison) == true)
-                    return true;
-            }
+                case SearchType.ObjectData:
+                case SearchType.All:
+                    return cls.DxfName.Contains(searchText, comparison) ||
+                           cls.CppClassName.Contains(searchText, comparison) ||
+                           cls.ApplicationName?.Contains(searchText, comparison) == true;
 
-            return false;
+                case SearchType.Handle:
+                case SearchType.TagCode:
+                    // Classes don't have handles, so these search types don't apply
+                    return false;
+
+                default:
+                    return false;
+            }
         }
     }
 } 

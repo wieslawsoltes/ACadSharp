@@ -8,6 +8,18 @@ using System.Runtime.CompilerServices;
 namespace ACadSharp.Viewer.Interfaces
 {
     /// <summary>
+    /// Search type for CAD object search
+    /// </summary>
+    public enum SearchType
+    {
+        Handle,
+        ObjectType,
+        ObjectData,
+        TagCode,
+        All
+    }
+
+    /// <summary>
     /// Interface for CAD object tree operations
     /// </summary>
     public interface ICadObjectTreeService
@@ -131,11 +143,15 @@ namespace ACadSharp.Viewer.Interfaces
     /// </summary>
     public class SearchCriteria
     {
-        public string? TagCode { get; set; }
-        public string? ObjectHandle { get; set; }
-        public string? ObjectData { get; set; }
-        public string? ObjectType { get; set; }
+        public string? SearchText { get; set; }
+        public SearchType SearchType { get; set; } = SearchType.Handle;
         public bool CaseSensitive { get; set; }
+
+        // Legacy properties for backward compatibility
+        public string? TagCode => SearchType == SearchType.TagCode ? SearchText : null;
+        public string? ObjectHandle => SearchType == SearchType.Handle ? SearchText : null;
+        public string? ObjectData => SearchType == SearchType.ObjectData ? SearchText : null;
+        public string? ObjectType => SearchType == SearchType.ObjectType ? SearchText : null;
     }
 
     /// <summary>

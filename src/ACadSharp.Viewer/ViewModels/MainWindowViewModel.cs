@@ -28,6 +28,7 @@ namespace ACadSharp.Viewer.ViewModels
         private CadDocumentModel _leftDocument;
         private CadDocumentModel _rightDocument;
         private string _searchText = string.Empty;
+        private SearchType _searchType = SearchType.Handle;
         private bool _isSearching;
         private readonly object _highlightLock = new object();
         private bool _isHighlighting = false;
@@ -54,12 +55,21 @@ namespace ACadSharp.Viewer.ViewModels
             // Subscribe to progress events
             _cadFileService.LoadProgressChanged += OnLoadProgressChanged;
 
-            // Search text changes
-            this.WhenAnyValue(x => x.SearchText)
+            // Search text and type changes
+            this.WhenAnyValue(x => x.SearchText, x => x.SearchType)
                 .Throttle(TimeSpan.FromMilliseconds(300))
-                .Where(text => !string.IsNullOrWhiteSpace(text))
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(async _ => await SearchAsync());
+                .Subscribe(async tuple => 
+                {
+                    if (string.IsNullOrWhiteSpace(tuple.Item1))
+                    {
+                        ClearSearchResults();
+                    }
+                    else
+                    {
+                        await SearchAsync();
+                    }
+                });
 
             // Ensure all property changes that affect UI run on main thread
             this.WhenAnyValue(x => x.IsBusy)
@@ -110,6 +120,20 @@ namespace ACadSharp.Viewer.ViewModels
             get => _searchText;
             set => this.RaiseAndSetIfChanged(ref _searchText, value);
         }
+
+        /// <summary>
+        /// Search type for finding objects
+        /// </summary>
+        public SearchType SearchType
+        {
+            get => _searchType;
+            set => this.RaiseAndSetIfChanged(ref _searchType, value);
+        }
+
+        /// <summary>
+        /// Available search types for the dropdown
+        /// </summary>
+        public SearchType[] SearchTypeValues => Enum.GetValues<SearchType>();
 
         /// <summary>
         /// Indicates if a search is currently in progress
@@ -195,6 +219,8 @@ namespace ACadSharp.Viewer.ViewModels
                     {
                         LeftDocument.ObjectTreeNodes.Add(node);
                     }
+                    // Initialize filtered collection with all nodes visible
+                    LeftDocument.UpdateFilteredTreeNodes();
                     // Clear search results when new file is loaded
                     ClearSearchResults();
                 });
@@ -254,6 +280,8 @@ namespace ACadSharp.Viewer.ViewModels
                     {
                         RightDocument.ObjectTreeNodes.Add(node);
                     }
+                    // Initialize filtered collection with all nodes visible
+                    RightDocument.UpdateFilteredTreeNodes();
                     // Clear search results when new file is loaded
                     ClearSearchResults();
                 });
@@ -280,13 +308,6 @@ namespace ACadSharp.Viewer.ViewModels
         /// </summary>
         private async Task SearchAsync()
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
-            {
-                // Clear search results when search text is empty
-                ClearSearchResults();
-                return;
-            }
-
             try
             {
                 IsSearching = true;
@@ -294,9 +315,8 @@ namespace ACadSharp.Viewer.ViewModels
                 var searchText = SearchText.Trim();
                 var searchCriteria = new SearchCriteria
                 {
-                    ObjectData = searchText,
-                    ObjectHandle = searchText,
-                    ObjectType = searchText,
+                    SearchText = searchText,
+                    SearchType = SearchType,
                     CaseSensitive = false
                 };
 
@@ -304,14 +324,14 @@ namespace ACadSharp.Viewer.ViewModels
                 if (LeftDocument?.Document != null && LeftDocument?.ObjectTreeNodes != null)
                 {
                     var leftResults = await _cadObjectTreeService.SearchObjectsAsync(LeftDocument.Document, searchCriteria);
-                    await FilterAndHighlightTree(LeftDocument.ObjectTreeNodes, leftResults, searchText);
+                    await FilterAndHighlightTree(LeftDocument, leftResults, searchText);
                 }
 
                 // Search in right document
                 if (RightDocument?.Document != null && RightDocument?.ObjectTreeNodes != null)
                 {
                     var rightResults = await _cadObjectTreeService.SearchObjectsAsync(RightDocument.Document, searchCriteria);
-                    await FilterAndHighlightTree(RightDocument.ObjectTreeNodes, rightResults, searchText);
+                    await FilterAndHighlightTree(RightDocument, rightResults, searchText);
                 }
             }
             catch (Exception ex)
@@ -396,15 +416,16 @@ namespace ACadSharp.Viewer.ViewModels
         /// <summary>
         /// Filters and highlights the tree based on search results
         /// </summary>
-        /// <param name="nodes">Tree nodes to filter</param>
+        /// <param name="documentModel">Document model containing the tree nodes</param>
         /// <param name="searchResults">Search results</param>
         /// <param name="searchText">Search text for property highlighting</param>
-        private async Task FilterAndHighlightTree(ObservableCollection<CadObjectTreeNode> nodes, System.Collections.Generic.IEnumerable<CadObject> searchResults, string searchText)
+        private async Task FilterAndHighlightTree(CadDocumentModel documentModel, System.Collections.Generic.IEnumerable<CadObject> searchResults, string searchText)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var resultHandles = searchResults.Select(r => r.Handle).ToHashSet();
-                FilterAndHighlightNodes(nodes, resultHandles, searchText);
+                FilterAndHighlightNodes(documentModel.ObjectTreeNodes, resultHandles, searchText);
+                documentModel.UpdateFilteredTreeNodes();
             });
         }
 
@@ -447,7 +468,7 @@ namespace ACadSharp.Viewer.ViewModels
                     }
                 }
 
-                // Recursively check children
+                // Recursively check children first
                 if (node.Children.Any())
                 {
                     var childHasMatch = FilterAndHighlightNodes(node.Children, resultHandles, searchText);
@@ -455,11 +476,20 @@ namespace ACadSharp.Viewer.ViewModels
                 }
 
                 // Set visibility and highlighting
+                // A node should be visible if:
+                // 1. It directly matches the search criteria, OR
+                // 2. It has children that match the search criteria (to show the path to matching nodes)
                 node.IsVisible = hasMatchingChild;
                 node.IsHighlighted = isDirectMatch;
-                node.IsExpanded = hasMatchingChild; // Auto-expand nodes with matches
+                
+                // Auto-expand nodes that have matches (either direct or in children)
+                // This ensures the path to matching nodes is visible
+                if (hasMatchingChild)
+                {
+                    node.IsExpanded = true;
+                }
 
-                // Highlight properties if this node is selected
+                // Highlight properties if this node is selected and directly matches
                 if (isDirectMatch && node == LeftDocument?.SelectedTreeNode && LeftDocument?.SelectedObjectProperties != null)
                 {
                     lock (_highlightLock)
@@ -538,6 +568,10 @@ namespace ACadSharp.Viewer.ViewModels
                     ClearTreeHighlighting(LeftDocument.ObjectTreeNodes);
                 if (RightDocument?.ObjectTreeNodes != null)
                     ClearTreeHighlighting(RightDocument.ObjectTreeNodes);
+
+                // Update filtered collections to show all nodes
+                LeftDocument?.UpdateFilteredTreeNodes();
+                RightDocument?.UpdateFilteredTreeNodes();
 
                 // Clear property highlighting
                 if (LeftDocument?.SelectedObjectProperties != null)

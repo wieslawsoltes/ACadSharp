@@ -61,13 +61,21 @@ namespace ACadSharp.Viewer.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(async tuple => 
                 {
-                    if (string.IsNullOrWhiteSpace(tuple.Item1))
+                    try
                     {
-                        ClearSearchResults();
+                        if (string.IsNullOrWhiteSpace(tuple.Item1))
+                        {
+                            RestoreTreeViewState();
+                        }
+                        else
+                        {
+                            await SearchAsync();
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        await SearchAsync();
+                        // Log the exception but don't crash the application
+                        System.Diagnostics.Debug.WriteLine($"Error in search subscription: {ex.Message}");
                     }
                 });
 
@@ -196,6 +204,9 @@ namespace ACadSharp.Viewer.ViewModels
                 {
                     IsBusy = true;
                     LeftDocument.StatusMessage = "Loading file...";
+                    
+                    // Clear previous document state to prevent duplicates
+                    LeftDocument.Clear();
                 });
 
                 var document = await _cadFileService.LoadFileAsync(filePath);
@@ -214,7 +225,6 @@ namespace ACadSharp.Viewer.ViewModels
                 var treeNodes = await _cadObjectTreeService.BuildObjectTreeAsync(document);
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    LeftDocument.ObjectTreeNodes.Clear();
                     foreach (var node in treeNodes)
                     {
                         LeftDocument.ObjectTreeNodes.Add(node);
@@ -222,7 +232,7 @@ namespace ACadSharp.Viewer.ViewModels
                     // Initialize filtered collection with all nodes visible
                     LeftDocument.UpdateFilteredTreeNodes();
                     // Clear search results when new file is loaded
-                    ClearSearchResults();
+                    RestoreTreeViewState();
                 });
             }
             catch (Exception ex)
@@ -257,6 +267,9 @@ namespace ACadSharp.Viewer.ViewModels
                 {
                     IsBusy = true;
                     RightDocument.StatusMessage = "Loading file...";
+                    
+                    // Clear previous document state to prevent duplicates
+                    RightDocument.Clear();
                 });
 
                 var document = await _cadFileService.LoadFileAsync(filePath);
@@ -275,7 +288,6 @@ namespace ACadSharp.Viewer.ViewModels
                 var treeNodes = await _cadObjectTreeService.BuildObjectTreeAsync(document);
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    RightDocument.ObjectTreeNodes.Clear();
                     foreach (var node in treeNodes)
                     {
                         RightDocument.ObjectTreeNodes.Add(node);
@@ -283,7 +295,7 @@ namespace ACadSharp.Viewer.ViewModels
                     // Initialize filtered collection with all nodes visible
                     RightDocument.UpdateFilteredTreeNodes();
                     // Clear search results when new file is loaded
-                    ClearSearchResults();
+                    RestoreTreeViewState();
                 });
             }
             catch (Exception ex)
@@ -308,6 +320,9 @@ namespace ACadSharp.Viewer.ViewModels
         /// </summary>
         private async Task SearchAsync()
         {
+            // Prevent multiple simultaneous search operations
+            if (IsSearching) return;
+            
             try
             {
                 IsSearching = true;
@@ -395,6 +410,7 @@ namespace ACadSharp.Viewer.ViewModels
         private void ClearSearch()
         {
             SearchText = string.Empty;
+            RestoreTreeViewState();
             ClearSearchResults();
         }
 
@@ -423,9 +439,16 @@ namespace ACadSharp.Viewer.ViewModels
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                var resultHandles = searchResults.Select(r => r.Handle).ToHashSet();
-                FilterAndHighlightNodes(documentModel.ObjectTreeNodes, resultHandles, searchText);
-                documentModel.UpdateFilteredTreeNodes();
+                try
+                {
+                    var resultHandles = searchResults.Select(r => r.Handle).ToHashSet();
+                    FilterAndHighlightNodes(documentModel.ObjectTreeNodes, resultHandles, searchText);
+                    documentModel.UpdateFilteredTreeNodes();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error in FilterAndHighlightTree: {ex.Message}");
+                }
             });
         }
 
@@ -557,6 +580,48 @@ namespace ACadSharp.Viewer.ViewModels
         }
 
         /// <summary>
+        /// Restores the tree view to its normal state after search operations
+        /// </summary>
+        private void RestoreTreeViewState()
+        {
+            // Ensure all nodes are visible and update the filtered collection
+            if (LeftDocument?.ObjectTreeNodes != null)
+            {
+                foreach (var node in LeftDocument.ObjectTreeNodes)
+                {
+                    RestoreNodeState(node);
+                }
+                LeftDocument.UpdateFilteredTreeNodes();
+            }
+            
+            if (RightDocument?.ObjectTreeNodes != null)
+            {
+                foreach (var node in RightDocument.ObjectTreeNodes)
+                {
+                    RestoreNodeState(node);
+                }
+                RightDocument.UpdateFilteredTreeNodes();
+            }
+        }
+
+        /// <summary>
+        /// Recursively restores a node and its children to normal state
+        /// </summary>
+        /// <param name="node">The node to restore</param>
+        private void RestoreNodeState(CadObjectTreeNode node)
+        {
+            if (node == null) return;
+            
+            node.IsVisible = true;
+            node.IsHighlighted = false;
+            
+            foreach (var child in node.Children)
+            {
+                RestoreNodeState(child);
+            }
+        }
+
+        /// <summary>
         /// Clears all search results and highlighting
         /// </summary>
         private void ClearSearchResults()
@@ -598,8 +663,10 @@ namespace ACadSharp.Viewer.ViewModels
                     if (node != null)
                     {
                         node.IsHighlighted = false;
-                        node.IsVisible = true;
-                        node.IsExpanded = false; // Reset expansion state
+                        node.IsVisible = true; // Ensure all nodes are visible when clearing search
+                        
+                        // Don't reset expansion state here - let users maintain their preferred view
+                        // node.IsExpanded = false;
 
                         if (node.Children?.Any() == true)
                         {

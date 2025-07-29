@@ -897,12 +897,12 @@ namespace ACadSharp.Viewer.Models
         public void UpdateFilteredTreeNodes()
         {
             FilteredObjectTreeNodes.Clear();
+            
+            // Always include all root nodes to maintain tree structure
+            // The visibility filtering is handled by the IsVisible property in the UI
             foreach (var node in ObjectTreeNodes)
             {
-                if (node.IsVisible)
-                {
-                    FilteredObjectTreeNodes.Add(node);
-                }
+                FilteredObjectTreeNodes.Add(node);
             }
         }
 

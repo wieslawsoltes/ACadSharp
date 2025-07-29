@@ -1,6 +1,8 @@
 using ACadSharp;
+using ACadSharp.Classes;
 using ACadSharp.Entities;
 using ACadSharp.Objects;
+using ACadSharp.Objects.Collections;
 using ACadSharp.Tables;
 using ACadSharp.Viewer.Interfaces;
 using System;
@@ -50,6 +52,47 @@ namespace ACadSharp.Viewer.Services
                         HasChildren = false
                     };
                     documentNode.Children.Add(headerNode);
+                }
+
+                // Summary Info
+                if (document.SummaryInfo != null)
+                {
+                    var summaryNode = new CadObjectTreeNode
+                    {
+                        Name = "Summary Info",
+                        CadObject = null, // SummaryInfo is not a CadObject
+                        ObjectType = "SummaryInfo",
+                        Handle = 0,
+                        HasChildren = false
+                    };
+                    documentNode.Children.Add(summaryNode);
+                }
+
+                // Classes
+                if (document.Classes != null && document.Classes.Any())
+                {
+                    var classesNode = new CadObjectTreeNode
+                    {
+                        Name = "Classes",
+                        ObjectType = "Classes",
+                        HasChildren = true,
+                        IsExpanded = false
+                    };
+
+                    var classNodes = document.Classes.Select(cls => new CadObjectTreeNode
+                    {
+                        Name = $"{cls.DxfName} ({cls.CppClassName})",
+                        CadObject = null, // Classes are not CadObjects
+                        ObjectType = "DxfClass",
+                        Handle = 0,
+                        HasChildren = false
+                    });
+
+                    foreach (var node in classNodes)
+                    {
+                        classesNode.Children.Add(node);
+                    }
+                    documentNode.Children.Add(classesNode);
                 }
 
                 // Tables
@@ -123,34 +166,90 @@ namespace ACadSharp.Viewer.Services
                 }
                 documentNode.Children.Add(tablesNode);
 
-                // Objects
+                // Collections (from Root Dictionary)
+                var collectionsNode = new CadObjectTreeNode
+                {
+                    Name = "Collections",
+                    ObjectType = "Collections",
+                    HasChildren = true,
+                    IsExpanded = false
+                };
+
+                var collectionNodes = new List<CadObjectTreeNode>();
+
+                // Groups
+                if (document.Groups != null)
+                {
+                    collectionNodes.Add(CreateCollectionNode<Group>("Groups", document.Groups));
+                }
+
+                // Colors
+                if (document.Colors != null)
+                {
+                    collectionNodes.Add(CreateCollectionNode<BookColor>("Colors", document.Colors));
+                }
+
+                // Image Definitions
+                if (document.ImageDefinitions != null)
+                {
+                    collectionNodes.Add(CreateCollectionNode<ImageDefinition>("Image Definitions", document.ImageDefinitions));
+                }
+
+                // PDF Definitions
+                if (document.PdfDefinitions != null)
+                {
+                    collectionNodes.Add(CreateCollectionNode<PdfUnderlayDefinition>("PDF Definitions", document.PdfDefinitions));
+                }
+
+                // Layouts
+                if (document.Layouts != null)
+                {
+                    collectionNodes.Add(CreateCollectionNode<Layout>("Layouts", document.Layouts));
+                }
+
+                // MLeader Styles
+                if (document.MLeaderStyles != null)
+                {
+                    collectionNodes.Add(CreateCollectionNode<MultiLeaderStyle>("MLeader Styles", document.MLeaderStyles));
+                }
+
+                // MLine Styles
+                if (document.MLineStyles != null)
+                {
+                    collectionNodes.Add(CreateCollectionNode<MLineStyle>("MLine Styles", document.MLineStyles));
+                }
+
+                // Scales
+                if (document.Scales != null)
+                {
+                    collectionNodes.Add(CreateCollectionNode<Scale>("Scales", document.Scales));
+                }
+
+                foreach (var node in collectionNodes)
+                {
+                    collectionsNode.Children.Add(node);
+                }
+                documentNode.Children.Add(collectionsNode);
+
+                // Objects (Root Dictionary)
                 if (document.RootDictionary != null)
                 {
-                    var objectsNode = new CadObjectTreeNode
-                    {
-                        Name = "Objects",
-                        CadObject = document.RootDictionary,
-                        ObjectType = "Root Dictionary",
-                        Handle = document.RootDictionary.Handle,
-                        HasChildren = true,
-                        IsExpanded = true
-                    };
-
+                    var objectsNode = CreateDictionaryNode(document.RootDictionary, "Objects (Root Dictionary)");
                     documentNode.Children.Add(objectsNode);
                 }
 
-                // Entities
-                if (document.Entities != null)
+                // Model Space Entities
+                if (document.ModelSpace != null && document.ModelSpace.Entities != null)
                 {
-                    var entitiesNode = new CadObjectTreeNode
+                    var modelSpaceNode = new CadObjectTreeNode
                     {
-                        Name = "Entities",
-                        ObjectType = "Entities",
-                        HasChildren = true,
+                        Name = "Model Space Entities",
+                        ObjectType = "Model Space",
+                        HasChildren = document.ModelSpace.Entities.Any(),
                         IsExpanded = true
                     };
 
-                    var entityNodes = document.Entities.Select(entity => new CadObjectTreeNode
+                    var modelSpaceEntityNodes = document.ModelSpace.Entities.Select(entity => new CadObjectTreeNode
                     {
                         Name = $"{entity.GetType().Name} ({entity.Handle:X})",
                         CadObject = entity,
@@ -159,11 +258,38 @@ namespace ACadSharp.Viewer.Services
                         HasChildren = false
                     });
 
-                    foreach (var node in entityNodes)
+                    foreach (var node in modelSpaceEntityNodes)
                     {
-                        entitiesNode.Children.Add(node);
+                        modelSpaceNode.Children.Add(node);
                     }
-                    documentNode.Children.Add(entitiesNode);
+                    documentNode.Children.Add(modelSpaceNode);
+                }
+
+                // Paper Space Entities
+                if (document.PaperSpace != null && document.PaperSpace.Entities != null)
+                {
+                    var paperSpaceNode = new CadObjectTreeNode
+                    {
+                        Name = "Paper Space Entities",
+                        ObjectType = "Paper Space",
+                        HasChildren = document.PaperSpace.Entities.Any(),
+                        IsExpanded = false
+                    };
+
+                    var paperSpaceEntityNodes = document.PaperSpace.Entities.Select(entity => new CadObjectTreeNode
+                    {
+                        Name = $"{entity.GetType().Name} ({entity.Handle:X})",
+                        CadObject = entity,
+                        ObjectType = entity.GetType().Name,
+                        Handle = entity.Handle,
+                        HasChildren = false
+                    });
+
+                    foreach (var node in paperSpaceEntityNodes)
+                    {
+                        paperSpaceNode.Children.Add(node);
+                    }
+                    documentNode.Children.Add(paperSpaceNode);
                 }
 
                 rootNodes.Add(documentNode);
@@ -184,7 +310,6 @@ namespace ACadSharp.Viewer.Services
                 var results = new List<CadObject>();
 
                 // Search in all collections
-                SearchInCollection<Entity>(document.Entities, searchCriteria, results);
                 SearchInCollection<Layer>(document.Layers, searchCriteria, results);
                 SearchInCollection<BlockRecord>(document.BlockRecords, searchCriteria, results);
                 SearchInCollection<TextStyle>(document.TextStyles, searchCriteria, results);
@@ -194,6 +319,57 @@ namespace ACadSharp.Viewer.Services
                 SearchInCollection<VPort>(document.VPorts, searchCriteria, results);
                 SearchInCollection<UCS>(document.UCSs, searchCriteria, results);
                 SearchInCollection<AppId>(document.AppIds, searchCriteria, results);
+
+                // Search in model space and paper space entities
+                if (document.ModelSpace?.Entities != null)
+                {
+                    SearchInCollection<Entity>(document.ModelSpace.Entities, searchCriteria, results);
+                }
+                if (document.PaperSpace?.Entities != null)
+                {
+                    SearchInCollection<Entity>(document.PaperSpace.Entities, searchCriteria, results);
+                }
+
+                // Search in block entities
+                if (document.BlockRecords != null)
+                {
+                    foreach (var blockRecord in document.BlockRecords)
+                    {
+                        if (blockRecord.Entities != null)
+                        {
+                            SearchInCollection<Entity>(blockRecord.Entities, searchCriteria, results);
+                        }
+                    }
+                }
+
+                // Search in additional collections
+                SearchInCollection<Group>(document.Groups, searchCriteria, results);
+                SearchInCollection<BookColor>(document.Colors, searchCriteria, results);
+                SearchInCollection<ImageDefinition>(document.ImageDefinitions, searchCriteria, results);
+                SearchInCollection<PdfUnderlayDefinition>(document.PdfDefinitions, searchCriteria, results);
+                SearchInCollection<Layout>(document.Layouts, searchCriteria, results);
+                SearchInCollection<MultiLeaderStyle>(document.MLeaderStyles, searchCriteria, results);
+                SearchInCollection<MLineStyle>(document.MLineStyles, searchCriteria, results);
+                SearchInCollection<Scale>(document.Scales, searchCriteria, results);
+
+                // Search in classes (DxfClass objects)
+                if (document.Classes != null)
+                {
+                    foreach (var cls in document.Classes)
+                    {
+                        if (MatchesSearchCriteriaForClass(cls, searchCriteria))
+                        {
+                            // Note: Classes are not CadObjects, so we can't add them to results
+                            // But we can still search through them for display purposes
+                        }
+                    }
+                }
+
+                // Search in root dictionary and its nested dictionaries
+                if (document.RootDictionary != null)
+                {
+                    SearchInDictionary(document.RootDictionary, searchCriteria, results);
+                }
 
                 return results;
             });
@@ -257,6 +433,58 @@ namespace ACadSharp.Viewer.Services
                 IsExpanded = false
             };
 
+            var children = collection.Select(item => 
+            {
+                var childNode = new CadObjectTreeNode
+                {
+                    Name = $"{item.GetType().Name} ({item.Handle:X})",
+                    CadObject = item,
+                    ObjectType = item.GetType().Name,
+                    Handle = item.Handle,
+                    HasChildren = false
+                };
+
+                // Special handling for BlockRecord to show its entities
+                if (item is BlockRecord blockRecord && blockRecord.Entities != null && blockRecord.Entities.Any())
+                {
+                    childNode.HasChildren = true;
+                    childNode.Name = $"{blockRecord.Name} ({item.Handle:X})";
+
+                    var entityNodes = blockRecord.Entities.Select(entity => new CadObjectTreeNode
+                    {
+                        Name = $"{entity.GetType().Name} ({entity.Handle:X})",
+                        CadObject = entity,
+                        ObjectType = entity.GetType().Name,
+                        Handle = entity.Handle,
+                        HasChildren = false
+                    });
+
+                    foreach (var entityNode in entityNodes)
+                    {
+                        childNode.Children.Add(entityNode);
+                    }
+                }
+
+                return childNode;
+            });
+
+            foreach (var child in children)
+            {
+                node.Children.Add(child);
+            }
+            return node;
+        }
+
+        private CadObjectTreeNode CreateCollectionNode<T>(string name, IEnumerable<T> collection) where T : CadObject
+        {
+            var node = new CadObjectTreeNode
+            {
+                Name = name,
+                ObjectType = name,
+                HasChildren = collection.Any(),
+                IsExpanded = false
+            };
+
             var children = collection.Select(item => new CadObjectTreeNode
             {
                 Name = $"{item.GetType().Name} ({item.Handle:X})",
@@ -273,6 +501,60 @@ namespace ACadSharp.Viewer.Services
             return node;
         }
 
+        private CadObjectTreeNode CreateDictionaryNode(CadDictionary dictionary, string name)
+        {
+            var node = new CadObjectTreeNode
+            {
+                Name = name,
+                CadObject = dictionary,
+                ObjectType = "CadDictionary",
+                Handle = dictionary.Handle,
+                HasChildren = dictionary.Any(),
+                IsExpanded = false
+            };
+
+            foreach (var entryName in dictionary.EntryNames)
+            {
+                if (dictionary.TryGetEntry<NonGraphicalObject>(entryName, out var entry))
+                {
+                    var entryNode = new CadObjectTreeNode
+                    {
+                        Name = $"{entryName} ({entry.GetType().Name})",
+                        CadObject = entry,
+                        ObjectType = entry.GetType().Name,
+                        Handle = entry.Handle,
+                        HasChildren = entry is CadDictionary nestedDict && nestedDict.Any(),
+                        IsExpanded = false
+                    };
+
+                    // Recursively add nested dictionaries
+                    if (entry is CadDictionary nestedDictionary)
+                    {
+                        foreach (var nestedEntryName in nestedDictionary.EntryNames)
+                        {
+                            if (nestedDictionary.TryGetEntry<NonGraphicalObject>(nestedEntryName, out var nestedEntry))
+                            {
+                                var nestedNode = new CadObjectTreeNode
+                                {
+                                    Name = $"{nestedEntryName} ({nestedEntry.GetType().Name})",
+                                    CadObject = nestedEntry,
+                                    ObjectType = nestedEntry.GetType().Name,
+                                    Handle = nestedEntry.Handle,
+                                    HasChildren = nestedEntry is CadDictionary && ((CadDictionary)nestedEntry).Any(),
+                                    IsExpanded = false
+                                };
+                                entryNode.Children.Add(nestedNode);
+                            }
+                        }
+                    }
+
+                    node.Children.Add(entryNode);
+                }
+            }
+
+            return node;
+        }
+
         private void SearchInCollection<T>(IEnumerable<T>? collection, SearchCriteria criteria, List<CadObject> results) where T : CadObject
         {
             if (collection == null) return;
@@ -282,6 +564,26 @@ namespace ACadSharp.Viewer.Services
                 if (MatchesSearchCriteria(item, criteria))
                 {
                     results.Add(item);
+                }
+            }
+        }
+
+        private void SearchInDictionary(CadDictionary dictionary, SearchCriteria criteria, List<CadObject> results)
+        {
+            foreach (var entryName in dictionary.EntryNames)
+            {
+                if (dictionary.TryGetEntry<NonGraphicalObject>(entryName, out var entry))
+                {
+                    if (MatchesSearchCriteria(entry, criteria))
+                    {
+                        results.Add(entry);
+                    }
+
+                    // Recursively search nested dictionaries
+                    if (entry is CadDictionary nestedDict)
+                    {
+                        SearchInDictionary(nestedDict, criteria, results);
+                    }
                 }
             }
         }
@@ -323,6 +625,31 @@ namespace ACadSharp.Viewer.Services
                         // Skip properties that can't be read
                     }
                 }
+            }
+
+            return false;
+        }
+
+        private bool MatchesSearchCriteriaForClass(DxfClass cls, SearchCriteria criteria)
+        {
+            var comparison = criteria.CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+            // Search by object type
+            if (!string.IsNullOrEmpty(criteria.ObjectType))
+            {
+                if (cls.GetType().Name.Contains(criteria.ObjectType, comparison) ||
+                    cls.DxfName.Contains(criteria.ObjectType, comparison) ||
+                    cls.CppClassName.Contains(criteria.ObjectType, comparison))
+                    return true;
+            }
+
+            // Search by object data (basic properties)
+            if (!string.IsNullOrEmpty(criteria.ObjectData))
+            {
+                if (cls.DxfName.Contains(criteria.ObjectData, comparison) ||
+                    cls.CppClassName.Contains(criteria.ObjectData, comparison) ||
+                    cls.ApplicationName?.Contains(criteria.ObjectData, comparison) == true)
+                    return true;
             }
 
             return false;

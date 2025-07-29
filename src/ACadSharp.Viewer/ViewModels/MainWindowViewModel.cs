@@ -29,6 +29,8 @@ namespace ACadSharp.Viewer.ViewModels
         private CadDocumentModel _rightDocument;
         private string _searchText = string.Empty;
         private bool _isSearching;
+        private readonly object _highlightLock = new object();
+        private bool _isHighlighting = false;
 
         public MainWindowViewModel(IFileDialogService? fileDialogService = null)
         {
@@ -75,11 +77,7 @@ namespace ACadSharp.Viewer.ViewModels
                 .Subscribe();
 
             // Highlight properties when search text changes and a node is selected
-            this.WhenAnyValue(x => x.SearchText, x => x.LeftDocument.SelectedTreeNode)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => HighlightSelectedNodeProperties());
-
-            this.WhenAnyValue(x => x.SearchText, x => x.RightDocument.SelectedTreeNode)
+            this.WhenAnyValue(x => x.SearchText, x => x.LeftDocument.SelectedTreeNode, x => x.RightDocument.SelectedTreeNode)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => HighlightSelectedNodeProperties());
         }
@@ -407,9 +405,13 @@ namespace ACadSharp.Viewer.ViewModels
         /// <returns>True if any node in this branch has a match</returns>
         private bool FilterAndHighlightNodes(ObservableCollection<CadObjectTreeNode> nodes, HashSet<ulong> resultHandles, string searchText)
         {
+            if (nodes == null) return false;
+            
             bool anyMatch = false;
             
-            foreach (var node in nodes)
+            // Create a copy of the collection to avoid concurrent modification issues
+            var nodesCopy = nodes.ToList();
+            foreach (var node in nodesCopy)
             {
                 bool hasMatchingChild = false;
                 bool isDirectMatch = false;
@@ -448,11 +450,17 @@ namespace ACadSharp.Viewer.ViewModels
                 // Highlight properties if this node is selected
                 if (isDirectMatch && node == LeftDocument.SelectedTreeNode)
                 {
-                    HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
+                    lock (_highlightLock)
+                    {
+                        HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
+                    }
                 }
                 else if (isDirectMatch && node == RightDocument.SelectedTreeNode)
                 {
-                    HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
+                    lock (_highlightLock)
+                    {
+                        HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
+                    }
                 }
 
                 anyMatch = anyMatch || hasMatchingChild;
@@ -468,9 +476,13 @@ namespace ACadSharp.Viewer.ViewModels
         /// <param name="searchText">Search text</param>
         private void HighlightProperties(ObservableCollection<ObjectProperty> properties, string searchText)
         {
+            if (properties == null) return;
+            
             if (string.IsNullOrEmpty(searchText))
             {
-                foreach (var prop in properties)
+                // Create a copy of the collection to avoid concurrent modification issues
+                var propertiesToClear = properties.ToList();
+                foreach (var prop in propertiesToClear)
                 {
                     prop.IsHighlighted = false;
                 }
@@ -478,7 +490,9 @@ namespace ACadSharp.Viewer.ViewModels
             }
 
             var searchLower = searchText.ToLowerInvariant();
-            foreach (var prop in properties)
+            // Create a copy of the collection to avoid concurrent modification issues
+            var propertiesToHighlight = properties.ToList();
+            foreach (var prop in propertiesToHighlight)
             {
                 prop.IsHighlighted = prop.Name.ToLowerInvariant().Contains(searchLower) ||
                                    prop.Value.ToLowerInvariant().Contains(searchLower) ||
@@ -491,13 +505,16 @@ namespace ACadSharp.Viewer.ViewModels
         /// </summary>
         private void ClearSearchResults()
         {
-            // Clear tree highlighting and visibility
-            ClearTreeHighlighting(LeftDocument.ObjectTreeNodes);
-            ClearTreeHighlighting(RightDocument.ObjectTreeNodes);
+            lock (_highlightLock)
+            {
+                // Clear tree highlighting and visibility
+                ClearTreeHighlighting(LeftDocument.ObjectTreeNodes);
+                ClearTreeHighlighting(RightDocument.ObjectTreeNodes);
 
-            // Clear property highlighting
-            ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
-            ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
+                // Clear property highlighting
+                ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
+                ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
+            }
         }
 
         /// <summary>
@@ -506,7 +523,11 @@ namespace ACadSharp.Viewer.ViewModels
         /// <param name="nodes">Nodes to clear</param>
         private void ClearTreeHighlighting(ObservableCollection<CadObjectTreeNode> nodes)
         {
-            foreach (var node in nodes)
+            if (nodes == null) return;
+            
+            // Create a copy of the collection to avoid concurrent modification issues
+            var nodesCopy = nodes.ToList();
+            foreach (var node in nodesCopy)
             {
                 node.IsHighlighted = false;
                 node.IsVisible = true;
@@ -525,7 +546,11 @@ namespace ACadSharp.Viewer.ViewModels
         /// <param name="properties">Properties to clear</param>
         private void ClearPropertyHighlighting(ObservableCollection<ObjectProperty> properties)
         {
-            foreach (var prop in properties)
+            if (properties == null) return;
+            
+            // Create a copy of the collection to avoid concurrent modification issues
+            var propertiesCopy = properties.ToList();
+            foreach (var prop in propertiesCopy)
             {
                 prop.IsHighlighted = false;
             }
@@ -536,25 +561,38 @@ namespace ACadSharp.Viewer.ViewModels
         /// </summary>
         private void HighlightSelectedNodeProperties()
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
-            {
-                ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
-                ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
-                return;
-            }
-
-            var searchText = SearchText.Trim();
+            if (_isHighlighting) return; // Prevent re-entrant calls
             
-            // Highlight properties for left document
-            if (LeftDocument.SelectedTreeNode != null)
+            lock (_highlightLock)
             {
-                HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
-            }
+                _isHighlighting = true;
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(SearchText))
+                    {
+                        ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
+                        ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
+                        return;
+                    }
 
-            // Highlight properties for right document
-            if (RightDocument.SelectedTreeNode != null)
-            {
-                HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
+                    var searchText = SearchText.Trim();
+                    
+                    // Highlight properties for left document
+                    if (LeftDocument.SelectedTreeNode != null)
+                    {
+                        HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
+                    }
+
+                    // Highlight properties for right document
+                    if (RightDocument.SelectedTreeNode != null)
+                    {
+                        HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
+                    }
+                }
+                finally
+                {
+                    _isHighlighting = false;
+                }
             }
         }
     }

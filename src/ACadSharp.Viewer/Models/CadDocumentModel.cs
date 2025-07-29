@@ -710,7 +710,7 @@ namespace ACadSharp.Viewer.Models
                 properties.Add(new ObjectProperty
                 {
                     Name = "Handle",
-                    Value = node.Handle.ToString(),
+                    Value = node.Handle?.ToString() ?? "null",
                     Type = "UInt64"
                 });
                 
@@ -898,12 +898,91 @@ namespace ACadSharp.Viewer.Models
         {
             FilteredObjectTreeNodes.Clear();
             
-            // Always include all root nodes to maintain tree structure
-            // The visibility filtering is handled by the IsVisible property in the UI
+            // Create filtered copies of nodes that are visible or have visible children
             foreach (var node in ObjectTreeNodes)
             {
-                FilteredObjectTreeNodes.Add(node);
+                var filteredNode = CreateFilteredNodeCopy(node);
+                if (filteredNode != null)
+                {
+                    FilteredObjectTreeNodes.Add(filteredNode);
+                }
             }
+        }
+
+        /// <summary>
+        /// Creates a filtered copy of a node and its children
+        /// </summary>
+        /// <param name="originalNode">The original node to filter</param>
+        /// <returns>A filtered node copy or null if the node and all its children are not visible</returns>
+        private CadObjectTreeNode? CreateFilteredNodeCopy(CadObjectTreeNode originalNode)
+        {
+            // If the node itself is visible, include it
+            if (originalNode.IsVisible)
+            {
+                var filteredNode = new CadObjectTreeNode
+                {
+                    Name = originalNode.Name,
+                    CadObject = originalNode.CadObject,
+                    ObjectType = originalNode.ObjectType,
+                    Handle = originalNode.Handle,
+                    IsExpanded = originalNode.IsExpanded,
+                    HasChildren = originalNode.HasChildren,
+                    IsHighlighted = originalNode.IsHighlighted,
+                    IsVisible = true // Always true in filtered collection
+                };
+
+                // Add visible children
+                foreach (var child in originalNode.Children)
+                {
+                    var filteredChild = CreateFilteredNodeCopy(child);
+                    if (filteredChild != null)
+                    {
+                        filteredNode.Children.Add(filteredChild);
+                    }
+                }
+
+                return filteredNode;
+            }
+
+            // If the node is not visible but has children, check if any children are visible
+            if (originalNode.Children.Any())
+            {
+                var visibleChildren = new List<CadObjectTreeNode>();
+                
+                foreach (var child in originalNode.Children)
+                {
+                    var filteredChild = CreateFilteredNodeCopy(child);
+                    if (filteredChild != null)
+                    {
+                        visibleChildren.Add(filteredChild);
+                    }
+                }
+
+                // If we have visible children, create a node to contain them
+                if (visibleChildren.Any())
+                {
+                    var filteredNode = new CadObjectTreeNode
+                    {
+                        Name = originalNode.Name,
+                        CadObject = originalNode.CadObject,
+                        ObjectType = originalNode.ObjectType,
+                        Handle = originalNode.Handle,
+                        IsExpanded = originalNode.IsExpanded,
+                        HasChildren = true,
+                        IsHighlighted = false,
+                        IsVisible = true
+                    };
+
+                    foreach (var child in visibleChildren)
+                    {
+                        filteredNode.Children.Add(child);
+                    }
+
+                    return filteredNode;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

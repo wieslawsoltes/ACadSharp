@@ -94,7 +94,7 @@
                                          SelectedItem="{Binding LeftDocument.SelectedTreeNode}">
                                     <TreeView.ItemTemplate>
                                         <TreeDataTemplate ItemsSource="{Binding Children}">
-                                            <StackPanel Orientation="Horizontal" IsVisible="{Binding IsVisible}">
+                                            <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding Name}" 
                                                            Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"/>
                                                 <TextBlock Text=" (" Foreground="Gray"/>
@@ -220,7 +220,7 @@
                                          SelectedItem="{Binding RightDocument.SelectedTreeNode}">
                                     <TreeView.ItemTemplate>
                                         <TreeDataTemplate ItemsSource="{Binding Children}">
-                                            <StackPanel Orientation="Horizontal" IsVisible="{Binding IsVisible}">
+                                            <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding Name}" 
                                                            Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"/>
                                                 <TextBlock Text=" (" Foreground="Gray"/>

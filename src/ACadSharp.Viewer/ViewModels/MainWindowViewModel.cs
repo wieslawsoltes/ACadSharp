@@ -696,31 +696,24 @@ namespace ACadSharp.Viewer.ViewModels
             if (breadcrumbItem == null)
                 return;
 
-            // Navigate to the object in the breadcrumb
-            if (breadcrumbItem.Object != null)
+            // Create a temporary node to represent the breadcrumb item
+            var tempNode = new ACadSharp.Viewer.Interfaces.CadObjectTreeNode
             {
-                if (LeftDocument?.Document != null)
-                {
-                    LeftDocument.NavigateToObject(breadcrumbItem.Object, breadcrumbItem.Name);
-                }
+                Name = breadcrumbItem.Name,
+                ObjectType = breadcrumbItem.Type,
+                CadObject = breadcrumbItem.Object as ACadSharp.CadObject,
+                Handle = breadcrumbItem.Handle
+            };
 
-                if (RightDocument?.Document != null)
-                {
-                    RightDocument.NavigateToObject(breadcrumbItem.Object, breadcrumbItem.Name);
-                }
+            // Navigate to the object in the breadcrumb using tree navigation
+            if (LeftDocument?.Document != null)
+            {
+                LeftDocument.NavigateToTreeNode(tempNode);
             }
-            else if (breadcrumbItem.Handle.HasValue)
-            {
-                // Navigate by handle
-                if (LeftDocument?.Document != null)
-                {
-                    LeftDocument.NavigateToObjectByHandle(breadcrumbItem.Handle.Value, breadcrumbItem.Name);
-                }
 
-                if (RightDocument?.Document != null)
-                {
-                    RightDocument.NavigateToObjectByHandle(breadcrumbItem.Handle.Value, breadcrumbItem.Name);
-                }
+            if (RightDocument?.Document != null)
+            {
+                RightDocument.NavigateToTreeNode(tempNode);
             }
         }
     }

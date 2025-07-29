@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace ACadSharp.Viewer.Models
 {
@@ -209,24 +210,22 @@ namespace ACadSharp.Viewer.Models
         {
             BreadcrumbItems.Clear();
             
-            // Add document level
-            BreadcrumbItems.Add(new BreadcrumbItem
+            // Find the path from root to this object
+            var path = FindPathToObject(cadObject);
+            
+            // Build breadcrumb items from the path
+            for (int i = 0; i < path.Count; i++)
             {
-                Name = "Document",
-                Type = "Document",
-                Object = Document,
-                IsCurrent = false
-            });
-
-            // Add current object
-            BreadcrumbItems.Add(new BreadcrumbItem
-            {
-                Name = cadObject.GetType().Name,
-                Type = cadObject.GetType().Name,
-                Object = cadObject,
-                Handle = cadObject.Handle,
-                IsCurrent = true
-            });
+                var node = path[i];
+                BreadcrumbItems.Add(new BreadcrumbItem
+                {
+                    Name = node.Name,
+                    Type = node.ObjectType,
+                    Object = node.CadObject,
+                    Handle = node.Handle,
+                    IsCurrent = (i == path.Count - 1)
+                });
+            }
         }
 
         /// <summary>
@@ -237,24 +236,138 @@ namespace ACadSharp.Viewer.Models
         {
             BreadcrumbItems.Clear();
             
-            // Add document level
-            BreadcrumbItems.Add(new BreadcrumbItem
+            // Find the path from root to this node
+            var path = FindPathToNode(node);
+            
+            // Build breadcrumb items from the path
+            for (int i = 0; i < path.Count; i++)
             {
-                Name = "Document",
-                Type = "Document",
-                Object = Document,
-                IsCurrent = false
-            });
+                var pathNode = path[i];
+                BreadcrumbItems.Add(new BreadcrumbItem
+                {
+                    Name = pathNode.Name,
+                    Type = pathNode.ObjectType,
+                    Object = pathNode.CadObject,
+                    Handle = pathNode.Handle,
+                    IsCurrent = (i == path.Count - 1)
+                });
+            }
+        }
 
-            // Add current node
-            BreadcrumbItems.Add(new BreadcrumbItem
+        /// <summary>
+        /// Finds the path from root to a specific object
+        /// </summary>
+        /// <param name="targetObject">The target object</param>
+        /// <returns>List of nodes representing the path from root to the object</returns>
+        private List<CadObjectTreeNode> FindPathToObject(object targetObject)
+        {
+            var path = new List<CadObjectTreeNode>();
+            
+            foreach (var rootNode in ObjectTreeNodes)
             {
-                Name = node.Name,
-                Type = node.ObjectType,
-                Object = node.CadObject,
-                Handle = node.Handle,
-                IsCurrent = true
-            });
+                if (FindPathInNode(rootNode, targetObject, path))
+                {
+                    return path;
+                }
+            }
+            
+            // If not found in tree, return just document level
+            if (ObjectTreeNodes.Any())
+            {
+                path.Add(ObjectTreeNodes.First());
+            }
+            
+            return path;
+        }
+
+        /// <summary>
+        /// Finds the path from root to a specific node
+        /// </summary>
+        /// <param name="targetNode">The target node</param>
+        /// <returns>List of nodes representing the path from root to the target node</returns>
+        private List<CadObjectTreeNode> FindPathToNode(CadObjectTreeNode targetNode)
+        {
+            var path = new List<CadObjectTreeNode>();
+            
+            foreach (var rootNode in ObjectTreeNodes)
+            {
+                if (FindPathToNodeRecursive(rootNode, targetNode, path))
+                {
+                    return path;
+                }
+            }
+            
+            // If not found, return just document level
+            if (ObjectTreeNodes.Any())
+            {
+                path.Add(ObjectTreeNodes.First());
+            }
+            
+            return path;
+        }
+
+        /// <summary>
+        /// Recursively searches for a path to an object within a node and its children
+        /// </summary>
+        /// <param name="node">The current node</param>
+        /// <param name="targetObject">The target object</param>
+        /// <param name="path">The path being built</param>
+        /// <returns>True if the path was found</returns>
+        private bool FindPathInNode(CadObjectTreeNode node, object targetObject, List<CadObjectTreeNode> path)
+        {
+            // Add current node to path
+            path.Add(node);
+            
+            // Check if this node contains the target object
+            if (node.CadObject == targetObject)
+            {
+                return true;
+            }
+            
+            // Search in children
+            foreach (var child in node.Children)
+            {
+                if (FindPathInNode(child, targetObject, path))
+                {
+                    return true;
+                }
+            }
+            
+            // If not found in this branch, remove this node from path
+            path.RemoveAt(path.Count - 1);
+            return false;
+        }
+
+        /// <summary>
+        /// Recursively searches for a path to a specific node
+        /// </summary>
+        /// <param name="currentNode">The current node</param>
+        /// <param name="targetNode">The target node</param>
+        /// <param name="path">The path being built</param>
+        /// <returns>True if the path was found</returns>
+        private bool FindPathToNodeRecursive(CadObjectTreeNode currentNode, CadObjectTreeNode targetNode, List<CadObjectTreeNode> path)
+        {
+            // Add current node to path
+            path.Add(currentNode);
+            
+            // Check if this is the target node
+            if (currentNode == targetNode)
+            {
+                return true;
+            }
+            
+            // Search in children
+            foreach (var child in currentNode.Children)
+            {
+                if (FindPathToNodeRecursive(child, targetNode, path))
+                {
+                    return true;
+                }
+            }
+            
+            // If not found in this branch, remove this node from path
+            path.RemoveAt(path.Count - 1);
+            return false;
         }
 
         /// <summary>
@@ -309,6 +422,23 @@ namespace ACadSharp.Viewer.Models
                 {
                     NavigateToObject(targetObject, propertyName);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Navigates to a specific tree node (for breadcrumb navigation)
+        /// </summary>
+        /// <param name="targetNode">The target node to navigate to</param>
+        public void NavigateToTreeNode(CadObjectTreeNode targetNode)
+        {
+            if (targetNode == null) return;
+
+            // Find the node in the current tree structure
+            var actualNode = FindNodeInTree(targetNode);
+            if (actualNode != null)
+            {
+                // Select the node in the tree - this will update properties and breadcrumb
+                SelectedTreeNode = actualNode;
             }
         }
 
@@ -692,6 +822,68 @@ namespace ACadSharp.Viewer.Models
             }
             
             return properties;
+        }
+
+        /// <summary>
+        /// Finds a specific node in the current tree structure
+        /// </summary>
+        /// <param name="targetNode">The node to find</param>
+        /// <returns>The actual node in the tree, or null if not found</returns>
+        private CadObjectTreeNode? FindNodeInTree(CadObjectTreeNode targetNode)
+        {
+            foreach (var rootNode in ObjectTreeNodes)
+            {
+                var result = FindNodeInTreeRecursive(rootNode, targetNode);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Recursively searches for a node in the tree
+        /// </summary>
+        /// <param name="currentNode">The current node</param>
+        /// <param name="targetNode">The target node</param>
+        /// <returns>The matching node, or null if not found</returns>
+        private CadObjectTreeNode? FindNodeInTreeRecursive(CadObjectTreeNode currentNode, CadObjectTreeNode targetNode)
+        {
+            // Check if this is the target node (by comparing key properties)
+            if (IsSameNode(currentNode, targetNode))
+                return currentNode;
+
+            // Search in children
+            foreach (var child in currentNode.Children)
+            {
+                var result = FindNodeInTreeRecursive(child, targetNode);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Determines if two nodes represent the same object
+        /// </summary>
+        /// <param name="node1">First node</param>
+        /// <param name="node2">Second node</param>
+        /// <returns>True if the nodes represent the same object</returns>
+        private bool IsSameNode(CadObjectTreeNode node1, CadObjectTreeNode node2)
+        {
+            // Compare by handle if available
+            if (node1.Handle.HasValue && node2.Handle.HasValue)
+            {
+                return node1.Handle.Value == node2.Handle.Value;
+            }
+
+            // Compare by object reference if available
+            if (node1.CadObject != null && node2.CadObject != null)
+            {
+                return node1.CadObject == node2.CadObject;
+            }
+
+            // Compare by name and type for non-object nodes
+            return node1.Name == node2.Name && node1.ObjectType == node2.ObjectType;
         }
 
         /// <summary>

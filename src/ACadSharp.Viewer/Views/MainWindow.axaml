@@ -106,14 +106,77 @@
                         <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
 
                         <!-- Properties Panel -->
-                        <Grid Grid.Column="2" RowDefinitions="Auto,*">
+                        <Grid Grid.Column="2" RowDefinitions="Auto,Auto,*">
                             <TextBlock Grid.Row="0" Text="Properties" FontWeight="SemiBold" 
                                        Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-                            <DataGrid Grid.Row="1" ItemsSource="{Binding LeftDocument.SelectedObjectProperties}" 
+                            
+                            <!-- Breadcrumb Navigation -->
+                            <Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                    BorderThickness="0,0,0,1" Padding="10,5">
+                                <ItemsControl ItemsSource="{Binding LeftDocument.BreadcrumbItems}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,5,0">
+                                                <Button Content="{Binding Name}" 
+                                                        Click="BreadcrumbButton_Click"
+                                                        Tag="{Binding}"
+                                                        IsEnabled="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Padding="5,2"
+                                                        Margin="0,0,2,0">
+                                                    <Button.Styles>
+                                                        <Style Selector="Button:pointerover">
+                                                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                                        </Style>
+                                                        <Style Selector="Button:disabled">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                        </Style>
+                                                    </Button.Styles>
+                                                </Button>
+                                                <TextBlock Text=" > " Foreground="Gray" VerticalAlignment="Center" 
+                                                           IsVisible="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                            
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding LeftDocument.SelectedObjectProperties}" 
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Property" Binding="{Binding Name}" Width="*" CanUserResize="True"/>
-                                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*" CanUserResize="True"/>
+                                    <DataGridTemplateColumn Header="Value" Width="2*" CanUserResize="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="{Binding Value}" 
+                                                        Click="PropertyButton_Click"
+                                                        Tag="{Binding}"
+                                                        IsEnabled="{Binding IsNavigable}"
+                                                        HorizontalAlignment="Left"
+                                                        HorizontalContentAlignment="Left"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Padding="0"
+                                                        Margin="0">
+                                                    <Button.Styles>
+                                                        <Style Selector="Button:pointerover">
+                                                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                                        </Style>
+                                                        <Style Selector="Button:disabled">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                        </Style>
+                                                    </Button.Styles>
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*" CanUserResize="True"/>
                                 </DataGrid.Columns>
                             </DataGrid>
@@ -169,14 +232,77 @@
                         <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
 
                         <!-- Properties Panel -->
-                        <Grid Grid.Column="2" RowDefinitions="Auto,*">
+                        <Grid Grid.Column="2" RowDefinitions="Auto,Auto,*">
                             <TextBlock Grid.Row="0" Text="Properties" FontWeight="SemiBold" 
                                        Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-                            <DataGrid Grid.Row="1" ItemsSource="{Binding RightDocument.SelectedObjectProperties}" 
+                            
+                            <!-- Breadcrumb Navigation -->
+                            <Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                    BorderThickness="0,0,0,1" Padding="10,5">
+                                <ItemsControl ItemsSource="{Binding RightDocument.BreadcrumbItems}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,5,0">
+                                                <Button Content="{Binding Name}" 
+                                                        Click="BreadcrumbButton_Click"
+                                                        Tag="{Binding}"
+                                                        IsEnabled="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Padding="5,2"
+                                                        Margin="0,0,2,0">
+                                                    <Button.Styles>
+                                                        <Style Selector="Button:pointerover">
+                                                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                                        </Style>
+                                                        <Style Selector="Button:disabled">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                        </Style>
+                                                    </Button.Styles>
+                                                </Button>
+                                                <TextBlock Text=" > " Foreground="Gray" VerticalAlignment="Center" 
+                                                           IsVisible="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                            
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding RightDocument.SelectedObjectProperties}" 
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Property" Binding="{Binding Name}" Width="*" CanUserResize="True"/>
-                                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="2*" CanUserResize="True"/>
+                                    <DataGridTemplateColumn Header="Value" Width="2*" CanUserResize="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="{Binding Value}" 
+                                                        Click="PropertyButton_Click"
+                                                        Tag="{Binding}"
+                                                        IsEnabled="{Binding IsNavigable}"
+                                                        HorizontalAlignment="Left"
+                                                        HorizontalContentAlignment="Left"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Padding="0"
+                                                        Margin="0">
+                                                    <Button.Styles>
+                                                        <Style Selector="Button:pointerover">
+                                                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                                        </Style>
+                                                        <Style Selector="Button:disabled">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                        </Style>
+                                                    </Button.Styles>
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*" CanUserResize="True"/>
                                 </DataGrid.Columns>
                             </DataGrid>

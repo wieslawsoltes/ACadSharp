@@ -96,6 +96,11 @@ namespace ACadSharp.Viewer.Models
         public ObservableCollection<ObjectProperty> SelectedObjectProperties { get; } = new();
 
         /// <summary>
+        /// Collection of breadcrumb items for navigation
+        /// </summary>
+        public ObservableCollection<BreadcrumbItem> BreadcrumbItems { get; } = new();
+
+        /// <summary>
         /// Currently selected object
         /// </summary>
         public CadObject? SelectedObject
@@ -161,6 +166,9 @@ namespace ACadSharp.Viewer.Models
                     // Update the selected object
                     SelectedObject = SelectedTreeNode.CadObject;
                     
+                    // Update breadcrumb navigation
+                    UpdateBreadcrumbNavigation(SelectedTreeNode.CadObject);
+                    
                     // Get properties for the selected object
                     var properties = GetObjectProperties(SelectedTreeNode.CadObject);
                     
@@ -174,6 +182,7 @@ namespace ACadSharp.Viewer.Models
                 {
                     // Handle special cases like Document and Header nodes
                     SelectedObject = null;
+                    UpdateBreadcrumbNavigation(SelectedTreeNode);
                     var properties = GetSpecialNodeProperties(SelectedTreeNode);
                     
                     // Add properties to the collection
@@ -187,8 +196,226 @@ namespace ACadSharp.Viewer.Models
             {
                 // Clear properties if no object is selected
                 SelectedObjectProperties.Clear();
+                BreadcrumbItems.Clear();
                 SelectedObject = null;
             }
+        }
+
+        /// <summary>
+        /// Updates the breadcrumb navigation for the current object
+        /// </summary>
+        /// <param name="cadObject">The CAD object</param>
+        private void UpdateBreadcrumbNavigation(CadObject cadObject)
+        {
+            BreadcrumbItems.Clear();
+            
+            // Add document level
+            BreadcrumbItems.Add(new BreadcrumbItem
+            {
+                Name = "Document",
+                Type = "Document",
+                Object = Document,
+                IsCurrent = false
+            });
+
+            // Add current object
+            BreadcrumbItems.Add(new BreadcrumbItem
+            {
+                Name = cadObject.GetType().Name,
+                Type = cadObject.GetType().Name,
+                Object = cadObject,
+                Handle = cadObject.Handle,
+                IsCurrent = true
+            });
+        }
+
+        /// <summary>
+        /// Updates the breadcrumb navigation for a tree node
+        /// </summary>
+        /// <param name="node">The tree node</param>
+        private void UpdateBreadcrumbNavigation(CadObjectTreeNode node)
+        {
+            BreadcrumbItems.Clear();
+            
+            // Add document level
+            BreadcrumbItems.Add(new BreadcrumbItem
+            {
+                Name = "Document",
+                Type = "Document",
+                Object = Document,
+                IsCurrent = false
+            });
+
+            // Add current node
+            BreadcrumbItems.Add(new BreadcrumbItem
+            {
+                Name = node.Name,
+                Type = node.ObjectType,
+                Object = node.CadObject,
+                Handle = node.Handle,
+                IsCurrent = true
+            });
+        }
+
+        /// <summary>
+        /// Navigates to a specific object and updates the breadcrumb
+        /// </summary>
+        /// <param name="targetObject">The object to navigate to</param>
+        /// <param name="propertyName">The property name that led to this navigation</param>
+        public void NavigateToObject(object targetObject, string propertyName)
+        {
+            if (targetObject == null) return;
+
+            // First, try to find the object in the tree
+            var targetNode = FindObjectInTree(targetObject);
+            
+            if (targetNode != null)
+            {
+                // Select the node in the tree - this will update properties and breadcrumb
+                SelectedTreeNode = targetNode;
+            }
+            else
+            {
+                // If not found in tree, just update properties and breadcrumb
+                UpdateBreadcrumbForObject(targetObject, propertyName);
+                var properties = GetObjectPropertiesForAnyObject(targetObject);
+                
+                SelectedObjectProperties.Clear();
+                foreach (var property in properties)
+                {
+                    SelectedObjectProperties.Add(property);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Navigates to a specific object by handle, prioritizing tree navigation
+        /// </summary>
+        /// <param name="handle">The handle of the object to navigate to</param>
+        /// <param name="propertyName">The property name that led to this navigation</param>
+        public void NavigateToObjectByHandle(ulong handle, string propertyName = "")
+        {
+            var targetNode = FindNodeByHandle(ObjectTreeNodes, handle);
+            if (targetNode != null)
+            {
+                // Select the node in the tree - this will update properties and breadcrumb
+                SelectedTreeNode = targetNode;
+            }
+            else
+            {
+                // If not found in tree, try to find the object in the document
+                var targetObject = FindObjectByHandle(handle);
+                if (targetObject != null)
+                {
+                    NavigateToObject(targetObject, propertyName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates breadcrumb navigation for an object that's not in the tree
+        /// </summary>
+        /// <param name="targetObject">The target object</param>
+        /// <param name="propertyName">The property name that led to this navigation</param>
+        private void UpdateBreadcrumbForObject(object targetObject, string propertyName)
+        {
+            BreadcrumbItems.Clear();
+            
+            // Add document level
+            BreadcrumbItems.Add(new BreadcrumbItem
+            {
+                Name = "Document",
+                Type = "Document",
+                Object = Document,
+                IsCurrent = false
+            });
+
+            // Add the property that was clicked
+            BreadcrumbItems.Add(new BreadcrumbItem
+            {
+                Name = propertyName,
+                Type = "Property",
+                Object = null,
+                IsCurrent = false
+            });
+
+            // Add current object
+            BreadcrumbItems.Add(new BreadcrumbItem
+            {
+                Name = targetObject.GetType().Name,
+                Type = targetObject.GetType().Name,
+                Object = targetObject,
+                IsCurrent = true
+            });
+        }
+
+        /// <summary>
+        /// Finds an object in the tree by searching recursively
+        /// </summary>
+        /// <param name="targetObject">The object to find</param>
+        /// <returns>The tree node containing the object, or null if not found</returns>
+        private CadObjectTreeNode? FindObjectInTree(object targetObject)
+        {
+            foreach (var node in ObjectTreeNodes)
+            {
+                var result = FindObjectInNode(node, targetObject);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Recursively searches for an object in a tree node and its children
+        /// </summary>
+        /// <param name="node">The node to search in</param>
+        /// <param name="targetObject">The object to find</param>
+        /// <returns>The tree node containing the object, or null if not found</returns>
+        private CadObjectTreeNode? FindObjectInNode(CadObjectTreeNode node, object targetObject)
+        {
+            if (node.CadObject == targetObject)
+                return node;
+
+            foreach (var child in node.Children)
+            {
+                var result = FindObjectInNode(child, targetObject);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Recursively finds a tree node by handle
+        /// </summary>
+        /// <param name="nodes">The nodes to search in</param>
+        /// <param name="handle">The handle to find</param>
+        /// <returns>The tree node with the specified handle, or null if not found</returns>
+        private CadObjectTreeNode? FindNodeByHandle(ObservableCollection<CadObjectTreeNode> nodes, ulong handle)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Handle == handle)
+                    return node;
+
+                var result = FindNodeByHandle(node.Children, handle);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Finds an object in the document by handle
+        /// </summary>
+        /// <param name="handle">The handle to find</param>
+        /// <returns>The object with the specified handle, or null if not found</returns>
+        private CadObject? FindObjectByHandle(ulong handle)
+        {
+            if (Document == null) return null;
+
+            // Try to get the object directly from the document
+            return Document.GetCadObject(handle);
         }
 
         private IEnumerable<ObjectProperty> GetObjectProperties(CadObject cadObject)
@@ -208,12 +435,96 @@ namespace ACadSharp.Viewer.Models
                         var value = prop.GetValue(cadObject);
                         var stringValue = value?.ToString() ?? "null";
                         
-                        properties.Add(new ObjectProperty
+                        var objectProperty = new ObjectProperty
                         {
                             Name = prop.Name,
                             Value = stringValue,
                             Type = prop.PropertyType.Name
+                        };
+
+                        // Check if this property is navigable (an object type)
+                        if (value != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
+                        {
+                            objectProperty.IsNavigable = true;
+                            objectProperty.PropertyObject = value;
+                            
+                            // If it's a CadObject, get its handle
+                            if (value is CadObject cadObj)
+                            {
+                                objectProperty.ObjectHandle = cadObj.Handle;
+                            }
+                        }
+
+                        properties.Add(objectProperty);
+                    }
+                    catch
+                    {
+                        // Skip properties that can't be read
+                        properties.Add(new ObjectProperty
+                        {
+                            Name = prop.Name,
+                            Value = "Error reading property",
+                            Type = prop.PropertyType.Name
                         });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                properties.Add(new ObjectProperty
+                {
+                    Name = "Error",
+                    Value = ex.Message,
+                    Type = "Exception"
+                });
+            }
+            
+            return properties;
+        }
+
+        /// <summary>
+        /// Gets properties for any object type (not just CadObject)
+        /// </summary>
+        /// <param name="obj">The object to get properties for</param>
+        /// <returns>Collection of object properties</returns>
+        private IEnumerable<ObjectProperty> GetObjectPropertiesForAnyObject(object obj)
+        {
+            var properties = new List<ObjectProperty>();
+            
+            try
+            {
+                // Get all public properties of the object
+                var type = obj.GetType();
+                var publicProperties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                
+                foreach (var prop in publicProperties)
+                {
+                    try
+                    {
+                        var value = prop.GetValue(obj);
+                        var stringValue = value?.ToString() ?? "null";
+                        
+                        var objectProperty = new ObjectProperty
+                        {
+                            Name = prop.Name,
+                            Value = stringValue,
+                            Type = prop.PropertyType.Name
+                        };
+
+                        // Check if this property is navigable (an object type)
+                        if (value != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
+                        {
+                            objectProperty.IsNavigable = true;
+                            objectProperty.PropertyObject = value;
+                            
+                            // If it's a CadObject, get its handle
+                            if (value is CadObject cadObj)
+                            {
+                                objectProperty.ObjectHandle = cadObj.Handle;
+                            }
+                        }
+
+                        properties.Add(objectProperty);
                     }
                     catch
                     {
@@ -336,12 +647,26 @@ namespace ACadSharp.Viewer.Models
                                 var value = prop.GetValue(header);
                                 var stringValue = value?.ToString() ?? "null";
                                 
-                                properties.Add(new ObjectProperty
+                                var objectProperty = new ObjectProperty
                                 {
                                     Name = prop.Name,
                                     Value = stringValue,
                                     Type = prop.PropertyType.Name
-                                });
+                                };
+
+                                // Check if this property is navigable
+                                if (value != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
+                                {
+                                    objectProperty.IsNavigable = true;
+                                    objectProperty.PropertyObject = value;
+                                    
+                                    if (value is CadObject cadObj)
+                                    {
+                                        objectProperty.ObjectHandle = cadObj.Handle;
+                                    }
+                                }
+
+                                properties.Add(objectProperty);
                             }
                             catch
                             {
@@ -383,6 +708,7 @@ namespace ACadSharp.Viewer.Models
             LoadProgress = 0;
             ObjectTreeNodes.Clear();
             SelectedObjectProperties.Clear();
+            BreadcrumbItems.Clear();
             SelectedObject = null;
         }
     }

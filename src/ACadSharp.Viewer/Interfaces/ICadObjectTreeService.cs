@@ -148,6 +148,9 @@ namespace ACadSharp.Viewer.Interfaces
         private string _type = string.Empty;
         private bool _isReadOnly;
         private bool _isHighlighted;
+        private bool _isNavigable;
+        private object? _propertyObject;
+        private ulong? _objectHandle;
 
         public string Name 
         { 
@@ -180,6 +183,90 @@ namespace ACadSharp.Viewer.Interfaces
         { 
             get => _isHighlighted; 
             set => SetProperty(ref _isHighlighted, value); 
+        }
+
+        /// <summary>
+        /// Indicates if this property is navigable (clickable to view object properties)
+        /// </summary>
+        public bool IsNavigable 
+        { 
+            get => _isNavigable; 
+            set => SetProperty(ref _isNavigable, value); 
+        }
+
+        /// <summary>
+        /// The actual object value of this property (for navigation)
+        /// </summary>
+        public object? PropertyObject 
+        { 
+            get => _propertyObject; 
+            set => SetProperty(ref _propertyObject, value); 
+        }
+
+        /// <summary>
+        /// Handle of the object this property references (for tree navigation)
+        /// </summary>
+        public ulong? ObjectHandle 
+        { 
+            get => _objectHandle; 
+            set => SetProperty(ref _objectHandle, value); 
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Represents an item in the breadcrumb navigation
+    /// </summary>
+    public class BreadcrumbItem : INotifyPropertyChanged
+    {
+        private string _name = string.Empty;
+        private string _type = string.Empty;
+        private object? _object;
+        private ulong? _handle;
+        private bool _isCurrent;
+
+        public string Name 
+        { 
+            get => _name; 
+            set => SetProperty(ref _name, value); 
+        }
+
+        public string Type 
+        { 
+            get => _type; 
+            set => SetProperty(ref _type, value); 
+        }
+
+        public object? Object 
+        { 
+            get => _object; 
+            set => SetProperty(ref _object, value); 
+        }
+
+        public ulong? Handle 
+        { 
+            get => _handle; 
+            set => SetProperty(ref _handle, value); 
+        }
+
+        public bool IsCurrent 
+        { 
+            get => _isCurrent; 
+            set => SetProperty(ref _isCurrent, value); 
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -48,6 +48,8 @@ namespace ACadSharp.Viewer.ViewModels
             LoadLeftFileNoParamCommand = ReactiveCommand.CreateFromTask(LoadLeftFileNoParamAsync);
             LoadRightFileNoParamCommand = ReactiveCommand.CreateFromTask(LoadRightFileNoParamAsync);
             ClearSearchCommand = ReactiveCommand.Create(ClearSearch);
+            NavigateToPropertyCommand = ReactiveCommand.Create<ObjectProperty>(NavigateToProperty);
+            NavigateToBreadcrumbCommand = ReactiveCommand.Create<BreadcrumbItem>(NavigateToBreadcrumb);
 
             // Subscribe to progress events
             _cadFileService.LoadProgressChanged += OnLoadProgressChanged;
@@ -88,7 +90,7 @@ namespace ACadSharp.Viewer.ViewModels
         public CadDocumentModel LeftDocument
         {
             get => _leftDocument;
-            set => this.RaiseAndSetIfChanged(ref _leftDocument, value);
+            set => this.RaiseAndSetIfChanged(ref _leftDocument, value ?? new CadDocumentModel());
         }
 
         /// <summary>
@@ -97,7 +99,7 @@ namespace ACadSharp.Viewer.ViewModels
         public CadDocumentModel RightDocument
         {
             get => _rightDocument;
-            set => this.RaiseAndSetIfChanged(ref _rightDocument, value);
+            set => this.RaiseAndSetIfChanged(ref _rightDocument, value ?? new CadDocumentModel());
         }
 
         /// <summary>
@@ -144,6 +146,16 @@ namespace ACadSharp.Viewer.ViewModels
         /// Command to clear search results
         /// </summary>
         public ICommand ClearSearchCommand { get; }
+
+        /// <summary>
+        /// Command to navigate to an object property
+        /// </summary>
+        public ICommand NavigateToPropertyCommand { get; }
+
+        /// <summary>
+        /// Command to navigate to a breadcrumb item
+        /// </summary>
+        public ICommand NavigateToBreadcrumbCommand { get; }
 
         /// <summary>
         /// Loads a file into the left panel (DWG)
@@ -289,14 +301,14 @@ namespace ACadSharp.Viewer.ViewModels
                 };
 
                 // Search in left document
-                if (LeftDocument.Document != null)
+                if (LeftDocument?.Document != null && LeftDocument?.ObjectTreeNodes != null)
                 {
                     var leftResults = await _cadObjectTreeService.SearchObjectsAsync(LeftDocument.Document, searchCriteria);
                     await FilterAndHighlightTree(LeftDocument.ObjectTreeNodes, leftResults, searchText);
                 }
 
                 // Search in right document
-                if (RightDocument.Document != null)
+                if (RightDocument?.Document != null && RightDocument?.ObjectTreeNodes != null)
                 {
                     var rightResults = await _cadObjectTreeService.SearchObjectsAsync(RightDocument.Document, searchCriteria);
                     await FilterAndHighlightTree(RightDocument.ObjectTreeNodes, rightResults, searchText);
@@ -448,14 +460,14 @@ namespace ACadSharp.Viewer.ViewModels
                 node.IsExpanded = hasMatchingChild; // Auto-expand nodes with matches
 
                 // Highlight properties if this node is selected
-                if (isDirectMatch && node == LeftDocument.SelectedTreeNode)
+                if (isDirectMatch && node == LeftDocument?.SelectedTreeNode && LeftDocument?.SelectedObjectProperties != null)
                 {
                     lock (_highlightLock)
                     {
                         HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
                     }
                 }
-                else if (isDirectMatch && node == RightDocument.SelectedTreeNode)
+                else if (isDirectMatch && node == RightDocument?.SelectedTreeNode && RightDocument?.SelectedObjectProperties != null)
                 {
                     lock (_highlightLock)
                     {
@@ -478,25 +490,39 @@ namespace ACadSharp.Viewer.ViewModels
         {
             if (properties == null) return;
             
-            if (string.IsNullOrEmpty(searchText))
+            try
             {
-                // Create a copy of the collection to avoid concurrent modification issues
-                var propertiesToClear = properties.ToList();
-                foreach (var prop in propertiesToClear)
+                if (string.IsNullOrEmpty(searchText))
                 {
-                    prop.IsHighlighted = false;
+                    // Create a copy of the collection to avoid concurrent modification issues
+                    var propertiesToClear = properties.ToList();
+                    foreach (var prop in propertiesToClear)
+                    {
+                        if (prop != null)
+                        {
+                            prop.IsHighlighted = false;
+                        }
+                    }
+                    return;
                 }
-                return;
-            }
 
-            var searchLower = searchText.ToLowerInvariant();
-            // Create a copy of the collection to avoid concurrent modification issues
-            var propertiesToHighlight = properties.ToList();
-            foreach (var prop in propertiesToHighlight)
+                var searchLower = searchText.ToLowerInvariant();
+                // Create a copy of the collection to avoid concurrent modification issues
+                var propertiesToHighlight = properties.ToList();
+                foreach (var prop in propertiesToHighlight)
+                {
+                    if (prop != null)
+                    {
+                        prop.IsHighlighted = prop.Name.ToLowerInvariant().Contains(searchLower) ||
+                                           prop.Value.ToLowerInvariant().Contains(searchLower) ||
+                                           prop.Type.ToLowerInvariant().Contains(searchLower);
+                    }
+                }
+            }
+            catch (Exception ex)
             {
-                prop.IsHighlighted = prop.Name.ToLowerInvariant().Contains(searchLower) ||
-                                   prop.Value.ToLowerInvariant().Contains(searchLower) ||
-                                   prop.Type.ToLowerInvariant().Contains(searchLower);
+                // Log the exception but don't crash the application
+                System.Diagnostics.Debug.WriteLine($"Error in HighlightProperties: {ex.Message}");
             }
         }
 
@@ -508,12 +534,16 @@ namespace ACadSharp.Viewer.ViewModels
             lock (_highlightLock)
             {
                 // Clear tree highlighting and visibility
-                ClearTreeHighlighting(LeftDocument.ObjectTreeNodes);
-                ClearTreeHighlighting(RightDocument.ObjectTreeNodes);
+                if (LeftDocument?.ObjectTreeNodes != null)
+                    ClearTreeHighlighting(LeftDocument.ObjectTreeNodes);
+                if (RightDocument?.ObjectTreeNodes != null)
+                    ClearTreeHighlighting(RightDocument.ObjectTreeNodes);
 
                 // Clear property highlighting
-                ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
-                ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
+                if (LeftDocument?.SelectedObjectProperties != null)
+                    ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
+                if (RightDocument?.SelectedObjectProperties != null)
+                    ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
             }
         }
 
@@ -525,18 +555,29 @@ namespace ACadSharp.Viewer.ViewModels
         {
             if (nodes == null) return;
             
-            // Create a copy of the collection to avoid concurrent modification issues
-            var nodesCopy = nodes.ToList();
-            foreach (var node in nodesCopy)
+            try
             {
-                node.IsHighlighted = false;
-                node.IsVisible = true;
-                node.IsExpanded = false; // Reset expansion state
-
-                if (node.Children.Any())
+                // Create a copy of the collection to avoid concurrent modification issues
+                var nodesCopy = nodes.ToList();
+                foreach (var node in nodesCopy)
                 {
-                    ClearTreeHighlighting(node.Children);
+                    if (node != null)
+                    {
+                        node.IsHighlighted = false;
+                        node.IsVisible = true;
+                        node.IsExpanded = false; // Reset expansion state
+
+                        if (node.Children?.Any() == true)
+                        {
+                            ClearTreeHighlighting(node.Children);
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception but don't crash the application
+                System.Diagnostics.Debug.WriteLine($"Error in ClearTreeHighlighting: {ex.Message}");
             }
         }
 
@@ -548,11 +589,22 @@ namespace ACadSharp.Viewer.ViewModels
         {
             if (properties == null) return;
             
-            // Create a copy of the collection to avoid concurrent modification issues
-            var propertiesCopy = properties.ToList();
-            foreach (var prop in propertiesCopy)
+            try
             {
-                prop.IsHighlighted = false;
+                // Create a copy of the collection to avoid concurrent modification issues
+                var propertiesCopy = properties.ToList();
+                foreach (var prop in propertiesCopy)
+                {
+                    if (prop != null)
+                    {
+                        prop.IsHighlighted = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception but don't crash the application
+                System.Diagnostics.Debug.WriteLine($"Error in ClearPropertyHighlighting: {ex.Message}");
             }
         }
 
@@ -570,21 +622,23 @@ namespace ACadSharp.Viewer.ViewModels
                 {
                     if (string.IsNullOrWhiteSpace(SearchText))
                     {
-                        ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
-                        ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
+                        if (LeftDocument?.SelectedObjectProperties != null)
+                            ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
+                        if (RightDocument?.SelectedObjectProperties != null)
+                            ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
                         return;
                     }
 
                     var searchText = SearchText.Trim();
                     
                     // Highlight properties for left document
-                    if (LeftDocument.SelectedTreeNode != null)
+                    if (LeftDocument?.SelectedTreeNode != null && LeftDocument?.SelectedObjectProperties != null)
                     {
                         HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
                     }
 
                     // Highlight properties for right document
-                    if (RightDocument.SelectedTreeNode != null)
+                    if (RightDocument?.SelectedTreeNode != null && RightDocument?.SelectedObjectProperties != null)
                     {
                         HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
                     }
@@ -592,6 +646,80 @@ namespace ACadSharp.Viewer.ViewModels
                 finally
                 {
                     _isHighlighting = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Navigates to a property object when clicked
+        /// </summary>
+        /// <param name="property">The property to navigate to</param>
+        public void NavigateToProperty(ObjectProperty property)
+        {
+            if (property?.PropertyObject == null || !property.IsNavigable)
+                return;
+
+            // If the property has a handle, try to navigate to the object in the tree first
+            if (property.ObjectHandle.HasValue)
+            {
+                if (LeftDocument?.Document != null)
+                {
+                    LeftDocument.NavigateToObjectByHandle(property.ObjectHandle.Value, property.Name);
+                }
+
+                if (RightDocument?.Document != null)
+                {
+                    RightDocument.NavigateToObjectByHandle(property.ObjectHandle.Value, property.Name);
+                }
+            }
+            else
+            {
+                // Otherwise, navigate directly to the object
+                if (LeftDocument?.Document != null)
+                {
+                    LeftDocument.NavigateToObject(property.PropertyObject, property.Name);
+                }
+
+                if (RightDocument?.Document != null)
+                {
+                    RightDocument.NavigateToObject(property.PropertyObject, property.Name);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Navigates to a breadcrumb item when clicked
+        /// </summary>
+        /// <param name="breadcrumbItem">The breadcrumb item to navigate to</param>
+        public void NavigateToBreadcrumb(BreadcrumbItem breadcrumbItem)
+        {
+            if (breadcrumbItem == null)
+                return;
+
+            // Navigate to the object in the breadcrumb
+            if (breadcrumbItem.Object != null)
+            {
+                if (LeftDocument?.Document != null)
+                {
+                    LeftDocument.NavigateToObject(breadcrumbItem.Object, breadcrumbItem.Name);
+                }
+
+                if (RightDocument?.Document != null)
+                {
+                    RightDocument.NavigateToObject(breadcrumbItem.Object, breadcrumbItem.Name);
+                }
+            }
+            else if (breadcrumbItem.Handle.HasValue)
+            {
+                // Navigate by handle
+                if (LeftDocument?.Document != null)
+                {
+                    LeftDocument.NavigateToObjectByHandle(breadcrumbItem.Handle.Value, breadcrumbItem.Name);
+                }
+
+                if (RightDocument?.Document != null)
+                {
+                    RightDocument.NavigateToObjectByHandle(breadcrumbItem.Handle.Value, breadcrumbItem.Name);
                 }
             }
         }

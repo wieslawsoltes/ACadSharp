@@ -243,5 +243,23 @@ namespace ACadSharp.Viewer.Views
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
             return extension == ".dwg" || extension == ".dxf";
         }
+
+        private void BreadcrumbButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is ACadSharp.Viewer.Interfaces.BreadcrumbItem breadcrumbItem)
+            {
+                var viewModel = DataContext as MainWindowViewModel;
+                viewModel?.NavigateToBreadcrumb(breadcrumbItem);
+            }
+        }
+
+        private void PropertyButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is ACadSharp.Viewer.Interfaces.ObjectProperty property)
+            {
+                var viewModel = DataContext as MainWindowViewModel;
+                viewModel?.NavigateToProperty(property);
+            }
+        }
     }
 } 

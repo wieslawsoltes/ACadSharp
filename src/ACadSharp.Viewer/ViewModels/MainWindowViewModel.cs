@@ -37,6 +37,10 @@ public class MainWindowViewModel : ViewModelBase
     private DateTime _lastRestoreTime = DateTime.MinValue;
     private readonly TimeSpan _restoreDebounceTime = TimeSpan.FromMilliseconds(100);
     private ObservableCollection<string> _searchSuggestions = new();
+    
+    // Expanded state tracking
+    private Dictionary<string, bool> _leftDocumentExpandedState = new();
+    private Dictionary<string, bool> _rightDocumentExpandedState = new();
 
     public MainWindowViewModel(IFileDialogService? fileDialogService = null)
     {
@@ -310,6 +314,8 @@ public class MainWindowViewModel : ViewModelBase
                 }
                 // Initialize filtered collection with all nodes visible
                 LeftDocument.UpdateFilteredTreeNodes();
+                // Capture initial expanded state (typically all collapsed)
+                CaptureExpandedState(LeftDocument, _leftDocumentExpandedState);
                 // Clear search results when new file is loaded
                 RestoreTreeViewState();
             });
@@ -376,6 +382,8 @@ public class MainWindowViewModel : ViewModelBase
                 }
                 // Initialize filtered collection with all nodes visible
                 RightDocument.UpdateFilteredTreeNodes();
+                // Capture initial expanded state (typically all collapsed)
+                CaptureExpandedState(RightDocument, _rightDocumentExpandedState);
                 // Clear search results when new file is loaded
                 RestoreTreeViewState();
             });
@@ -408,6 +416,10 @@ public class MainWindowViewModel : ViewModelBase
         try
         {
             IsSearching = true;
+
+            // Capture the current expanded state before searching
+            CaptureExpandedState(LeftDocument, _leftDocumentExpandedState);
+            CaptureExpandedState(RightDocument, _rightDocumentExpandedState);
 
             var searchText = SearchText.Trim();
             var searchCriteria = new SearchCriteria
@@ -529,17 +541,12 @@ public class MainWindowViewModel : ViewModelBase
             {
                 var resultHandles = searchResults.Select(r => r.Handle).ToHashSet();
                 
-                // First, expand all parent nodes of matches to ensure proper visibility
-                ExpandParentNodesOfMatches(documentModel.ObjectTreeNodes, resultHandles, searchText);
-                
-                // Then filter and highlight the nodes
-                FilterAndHighlightNodes(documentModel.ObjectTreeNodes, resultHandles, searchText);
+                // Filter and highlight the nodes while preserving expanded state
+                var expandedStateDict = documentModel == LeftDocument ? _leftDocumentExpandedState : _rightDocumentExpandedState;
+                FilterAndHighlightNodes(documentModel.ObjectTreeNodes, resultHandles, searchText, expandedStateDict);
                 
                 // Update the filtered tree
                 documentModel.UpdateFilteredTreeNodes();
-                
-                // Apply expansion state to the filtered tree
-                ApplyExpansionStateToFilteredTree(documentModel.FilteredObjectTreeNodes, resultHandles, searchText);
             }
             catch (Exception ex)
             {
@@ -554,8 +561,10 @@ public class MainWindowViewModel : ViewModelBase
     /// <param name="nodes">Nodes to process</param>
     /// <param name="resultHandles">Set of handles that match the search</param>
     /// <param name="searchText">Search text for property highlighting</param>
+    /// <param name="expandedStateDict">Dictionary containing the original expanded state</param>
+    /// <param name="currentPath">Current path to build node paths</param>
     /// <returns>True if any node in this branch has a match</returns>
-    private bool FilterAndHighlightNodes(ObservableCollection<CadObjectTreeNode> nodes, HashSet<ulong> resultHandles, string searchText)
+    private bool FilterAndHighlightNodes(ObservableCollection<CadObjectTreeNode> nodes, HashSet<ulong> resultHandles, string searchText, Dictionary<string, bool> expandedStateDict, string currentPath = "")
     {
         if (nodes == null) return false;
             
@@ -567,6 +576,9 @@ public class MainWindowViewModel : ViewModelBase
         {
             bool hasMatchingChild = false;
             bool isDirectMatch = false;
+
+            // Build the path for this node
+            var nodePath = string.IsNullOrEmpty(currentPath) ? node.Name : $"{currentPath}/{node.Name}";
 
             // Check if this node directly matches
             if (node.CadObject != null && resultHandles.Contains(node.CadObject.Handle))
@@ -590,7 +602,7 @@ public class MainWindowViewModel : ViewModelBase
             // Recursively check children first
             if (node.Children.Any())
             {
-                var childHasMatch = FilterAndHighlightNodes(node.Children, resultHandles, searchText);
+                var childHasMatch = FilterAndHighlightNodes(node.Children, resultHandles, searchText, expandedStateDict, nodePath);
                 hasMatchingChild = hasMatchingChild || childHasMatch;
             }
 
@@ -601,10 +613,18 @@ public class MainWindowViewModel : ViewModelBase
             node.IsVisible = hasMatchingChild;
             node.IsHighlighted = isDirectMatch;
                 
-            // Auto-expand nodes that have matches (either direct or in children)
-            // This ensures the path to matching nodes is visible
-            if (hasMatchingChild)
+            // Preserve the original expanded state instead of auto-expanding
+            // Only expand if:
+            // 1. The node was originally expanded, OR
+            // 2. The node needs to be expanded to show direct matches in children
+            if (expandedStateDict.TryGetValue(nodePath, out bool wasExpanded))
             {
+                node.IsExpanded = wasExpanded;
+            }
+            else if (hasMatchingChild && !isDirectMatch)
+            {
+                // If we don't have stored state but have matching children,
+                // expand to show the path to matches (but only if this node itself is not a direct match)
                 node.IsExpanded = true;
             }
 
@@ -864,7 +884,7 @@ public class MainWindowViewModel : ViewModelBase
             RightDocument.SelectedTreeNode = null;
         }
 
-        // Ensure all nodes are visible and update the filtered collection
+        // Ensure all nodes are visible and restore their original expanded state
         if (LeftDocument?.ObjectTreeNodes != null)
         {
             System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Left document has {LeftDocument.ObjectTreeNodes.Count} root nodes");
@@ -872,6 +892,8 @@ public class MainWindowViewModel : ViewModelBase
             {
                 RestoreNodeState(node);
             }
+            // Restore the original expanded state
+            RestoreExpandedState(LeftDocument, _leftDocumentExpandedState);
             LeftDocument.UpdateFilteredTreeNodes();
             System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Left document filtered collection has {LeftDocument.FilteredObjectTreeNodes.Count} root nodes");
         }
@@ -883,6 +905,8 @@ public class MainWindowViewModel : ViewModelBase
             {
                 RestoreNodeState(node);
             }
+            // Restore the original expanded state
+            RestoreExpandedState(RightDocument, _rightDocumentExpandedState);
             RightDocument.UpdateFilteredTreeNodes();
             System.Diagnostics.Debug.WriteLine($"RestoreTreeViewState: Right document filtered collection has {RightDocument.FilteredObjectTreeNodes.Count} root nodes");
         }
@@ -1499,6 +1523,86 @@ public class MainWindowViewModel : ViewModelBase
         var batchSearchFileDialogService = new FileDialogService(batchSearchWindow);
         batchSearchWindow.DataContext = new BatchSearchViewModel(batchSearchFileDialogService);
         batchSearchWindow.Show();
+    }
+
+    /// <summary>
+    /// Captures the current expanded state of all tree nodes
+    /// </summary>
+    /// <param name="documentModel">The document model containing the tree nodes</param>
+    /// <param name="expandedStateDict">Dictionary to store the expanded state</param>
+    private void CaptureExpandedState(CadDocumentModel documentModel, Dictionary<string, bool> expandedStateDict)
+    {
+        if (documentModel?.ObjectTreeNodes == null) return;
+        
+        expandedStateDict.Clear();
+        foreach (var node in documentModel.ObjectTreeNodes)
+        {
+            CaptureNodeExpandedState(node, expandedStateDict, "");
+        }
+    }
+    
+    /// <summary>
+    /// Recursively captures the expanded state of a node and its children
+    /// </summary>
+    /// <param name="node">The node to capture state for</param>
+    /// <param name="expandedStateDict">Dictionary to store the expanded state</param>
+    /// <param name="path">Current path to the node</param>
+    private void CaptureNodeExpandedState(CadObjectTreeNode node, Dictionary<string, bool> expandedStateDict, string path)
+    {
+        if (node == null) return;
+        
+        // Create a unique path for this node
+        var nodePath = string.IsNullOrEmpty(path) ? node.Name : $"{path}/{node.Name}";
+        
+        // Store the expanded state
+        expandedStateDict[nodePath] = node.IsExpanded;
+        
+        // Recursively capture children
+        foreach (var child in node.Children)
+        {
+            CaptureNodeExpandedState(child, expandedStateDict, nodePath);
+        }
+    }
+    
+    /// <summary>
+    /// Restores the expanded state of all tree nodes from stored state
+    /// </summary>
+    /// <param name="documentModel">The document model containing the tree nodes</param>
+    /// <param name="expandedStateDict">Dictionary containing the stored expanded state</param>
+    private void RestoreExpandedState(CadDocumentModel documentModel, Dictionary<string, bool> expandedStateDict)
+    {
+        if (documentModel?.ObjectTreeNodes == null || !expandedStateDict.Any()) return;
+        
+        foreach (var node in documentModel.ObjectTreeNodes)
+        {
+            RestoreNodeExpandedState(node, expandedStateDict, "");
+        }
+    }
+    
+    /// <summary>
+    /// Recursively restores the expanded state of a node and its children
+    /// </summary>
+    /// <param name="node">The node to restore state for</param>
+    /// <param name="expandedStateDict">Dictionary containing the stored expanded state</param>
+    /// <param name="path">Current path to the node</param>
+    private void RestoreNodeExpandedState(CadObjectTreeNode node, Dictionary<string, bool> expandedStateDict, string path)
+    {
+        if (node == null) return;
+        
+        // Create the same unique path used during capture
+        var nodePath = string.IsNullOrEmpty(path) ? node.Name : $"{path}/{node.Name}";
+        
+        // Restore the expanded state if it was stored
+        if (expandedStateDict.TryGetValue(nodePath, out bool wasExpanded))
+        {
+            node.IsExpanded = wasExpanded;
+        }
+        
+        // Recursively restore children
+        foreach (var child in node.Children)
+        {
+            RestoreNodeExpandedState(child, expandedStateDict, nodePath);
+        }
     }
 
     /// <summary>

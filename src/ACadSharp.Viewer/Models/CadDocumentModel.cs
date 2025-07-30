@@ -762,8 +762,21 @@ public class CadDocumentModel : INotifyPropertyChanged
                     {
                         Name = prop.Name,
                         Value = stringValue,
-                        Type = prop.PropertyType.Name
+                        Type = prop.PropertyType.Name,
+                        PropertyInfo = prop,
+                        SourceObject = cadObject,
+                        IsReadOnly = !prop.CanWrite || prop.SetMethod?.IsPublic != true
                     };
+
+                    // Determine if property is editable (writable primitive types or enums)
+                    var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                    objectProperty.IsEditable = prop.CanWrite && 
+                                              prop.SetMethod?.IsPublic == true && 
+                                              !objectProperty.IsReadOnly &&
+                                              (underlyingType.IsPrimitive || 
+                                               underlyingType == typeof(string) || 
+                                               underlyingType == typeof(decimal) || 
+                                               underlyingType.IsEnum);
 
                     // Check if this property is navigable (an object type)
                     if (value != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
@@ -1361,5 +1374,27 @@ public class CadDocumentModel : INotifyPropertyChanged
         FilteredSelectedObjectProperties.Clear();
         BreadcrumbItems.Clear();
         SelectedObject = null;
+    }
+
+    /// <summary>
+    /// Refreshes the selected object properties to reflect any changes
+    /// </summary>
+    public void RefreshSelectedObjectProperties()
+    {
+        if (SelectedTreeNode?.CadObject != null)
+        {
+            // Re-generate properties for the currently selected object
+            var refreshedProperties = GetObjectProperties(SelectedTreeNode.CadObject).ToList();
+            
+            // Update the property collections
+            SelectedObjectProperties.Clear();
+            foreach (var prop in refreshedProperties)
+            {
+                SelectedObjectProperties.Add(prop);
+            }
+            
+            // Update filtered properties as well
+            UpdateFilteredProperties(SearchType.Handle, null);
+        }
     }
 }

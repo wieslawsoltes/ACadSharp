@@ -175,6 +175,9 @@ public class ObjectProperty : INotifyPropertyChanged
     private bool _isCollectionItem;
     private int? _collectionIndex;
     private string _parentPropertyName = string.Empty;
+    private bool _isEditable;
+    private System.Reflection.PropertyInfo? _propertyInfo;
+    private object? _sourceObject;
 
     public string Name 
     { 
@@ -261,6 +264,99 @@ public class ObjectProperty : INotifyPropertyChanged
     { 
         get => _parentPropertyName; 
         set => SetProperty(ref _parentPropertyName, value); 
+    }
+
+    /// <summary>
+    /// Indicates if this property can be edited
+    /// </summary>
+    public bool IsEditable 
+    { 
+        get => _isEditable; 
+        set => SetProperty(ref _isEditable, value); 
+    }
+
+    /// <summary>
+    /// The PropertyInfo for reflection-based editing
+    /// </summary>
+    public System.Reflection.PropertyInfo? PropertyInfo 
+    { 
+        get => _propertyInfo; 
+        set => SetProperty(ref _propertyInfo, value); 
+    }
+
+    /// <summary>
+    /// The source object that contains this property
+    /// </summary>
+    public object? SourceObject 
+    { 
+        get => _sourceObject; 
+        set => SetProperty(ref _sourceObject, value); 
+    }
+
+    /// <summary>
+    /// Gets the underlying type of the property (handles Nullable types)
+    /// </summary>
+    public Type? UnderlyingType => PropertyInfo?.PropertyType != null ? 
+        Nullable.GetUnderlyingType(PropertyInfo.PropertyType) ?? PropertyInfo.PropertyType : null;
+
+    /// <summary>
+    /// Indicates if this property is a primitive type that can be directly edited
+    /// </summary>
+    public bool IsPrimitiveEditable => UnderlyingType != null && (
+        UnderlyingType.IsPrimitive || 
+        UnderlyingType == typeof(string) || 
+        UnderlyingType == typeof(decimal) || 
+        UnderlyingType.IsEnum);
+
+    /// <summary>
+    /// Attempts to set the property value on the source object
+    /// </summary>
+    /// <param name="newValue">The new value to set</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public bool TrySetValue(object? newValue)
+    {
+        if (!IsEditable || PropertyInfo == null || SourceObject == null)
+            return false;
+
+        try
+        {
+            // Handle type conversion
+            var convertedValue = ConvertValue(newValue);
+            PropertyInfo.SetValue(SourceObject, convertedValue);
+            
+            // Update the display value
+            Value = convertedValue?.ToString() ?? "null";
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Converts a value to the property's type
+    /// </summary>
+    private object? ConvertValue(object? value)
+    {
+        if (value == null || UnderlyingType == null)
+            return null;
+
+        if (UnderlyingType.IsAssignableFrom(value.GetType()))
+            return value;
+
+        if (value is string stringValue)
+        {
+            if (string.IsNullOrEmpty(stringValue) && PropertyInfo?.PropertyType != typeof(string))
+                return null;
+
+            if (UnderlyingType.IsEnum)
+                return Enum.Parse(UnderlyingType, stringValue, true);
+
+            return Convert.ChangeType(stringValue, UnderlyingType);
+        }
+
+        return Convert.ChangeType(value, UnderlyingType);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

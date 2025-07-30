@@ -5,7 +5,10 @@
         xmlns:vm="using:ACadSharp.Viewer.ViewModels"
         xmlns:views="using:ACadSharp.Viewer.Views"
         xmlns:controls="using:Avalonia.Controls"
+        xmlns:appControls="using:ACadSharp.Viewer.Controls"
         xmlns:converters="using:ACadSharp.Viewer.Converters"
+        xmlns:interfaces="using:ACadSharp.Viewer.Interfaces"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
 
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="ACadSharp.Viewer.Views.MainWindow"
@@ -212,54 +215,90 @@
                                 </StackPanel>
                             </Border>
                             
-                            <DataGrid Grid.Row="2" ItemsSource="{Binding LeftDocument.FilteredSelectedObjectProperties}" 
-                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
-                                <DataGrid.Columns>
-                                    <DataGridTemplateColumn Header="Property" Width="*" CanUserResize="True">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Name}" 
-                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
-                                                           Padding="4,2"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Value" Width="2*" CanUserResize="True">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Content="{Binding Value}" 
-                                                        Click="PropertyButton_Click"
-                                                        Tag="{Binding}"
-                                                        IsEnabled="{Binding IsNavigable}"
-                                                        HorizontalAlignment="Left"
-                                                        HorizontalContentAlignment="Left"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Padding="0"
-                                                        Margin="0">
-                                                    <Button.Styles>
-                                                        <Style Selector="Button:pointerover">
-                                                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
-                                                        </Style>
-                                                        <Style Selector="Button:disabled">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                        </Style>
-                                                    </Button.Styles>
-                                                </Button>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Type" Width="*" CanUserResize="True">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Type}" 
-                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
-                                                           Padding="4,2"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                        <DataGrid Grid.Row="2" ItemsSource="{Binding LeftDocument.FilteredSelectedObjectProperties}" 
+                      AutoGenerateColumns="False" IsReadOnly="False" CanUserResizeColumns="True"
+                      CanUserSortColumns="True" GridLinesVisibility="Horizontal"
+                      BeginningEdit="DataGrid_BeginningEdit"
+                      CellEditEnding="DataGrid_CellEditEnding">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Property" Width="*" CanUserResize="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" 
+                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                           Padding="4,2"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Value" Width="2*" CanUserResize="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate DataType="{x:Type interfaces:ObjectProperty}">
+                                <!-- Simple approach: Show TextBox for editable, Button for navigable, TextBlock for others -->
+                                <Panel>
+
+                                    
+                                    <!-- Navigation Button -->
+                                    <Button Content="{Binding Value}" 
+                                            Click="PropertyButton_Click"
+                                            Tag="{Binding}"
+                                            IsVisible="{Binding IsNavigable}"
+                                            HorizontalAlignment="Left"
+                                            HorizontalContentAlignment="Left"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Padding="4,2"
+                                            Margin="0">
+                                        <Button.Styles>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                            </Style>
+                                        </Button.Styles>
+                                    </Button>
+                                    
+                                    <!-- Read-only Display -->
+                                    <TextBlock Text="{Binding Value}" 
+                                               Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                               Padding="4,2">
+                                        <TextBlock.IsVisible>
+                                            <Binding Path="!IsNavigable"/>
+                                        </TextBlock.IsVisible>
+                                    </TextBlock>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate DataType="{x:Type interfaces:ObjectProperty}">
+                                <!-- Edit template for edit mode -->
+                                <TextBox Text="{Binding Value, Mode=TwoWay}" 
+                                         BorderThickness="0"
+                                         Padding="4,2"
+                                         Background="Transparent"
+                                         Loaded="EditTextBox_Loaded"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Type" Width="*" CanUserResize="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Type}" 
+                                               Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                               Padding="4,2"/>
+                                    <TextBlock Text=" [E]" 
+                                               Foreground="Green" 
+                                               FontSize="10"
+                                               Margin="2,0,0,0"
+                                               IsVisible="{Binding IsEditable}"
+                                               ToolTip.Tip="Editable"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -407,54 +446,90 @@
                                 </StackPanel>
                             </Border>
                             
-                            <DataGrid Grid.Row="2" ItemsSource="{Binding RightDocument.FilteredSelectedObjectProperties}" 
-                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
-                                <DataGrid.Columns>
-                                    <DataGridTemplateColumn Header="Property" Width="*" CanUserResize="True">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Name}" 
-                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
-                                                           Padding="4,2"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Value" Width="2*" CanUserResize="True">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Button Content="{Binding Value}" 
-                                                        Click="PropertyButton_Click"
-                                                        Tag="{Binding}"
-                                                        IsEnabled="{Binding IsNavigable}"
-                                                        HorizontalAlignment="Left"
-                                                        HorizontalContentAlignment="Left"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Padding="0"
-                                                        Margin="0">
-                                                    <Button.Styles>
-                                                        <Style Selector="Button:pointerover">
-                                                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
-                                                        </Style>
-                                                        <Style Selector="Button:disabled">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                        </Style>
-                                                    </Button.Styles>
-                                                </Button>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Type" Width="*" CanUserResize="True">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Type}" 
-                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
-                                                           Padding="4,2"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                                        <DataGrid Grid.Row="2" ItemsSource="{Binding RightDocument.FilteredSelectedObjectProperties}" 
+                      AutoGenerateColumns="False" IsReadOnly="False" CanUserResizeColumns="True"
+                      CanUserSortColumns="True" GridLinesVisibility="Horizontal"
+                      BeginningEdit="DataGrid_BeginningEdit"
+                      CellEditEnding="DataGrid_CellEditEnding">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Property" Width="*" CanUserResize="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" 
+                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                           Padding="4,2"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Value" Width="2*" CanUserResize="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate DataType="{x:Type interfaces:ObjectProperty}">
+                                <!-- Simple approach: Show TextBox for editable, Button for navigable, TextBlock for others -->
+                                <Panel>
+
+                                    
+                                    <!-- Navigation Button -->
+                                    <Button Content="{Binding Value}" 
+                                            Click="PropertyButton_Click"
+                                            Tag="{Binding}"
+                                            IsVisible="{Binding IsNavigable}"
+                                            HorizontalAlignment="Left"
+                                            HorizontalContentAlignment="Left"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Padding="4,2"
+                                            Margin="0">
+                                        <Button.Styles>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                            </Style>
+                                        </Button.Styles>
+                                    </Button>
+                                    
+                                    <!-- Read-only Display -->
+                                    <TextBlock Text="{Binding Value}" 
+                                               Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                               Padding="4,2">
+                                        <TextBlock.IsVisible>
+                                            <Binding Path="!IsNavigable"/>
+                                        </TextBlock.IsVisible>
+                                    </TextBlock>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate DataType="{x:Type interfaces:ObjectProperty}">
+                                <!-- Edit template for edit mode -->
+                                <TextBox Text="{Binding Value, Mode=TwoWay}" 
+                                         BorderThickness="0"
+                                         Padding="4,2"
+                                         Background="Transparent"
+                                         Loaded="EditTextBox_Loaded"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Type" Width="*" CanUserResize="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Type}" 
+                                               Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                               Padding="4,2"/>
+                                    <TextBlock Text=" [E]" 
+                                               Foreground="Green" 
+                                               FontSize="10"
+                                               Margin="2,0,0,0"
+                                               IsVisible="{Binding IsEditable}"
+                                               ToolTip.Tip="Editable"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
                         </Grid>
                     </Grid>
                 </Grid>

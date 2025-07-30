@@ -267,6 +267,61 @@ public partial class MainWindow : Window
         }
     }
 
+    private void DataGrid_BeginningEdit(object? sender, DataGridBeginningEditEventArgs e)
+    {
+        // Check if the property is editable
+        if (e.Row.DataContext is ACadSharp.Viewer.Interfaces.ObjectProperty property)
+        {
+            System.Diagnostics.Debug.WriteLine($"BeginningEdit: {property.Name}, IsEditable: {property.IsEditable}, IsNavigable: {property.IsNavigable}");
+            
+            // Cancel edit if property is not editable or is navigable
+            if (!property.IsEditable || property.IsNavigable)
+            {
+                e.Cancel = true;
+                System.Diagnostics.Debug.WriteLine($"Edit canceled for {property.Name}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Edit allowed for {property.Name}");
+            }
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("BeginningEdit: No ObjectProperty found");
+        }
+    }
+
+    private void DataGrid_CellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
+    {
+        if (e.EditAction == DataGridEditAction.Commit && 
+            e.Row.DataContext is ACadSharp.Viewer.Interfaces.ObjectProperty property &&
+            e.EditingElement is TextBox textBox)
+        {
+            // Try to set the new value
+            if (property.IsEditable && property.TrySetValue(textBox.Text))
+            {
+                // Refresh the property display after successful edit
+                var viewModel = DataContext as MainWindowViewModel;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => viewModel?.RefreshPropertyGrids());
+            }
+            else
+            {
+                // Cancel the edit if the value couldn't be set
+                e.Cancel = true;
+            }
+        }
+    }
+
+    private void EditTextBox_Loaded(object? sender, RoutedEventArgs e)
+    {
+        // Auto-select text when entering edit mode
+        if (sender is TextBox textBox)
+        {
+            textBox.Focus();
+            textBox.SelectAll();
+        }
+    }
+
     private void SetupTreeViewExpansion()
     {
         // Setup left TreeView expansion handling

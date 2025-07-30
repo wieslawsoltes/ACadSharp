@@ -27,6 +27,7 @@ public class MainWindowViewModel : ViewModelBase
     private readonly ICadObjectTreeService _cadObjectTreeService;
     private readonly IFileDialogService _fileDialogService;
     private readonly SearchSuggestionService _searchSuggestionService;
+    private readonly PropertyEditingCommands _propertyEditingCommands;
     private CadDocumentModel _leftDocument;
     private CadDocumentModel _rightDocument;
     private string _searchText = string.Empty;
@@ -48,6 +49,7 @@ public class MainWindowViewModel : ViewModelBase
         _cadObjectTreeService = new CadObjectTreeService();
         _searchSuggestionService = new SearchSuggestionService();
         _fileDialogService = fileDialogService ?? new FileDialogService(null!); // Will be set properly
+        _propertyEditingCommands = new PropertyEditingCommands();
         _leftDocument = new CadDocumentModel();
         _rightDocument = new CadDocumentModel();
 
@@ -72,6 +74,10 @@ public class MainWindowViewModel : ViewModelBase
         SaveLeftAsDxfCommand = ReactiveCommand.CreateFromTask(SaveLeftAsDxfAsync);
         SaveRightAsDwgCommand = ReactiveCommand.CreateFromTask(SaveRightAsDwgAsync);
         SaveRightAsDxfCommand = ReactiveCommand.CreateFromTask(SaveRightAsDxfAsync);
+        
+        // Property editing commands
+        EditPropertyCommand = ReactiveCommand.Create<ObjectProperty>(EditProperty);
+        ValidatePropertyValueCommand = ReactiveCommand.Create<(ObjectProperty, object?), bool>(ValidatePropertyValue);
 
 
         // Subscribe to progress events
@@ -291,6 +297,21 @@ public class MainWindowViewModel : ViewModelBase
     /// Command to save right document as DXF
     /// </summary>
     public ICommand SaveRightAsDxfCommand { get; }
+
+    /// <summary>
+    /// Command to edit a property value
+    /// </summary>
+    public ICommand EditPropertyCommand { get; }
+
+    /// <summary>
+    /// Command to validate a property value before editing
+    /// </summary>
+    public ReactiveCommand<(ObjectProperty, object?), bool> ValidatePropertyValueCommand { get; }
+
+    /// <summary>
+    /// Property editing commands helper
+    /// </summary>
+    public PropertyEditingCommands PropertyEditingCommands => _propertyEditingCommands;
 
 
 
@@ -1155,7 +1176,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             document.NavigateToObjectByHandle(property.ObjectHandle.Value, propertyPath);
         }
-        else
+        else if (property.PropertyObject != null)
         {
             document.NavigateToObject(property.PropertyObject, propertyPath);
         }
@@ -1177,6 +1198,73 @@ public class MainWindowViewModel : ViewModelBase
         {
             // For regular properties, use the property name
             return property.Name;
+        }
+    }
+
+    /// <summary>
+    /// Edits a property value
+    /// </summary>
+    /// <param name="property">The property to edit</param>
+    private void EditProperty(ObjectProperty property)
+    {
+        if (property == null || !property.IsEditable)
+            return;
+
+        try
+        {
+            // The actual editing is handled by the UI controls through data binding
+            // This method serves as a hook for additional logic if needed
+            System.Diagnostics.Debug.WriteLine($"Property {property.Name} is being edited");
+            
+            // Refresh property grid after editing to reflect changes
+            RefreshPropertyGrids();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error editing property {property.Name}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Validates a property value before setting it
+    /// </summary>
+    /// <param name="input">Tuple containing the property and new value</param>
+    /// <returns>True if the value is valid, false otherwise</returns>
+    private bool ValidatePropertyValue((ObjectProperty property, object? newValue) input)
+    {
+        var (property, newValue) = input;
+        
+        if (property == null || !property.IsEditable)
+            return false;
+
+        try
+        {
+            // Use the PropertyEditingCommands for validation
+            var result = false;
+            _propertyEditingCommands.ValidatePropertyCommand.Execute((property, newValue)).Subscribe(r => result = r);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error validating property {property.Name}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Refreshes the property grids to show updated values
+    /// </summary>
+    public void RefreshPropertyGrids()
+    {
+        try
+        {
+            // Trigger property change notifications to refresh the UI
+            LeftDocument?.RefreshSelectedObjectProperties();
+            RightDocument?.RefreshSelectedObjectProperties();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error refreshing property grids: {ex.Message}");
         }
     }
 

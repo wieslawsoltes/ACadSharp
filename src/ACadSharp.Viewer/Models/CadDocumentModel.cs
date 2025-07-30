@@ -1398,33 +1398,33 @@ public class CadDocumentModel : INotifyPropertyChanged
             // Update filtered properties as well
             UpdateFilteredProperties(SearchType.Handle, null);
         }
-        
-        /// <summary>
-        /// Checks if a property value represents a coordinate type (XY, XYZ)
-        /// </summary>
-        private static bool IsCoordinateType(object? value)
-        {
-            if (value == null) return false;
-            
-            var typeName = value.GetType().Name;
-            var fullTypeName = value.GetType().FullName ?? "";
-            
-            return typeName == "XY" || typeName == "XYZ" || 
-                   fullTypeName.Contains("CSMath.XY") || fullTypeName.Contains("CSMath.XYZ");
-        }
+    }
 
-        /// <summary>
-        /// Checks if a property represents a color type based on name and value
-        /// </summary>
-        private static bool IsColorType(string propertyName, object? value)
-        {
-            if (value == null) return false;
-            
-            var typeName = value.GetType().Name;
-            var fullTypeName = value.GetType().FullName ?? "";
-            
-            return typeName.Contains("Color") || fullTypeName.Contains("Color") ||
-                   propertyName.Contains("Color", StringComparison.OrdinalIgnoreCase);
-        }
+    /// <summary>
+    /// Checks if a property value represents a coordinate type (XY, XYZ)
+    /// </summary>
+    private static bool IsCoordinateType(object? value)
+    {
+        if (value == null) return false;
+        
+        var typeName = value.GetType().Name;
+        var fullTypeName = value.GetType().FullName ?? "";
+        
+        return typeName == "XY" || typeName == "XYZ" || 
+               fullTypeName.Contains("CSMath.XY") || fullTypeName.Contains("CSMath.XYZ");
+    }
+
+    /// <summary>
+    /// Checks if a property represents a color type based on name and value
+    /// </summary>
+    private static bool IsColorType(string propertyName, object? value)
+    {
+        if (value == null) return false;
+        
+        var typeName = value.GetType().Name;
+        var fullTypeName = value.GetType().FullName ?? "";
+        
+        return typeName.Contains("Color") || fullTypeName.Contains("Color") ||
+               propertyName.Contains("Color", StringComparison.OrdinalIgnoreCase);
     }
 }

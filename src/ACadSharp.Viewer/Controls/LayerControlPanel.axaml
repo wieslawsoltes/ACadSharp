@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:ACadSharp.Viewer.Controls"
+             x:Class="ACadSharp.Viewer.Controls.LayerControlPanel"
+             x:DataType="controls:LayerControlPanel">
+    
+    <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+            BorderThickness="1" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+        
+        <Grid RowDefinitions="Auto,*">
+            <!-- Header -->
+            <TextBlock Grid.Row="0" Text="Layers" FontWeight="SemiBold" 
+                       Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+            
+            <!-- Layer List -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="LayersList" ItemsSource="{Binding Layers}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="controls:LayerViewModel">
+                            <Border Padding="5,2" Background="Transparent">
+                                <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                    <!-- Visibility Toggle -->
+                                    <CheckBox Grid.Column="0" 
+                                              IsChecked="{Binding IsVisible}"
+                                              ToolTip.Tip="Show/Hide Layer"
+                                              Margin="0,0,5,0"/>
+                                    
+                                    <!-- Layer Color -->
+                                    <Rectangle Grid.Column="1" 
+                                               Width="16" Height="16" 
+                                               Fill="{Binding ColorBrush}"
+                                               Stroke="Gray" StrokeThickness="0.5"
+                                               Margin="0,0,5,0"/>
+                                    
+                                    <!-- Layer Name -->
+                                    <TextBlock Grid.Column="2" 
+                                               Text="{Binding Name}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,5,0"/>
+                                    
+                                    <!-- Freeze Toggle -->
+                                    <ToggleButton Grid.Column="3" 
+                                                  IsChecked="{Binding IsFrozen}"
+                                                  Content="❄"
+                                                  ToolTip.Tip="Freeze/Thaw Layer"
+                                                  Width="20" Height="20"
+                                                  FontSize="10"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>

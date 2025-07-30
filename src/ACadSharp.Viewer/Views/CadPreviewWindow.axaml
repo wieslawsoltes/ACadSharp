@@ -1,0 +1,66 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ACadSharp.Viewer.ViewModels"
+        xmlns:appControls="using:ACadSharp.Viewer.Controls"
+        xmlns:converters="using:ACadSharp.Viewer.Converters"
+
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="ACadSharp.Viewer.Views.CadPreviewWindow"
+        x:DataType="vm:CadPreviewWindowViewModel"
+        Title="CAD Preview"
+        Width="1000" Height="700"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Resources>
+        <converters:SearchHighlightConverter x:Key="SearchHighlightConverter"/>
+    </Window.Resources>
+
+    <Design.DataContext>
+        <vm:CadPreviewWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" Margin="10,5">
+                <TextBlock Grid.Column="0" Text="{Binding DocumentTitle}" FontWeight="SemiBold" 
+                           VerticalAlignment="Center"/>
+                
+                <Button Grid.Column="1" Content="Fit" Command="{Binding FitToViewCommand}" 
+                        Padding="8,2" Margin="5,2" FontSize="11"/>
+                <Button Grid.Column="2" Content="Reset" Command="{Binding ResetViewCommand}" 
+                        Padding="8,2" Margin="5,2" FontSize="11"/>
+                <Button Grid.Column="3" Content="Print" Command="{Binding PrintPreviewCommand}" 
+                        Padding="8,2" Margin="5,2" FontSize="11"/>
+                <ToggleButton Grid.Column="4" Content="Grid" IsChecked="{Binding ShowGrid}" 
+                              Padding="8,2" Margin="5,2" FontSize="11"/>
+                <TextBlock Grid.Column="5" Text="{Binding ZoomText}" FontSize="11" 
+                           VerticalAlignment="Center" Margin="10,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,200">
+            <!-- CAD Preview -->
+            <appControls:CadPreviewControl Grid.Column="0" 
+                x:Name="CadPreview"
+                Document="{Binding Document}"
+                ShowGrid="{Binding ShowGrid}"
+                Zoom="{Binding PreviewZoom, Mode=TwoWay}"
+                PanOffset="{Binding PreviewPanOffset, Mode=TwoWay}"
+                SelectedEntity="{Binding SelectedEntity, Mode=TwoWay}"
+                MinHeight="200"/>
+            
+            <!-- Layer Control Panel -->
+            <appControls:LayerControlPanel Grid.Column="1" 
+                x:Name="LayerPanel"
+                Document="{Binding Document}"
+                Margin="5,0,0,0"/>
+        </Grid>
+    </Grid>
+</Window>

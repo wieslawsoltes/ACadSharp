@@ -4,6 +4,8 @@ using Avalonia.Platform.Storage;
 using Avalonia.Input;
 using ACadSharp.Viewer.ViewModels;
 using ACadSharp.Viewer.Interfaces;
+using ACadSharp.Viewer.Controls;
+using ACadSharp.Viewer.Services;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -391,4 +393,5 @@ public partial class MainWindow : Window
             }
         };
     }
+
 }

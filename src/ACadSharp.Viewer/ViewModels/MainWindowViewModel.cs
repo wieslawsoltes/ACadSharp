@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
 using System.Reactive.Concurrency;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 
 namespace ACadSharp.Viewer.ViewModels;
 
@@ -42,6 +44,12 @@ public class MainWindowViewModel : ViewModelBase
     // Expanded state tracking
     private Dictionary<string, bool> _leftDocumentExpandedState = new();
     private Dictionary<string, bool> _rightDocumentExpandedState = new();
+    
+    // Preview properties
+    private double _previewZoom = 1.0;
+    private Avalonia.Point _previewPanOffset = new Avalonia.Point(0, 0);
+    private bool _showGrid = true;
+    private ACadSharp.Entities.Entity? _selectedEntity;
 
     public MainWindowViewModel(IFileDialogService? fileDialogService = null)
     {
@@ -74,6 +82,12 @@ public class MainWindowViewModel : ViewModelBase
         SaveLeftAsDxfCommand = ReactiveCommand.CreateFromTask(SaveLeftAsDxfAsync);
         SaveRightAsDwgCommand = ReactiveCommand.CreateFromTask(SaveRightAsDwgAsync);
         SaveRightAsDxfCommand = ReactiveCommand.CreateFromTask(SaveRightAsDxfAsync);
+        
+        // Preview commands
+        FitToViewCommand = ReactiveCommand.Create(FitToView);
+        ResetViewCommand = ReactiveCommand.Create(ResetView);
+        PrintPreviewCommand = ReactiveCommand.CreateFromTask(ShowPrintPreviewAsync);
+        OpenPreviewWindowCommand = ReactiveCommand.Create(OpenPreviewWindow);
         
         // Property editing commands
         EditPropertyCommand = ReactiveCommand.Create<ObjectProperty>(EditProperty);
@@ -145,6 +159,11 @@ public class MainWindowViewModel : ViewModelBase
         this.WhenAnyValue(x => x.LeftDocument.Document, x => x.RightDocument.Document)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(async _ => await UpdateSearchSuggestionsAsync());
+
+        // Update zoom text when preview zoom changes
+        this.WhenAnyValue(x => x.PreviewZoom)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(ZoomText)));
     }
 
     /// <summary>
@@ -299,6 +318,26 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand SaveRightAsDxfCommand { get; }
 
     /// <summary>
+    /// Command to fit the CAD preview to view
+    /// </summary>
+    public ICommand FitToViewCommand { get; }
+
+    /// <summary>
+    /// Command to reset the CAD preview view
+    /// </summary>
+    public ICommand ResetViewCommand { get; }
+
+    /// <summary>
+    /// Command to show print preview
+    /// </summary>
+    public ICommand PrintPreviewCommand { get; }
+
+    /// <summary>
+    /// Command to open CAD preview window
+    /// </summary>
+    public ICommand OpenPreviewWindowCommand { get; }
+
+    /// <summary>
     /// Command to edit a property value
     /// </summary>
     public ICommand EditPropertyCommand { get; }
@@ -312,6 +351,47 @@ public class MainWindowViewModel : ViewModelBase
     /// Property editing commands helper
     /// </summary>
     public PropertyEditingCommands PropertyEditingCommands => _propertyEditingCommands;
+
+    /// <summary>
+    /// Preview zoom level
+    /// </summary>
+    public double PreviewZoom
+    {
+        get => _previewZoom;
+        set => this.RaiseAndSetIfChanged(ref _previewZoom, value);
+    }
+
+    /// <summary>
+    /// Preview pan offset
+    /// </summary>
+    public Avalonia.Point PreviewPanOffset
+    {
+        get => _previewPanOffset;
+        set => this.RaiseAndSetIfChanged(ref _previewPanOffset, value);
+    }
+
+    /// <summary>
+    /// Whether to show grid in preview
+    /// </summary>
+    public bool ShowGrid
+    {
+        get => _showGrid;
+        set => this.RaiseAndSetIfChanged(ref _showGrid, value);
+    }
+
+    /// <summary>
+    /// Currently selected entity in the preview
+    /// </summary>
+    public ACadSharp.Entities.Entity? SelectedEntity
+    {
+        get => _selectedEntity;
+        set => this.RaiseAndSetIfChanged(ref _selectedEntity, value);
+    }
+
+    /// <summary>
+    /// Zoom percentage text for display
+    /// </summary>
+    public string ZoomText => $"{(PreviewZoom * 100):F0}%";
 
 
 
@@ -1897,5 +1977,89 @@ public class MainWindowViewModel : ViewModelBase
         System.Diagnostics.Debug.WriteLine($"Save Progress: {e.ProgressPercentage}% - {e.StatusMessage}");
     }
 
+    /// <summary>
+    /// Fits the CAD preview to the view
+    /// </summary>
+    private void FitToView()
+    {
+        // This will be handled by the preview control when the command is bound
+        // The control will need to implement FitToView functionality
+        // For now, we can reset zoom and pan as a basic implementation
+        PreviewZoom = 1.0;
+        PreviewPanOffset = new Avalonia.Point(0, 0);
+    }
 
+    /// <summary>
+    /// Resets the CAD preview view to default
+    /// </summary>
+    private void ResetView()
+    {
+        PreviewZoom = 1.0;
+        PreviewPanOffset = new Avalonia.Point(0, 0);
+    }
+
+    /// <summary>
+    /// Shows print preview dialog
+    /// </summary>
+    private async Task ShowPrintPreviewAsync()
+    {
+        try
+        {
+            if (LeftDocument.Document == null) return;
+
+            // Create renderer for printing
+            var renderer = new ACadSharp.Viewer.Services.SkiaSharpCadRenderer();
+            var printService = new ACadSharp.Viewer.Services.CadPrintService(renderer);
+            
+            // Show print preview
+            var appLifetime = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+            if (appLifetime?.MainWindow is Avalonia.Controls.Window window)
+            {
+                await printService.ShowPrintPreviewAsync(window, LeftDocument.Document);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show error dialog
+            System.Diagnostics.Debug.WriteLine($"Print preview error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Opens the CAD preview window
+    /// </summary>
+    private void OpenPreviewWindow()
+    {
+        try
+        {
+            if (LeftDocument.Document == null) return;
+
+            // Create preview window view model
+            var previewViewModel = new CadPreviewWindowViewModel
+            {
+                Document = LeftDocument.Document,
+                PreviewZoom = PreviewZoom,
+                PreviewPanOffset = PreviewPanOffset,
+                ShowGrid = ShowGrid,
+                SelectedEntity = SelectedEntity
+            };
+
+            // Create and show preview window
+            var previewWindow = new Views.CadPreviewWindow(previewViewModel);
+            var appLifetime = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+            if (appLifetime?.MainWindow is Avalonia.Controls.Window mainWindow)
+            {
+                previewWindow.Show(mainWindow);
+            }
+            else
+            {
+                previewWindow.Show();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show error dialog
+            System.Diagnostics.Debug.WriteLine($"Preview window error: {ex.Message}");
+        }
+    }
 }

@@ -159,10 +159,18 @@
                                 </ItemsControl>
                             </Border>
                             
-                            <DataGrid Grid.Row="2" ItemsSource="{Binding LeftDocument.SelectedObjectProperties}" 
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding LeftDocument.FilteredSelectedObjectProperties}" 
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Property" Binding="{Binding Name}" Width="*" CanUserResize="True"/>
+                                    <DataGridTemplateColumn Header="Property" Width="*" CanUserResize="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}" 
+                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                                           Padding="4,2"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Header="Value" Width="2*" CanUserResize="True">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -188,7 +196,15 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*" CanUserResize="True"/>
+                                    <DataGridTemplateColumn Header="Type" Width="*" CanUserResize="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Type}" 
+                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                                           Padding="4,2"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
@@ -285,10 +301,18 @@
                                 </ItemsControl>
                             </Border>
                             
-                            <DataGrid Grid.Row="2" ItemsSource="{Binding RightDocument.SelectedObjectProperties}" 
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding RightDocument.FilteredSelectedObjectProperties}" 
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Property" Binding="{Binding Name}" Width="*" CanUserResize="True"/>
+                                    <DataGridTemplateColumn Header="Property" Width="*" CanUserResize="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}" 
+                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                                           Padding="4,2"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Header="Value" Width="2*" CanUserResize="True">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
@@ -314,7 +338,15 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*" CanUserResize="True"/>
+                                    <DataGridTemplateColumn Header="Type" Width="*" CanUserResize="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Type}" 
+                                                           Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"
+                                                           Padding="4,2"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>

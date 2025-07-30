@@ -657,8 +657,42 @@ public class CadObjectTreeService : ICadObjectTreeService
                 return obj.Handle.ToString("X").Equals(searchText, comparison) ||
                        obj.GetType().Name.Contains(searchText, comparison);
 
+            case SearchType.PropertyName:
+                var propNameType = obj.GetType();
+                var propNameProperties = propNameType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                
+                foreach (var prop in propNameProperties)
+                {
+                    if (prop.Name.Contains(searchText, comparison))
+                        return true;
+                }
+                return false;
+
+            case SearchType.PropertyType:
+                var propTypeType = obj.GetType();
+                var propTypeProperties = propTypeType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                
+                foreach (var prop in propTypeProperties)
+                {
+                    try
+                    {
+                        var propertyType = prop.PropertyType;
+                        var typeName = propertyType.IsGenericType 
+                            ? $"{propertyType.Name.Split('`')[0]}<{string.Join(", ", propertyType.GetGenericArguments().Select(t => t.Name))}>"
+                            : propertyType.Name;
+                        
+                        if (typeName.Contains(searchText, comparison))
+                            return true;
+                    }
+                    catch
+                    {
+                        // Skip properties that can't be processed
+                    }
+                }
+                return false;
+
             case SearchType.All:
-                // Search in handle, type, and properties
+                // Search in handle, type, properties, property names, and property types
                 if (obj.Handle.ToString("X").Equals(searchText, comparison))
                     return true;
                 if (obj.GetType().Name.Contains(searchText, comparison))
@@ -670,6 +704,20 @@ public class CadObjectTreeService : ICadObjectTreeService
                 {
                     try
                     {
+                        // Check property name
+                        if (prop.Name.Contains(searchText, comparison))
+                            return true;
+                        
+                        // Check property type
+                        var propertyType = prop.PropertyType;
+                        var typeName = propertyType.IsGenericType 
+                            ? $"{propertyType.Name.Split('`')[0]}<{string.Join(", ", propertyType.GetGenericArguments().Select(t => t.Name))}>"
+                            : propertyType.Name;
+                        
+                        if (typeName.Contains(searchText, comparison))
+                            return true;
+                        
+                        // Check property value
                         var value = prop.GetValue(obj)?.ToString();
                         if (!string.IsNullOrEmpty(value) && value.Contains(searchText, comparison))
                             return true;

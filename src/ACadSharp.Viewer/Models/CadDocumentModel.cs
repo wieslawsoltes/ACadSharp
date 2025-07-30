@@ -102,6 +102,11 @@ public class CadDocumentModel : INotifyPropertyChanged
     public ObservableCollection<ObjectProperty> SelectedObjectProperties { get; } = new();
 
     /// <summary>
+    /// Filtered collection of properties for the selected object (used for search filtering)
+    /// </summary>
+    public ObservableCollection<ObjectProperty> FilteredSelectedObjectProperties { get; } = new();
+
+    /// <summary>
     /// Collection of breadcrumb items for navigation
     /// </summary>
     public ObservableCollection<BreadcrumbItem> BreadcrumbItems { get; } = new();
@@ -166,6 +171,7 @@ public class CadDocumentModel : INotifyPropertyChanged
         {
             // Clear existing properties
             SelectedObjectProperties.Clear();
+            FilteredSelectedObjectProperties.Clear();
                 
             if (SelectedTreeNode.CadObject != null)
             {
@@ -183,6 +189,9 @@ public class CadDocumentModel : INotifyPropertyChanged
                 {
                     SelectedObjectProperties.Add(property);
                 }
+                
+                // Update filtered properties
+                UpdateFilteredProperties(SearchType.Handle, null);
             }
             else
             {
@@ -196,14 +205,18 @@ public class CadDocumentModel : INotifyPropertyChanged
                 {
                     SelectedObjectProperties.Add(property);
                 }
+                
+                // Update filtered properties
+                UpdateFilteredProperties(SearchType.Handle, null);
             }
         }
         else
         {
-            // Clear properties if no object is selected
-            SelectedObjectProperties.Clear();
-            BreadcrumbItems.Clear();
-            SelectedObject = null;
+                    // Clear properties if no object is selected
+        SelectedObjectProperties.Clear();
+        FilteredSelectedObjectProperties.Clear();
+        BreadcrumbItems.Clear();
+        SelectedObject = null;
         }
     }
 
@@ -399,10 +412,14 @@ public class CadDocumentModel : INotifyPropertyChanged
             var properties = GetObjectPropertiesForAnyObject(targetObject);
                 
             SelectedObjectProperties.Clear();
+            FilteredSelectedObjectProperties.Clear();
             foreach (var property in properties)
             {
                 SelectedObjectProperties.Add(property);
             }
+            
+            // Update filtered properties
+            UpdateFilteredProperties(SearchType.Handle, null);
         }
     }
 
@@ -922,6 +939,51 @@ public class CadDocumentModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Updates the filtered properties collection based on search criteria
+    /// </summary>
+    /// <param name="searchType">The search type</param>
+    /// <param name="searchText">The search text</param>
+    public void UpdateFilteredProperties(SearchType searchType, string? searchText)
+    {
+        // Clear the filtered collection
+        FilteredSelectedObjectProperties.Clear();
+        
+        // If no search text or not a property-specific search, show all properties
+        if (string.IsNullOrEmpty(searchText) || 
+            (searchType != SearchType.PropertyName && searchType != SearchType.PropertyType))
+        {
+            foreach (var prop in SelectedObjectProperties)
+            {
+                FilteredSelectedObjectProperties.Add(prop);
+            }
+            return;
+        }
+        
+        var searchLower = searchText.ToLowerInvariant();
+        
+        // Filter properties based on search type
+        foreach (var prop in SelectedObjectProperties)
+        {
+            bool shouldInclude = false;
+            
+            switch (searchType)
+            {
+                case SearchType.PropertyName:
+                    shouldInclude = prop.Name.ToLowerInvariant().Contains(searchLower);
+                    break;
+                case SearchType.PropertyType:
+                    shouldInclude = prop.Type.ToLowerInvariant().Contains(searchLower);
+                    break;
+            }
+            
+            if (shouldInclude)
+            {
+                FilteredSelectedObjectProperties.Add(prop);
+            }
+        }
+    }
+
+    /// <summary>
     /// Creates a filtered copy of a node and its children
     /// </summary>
     /// <param name="originalNode">The original node to filter</param>
@@ -1018,6 +1080,7 @@ public class CadDocumentModel : INotifyPropertyChanged
         ObjectTreeNodes.Clear();
         FilteredObjectTreeNodes.Clear();
         SelectedObjectProperties.Clear();
+        FilteredSelectedObjectProperties.Clear();
         BreadcrumbItems.Clear();
         SelectedObject = null;
     }

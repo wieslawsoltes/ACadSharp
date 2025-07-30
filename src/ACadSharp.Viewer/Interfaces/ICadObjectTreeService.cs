@@ -16,6 +16,8 @@ public enum SearchType
     ObjectType,
     ObjectData,
     TagCode,
+    PropertyName,
+    PropertyType,
     All
 }
 
@@ -152,6 +154,8 @@ public class SearchCriteria
     public string? ObjectHandle => SearchType == SearchType.Handle ? SearchText : null;
     public string? ObjectData => SearchType == SearchType.ObjectData ? SearchText : null;
     public string? ObjectType => SearchType == SearchType.ObjectType ? SearchText : null;
+    public string? PropertyName => SearchType == SearchType.PropertyName ? SearchText : null;
+    public string? PropertyType => SearchType == SearchType.PropertyType ? SearchText : null;
 }
 
 /// <summary>

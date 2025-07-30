@@ -573,18 +573,18 @@ public class MainWindowViewModel : ViewModelBase
             }
 
             // Highlight properties if this node is selected and directly matches
-            if (isDirectMatch && node == LeftDocument?.SelectedTreeNode && LeftDocument?.SelectedObjectProperties != null)
+            if (isDirectMatch && node == LeftDocument?.SelectedTreeNode && LeftDocument?.FilteredSelectedObjectProperties != null)
             {
                 lock (_highlightLock)
                 {
-                    HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
+                    HighlightProperties(LeftDocument.FilteredSelectedObjectProperties, searchText);
                 }
             }
-            else if (isDirectMatch && node == RightDocument?.SelectedTreeNode && RightDocument?.SelectedObjectProperties != null)
+            else if (isDirectMatch && node == RightDocument?.SelectedTreeNode && RightDocument?.FilteredSelectedObjectProperties != null)
             {
                 lock (_highlightLock)
                 {
-                    HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
+                    HighlightProperties(RightDocument.FilteredSelectedObjectProperties, searchText);
                 }
             }
 
@@ -768,9 +768,29 @@ public class MainWindowViewModel : ViewModelBase
             {
                 if (prop != null)
                 {
-                    prop.IsHighlighted = prop.Name.ToLowerInvariant().Contains(searchLower) ||
-                                         prop.Value.ToLowerInvariant().Contains(searchLower) ||
-                                         prop.Type.ToLowerInvariant().Contains(searchLower);
+                    bool shouldHighlight = false;
+                    
+                    // Determine what to highlight based on search type
+                    switch (SearchType)
+                    {
+                        case SearchType.PropertyName:
+                            shouldHighlight = prop.Name.ToLowerInvariant().Contains(searchLower);
+                            break;
+                        case SearchType.PropertyType:
+                            shouldHighlight = prop.Type.ToLowerInvariant().Contains(searchLower);
+                            break;
+                        case SearchType.ObjectData:
+                            shouldHighlight = prop.Value.ToLowerInvariant().Contains(searchLower);
+                            break;
+                        default:
+                            // For other search types, highlight name, value, and type
+                            shouldHighlight = prop.Name.ToLowerInvariant().Contains(searchLower) ||
+                                             prop.Value.ToLowerInvariant().Contains(searchLower) ||
+                                             prop.Type.ToLowerInvariant().Contains(searchLower);
+                            break;
+                    }
+                    
+                    prop.IsHighlighted = shouldHighlight;
                 }
             }
         }
@@ -953,22 +973,30 @@ public class MainWindowViewModel : ViewModelBase
                         ClearPropertyHighlighting(LeftDocument.SelectedObjectProperties);
                     if (RightDocument?.SelectedObjectProperties != null)
                         ClearPropertyHighlighting(RightDocument.SelectedObjectProperties);
+                    
+                    // Update filtered properties to show all when no search
+                    LeftDocument?.UpdateFilteredProperties(SearchType, null);
+                    RightDocument?.UpdateFilteredProperties(SearchType, null);
                     return;
                 }
 
                 var searchText = SearchText.Trim();
                     
                 // Highlight properties for left document
-                if (LeftDocument?.SelectedTreeNode != null && LeftDocument?.SelectedObjectProperties != null)
+                if (LeftDocument?.SelectedTreeNode != null && LeftDocument?.FilteredSelectedObjectProperties != null)
                 {
-                    HighlightProperties(LeftDocument.SelectedObjectProperties, searchText);
+                    HighlightProperties(LeftDocument.FilteredSelectedObjectProperties, searchText);
                 }
 
                 // Highlight properties for right document
-                if (RightDocument?.SelectedTreeNode != null && RightDocument?.SelectedObjectProperties != null)
+                if (RightDocument?.SelectedTreeNode != null && RightDocument?.FilteredSelectedObjectProperties != null)
                 {
-                    HighlightProperties(RightDocument.SelectedObjectProperties, searchText);
+                    HighlightProperties(RightDocument.FilteredSelectedObjectProperties, searchText);
                 }
+                
+                // Update filtered properties based on current search
+                LeftDocument?.UpdateFilteredProperties(SearchType, searchText);
+                RightDocument?.UpdateFilteredProperties(SearchType, searchText);
             }
             finally
             {

@@ -18,6 +18,8 @@ public class SearchSuggestionService
     private readonly HashSet<string> _objectTypes = new();
     private readonly HashSet<string> _objectData = new();
     private readonly HashSet<string> _tagCodes = new();
+    private readonly HashSet<string> _propertyNames = new();
+    private readonly HashSet<string> _propertyTypes = new();
 
     /// <summary>
     /// Updates suggestions based on the provided documents
@@ -31,6 +33,8 @@ public class SearchSuggestionService
             _objectTypes.Clear();
             _objectData.Clear();
             _tagCodes.Clear();
+            _propertyNames.Clear();
+            _propertyTypes.Clear();
 
             foreach (var document in documents)
             {
@@ -56,7 +60,9 @@ public class SearchSuggestionService
             SearchType.ObjectType => _objectTypes,
             SearchType.ObjectData => _objectData,
             SearchType.TagCode => _tagCodes,
-            SearchType.All => _handles.Concat(_objectTypes).Concat(_objectData).Concat(_tagCodes).Distinct(),
+            SearchType.PropertyName => _propertyNames,
+            SearchType.PropertyType => _propertyTypes,
+            SearchType.All => _handles.Concat(_objectTypes).Concat(_objectData).Concat(_tagCodes).Concat(_propertyNames).Concat(_propertyTypes).Distinct(),
             _ => Enumerable.Empty<string>()
         };
 
@@ -85,6 +91,9 @@ public class SearchSuggestionService
 
         // Extract tag codes (using handles as a proxy for now)
         ExtractTagCodesFromDocument(document);
+
+        // Extract property names and types
+        ExtractPropertyNamesAndTypesFromDocument(document);
     }
 
     /// <summary>
@@ -357,6 +366,119 @@ public class SearchSuggestionService
                 if (entry is CadDictionary nestedDict)
                 {
                     ExtractDataFromDictionary(nestedDict);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Extracts property names and types from document objects
+    /// </summary>
+    /// <param name="document">The CAD document</param>
+    private void ExtractPropertyNamesAndTypesFromDocument(CadDocument document)
+    {
+        // Extract from all collections
+        AddPropertyNamesAndTypesFromCollection(document.Layers);
+        AddPropertyNamesAndTypesFromCollection(document.BlockRecords);
+        AddPropertyNamesAndTypesFromCollection(document.TextStyles);
+        AddPropertyNamesAndTypesFromCollection(document.LineTypes);
+        AddPropertyNamesAndTypesFromCollection(document.DimensionStyles);
+        AddPropertyNamesAndTypesFromCollection(document.Views);
+        AddPropertyNamesAndTypesFromCollection(document.UCSs);
+        AddPropertyNamesAndTypesFromCollection(document.VPorts);
+        AddPropertyNamesAndTypesFromCollection(document.AppIds);
+
+        // Extract from entities
+        if (document.ModelSpace?.Entities != null)
+        {
+            foreach (var entity in document.ModelSpace.Entities)
+            {
+                AddPropertyNamesAndTypesFromObject(entity);
+            }
+        }
+
+        if (document.PaperSpace?.Entities != null)
+        {
+            foreach (var entity in document.PaperSpace.Entities)
+            {
+                AddPropertyNamesAndTypesFromObject(entity);
+            }
+        }
+
+        // Extract from dictionaries
+        ExtractPropertyNamesAndTypesFromDictionary(document.RootDictionary);
+    }
+
+    /// <summary>
+    /// Adds property names and types from a collection of CAD objects
+    /// </summary>
+    /// <typeparam name="T">Type of CAD object</typeparam>
+    /// <param name="collection">Collection of objects</param>
+    private void AddPropertyNamesAndTypesFromCollection<T>(IEnumerable<T>? collection) where T : CadObject
+    {
+        if (collection == null) return;
+
+        foreach (var item in collection)
+        {
+            AddPropertyNamesAndTypesFromObject(item);
+        }
+    }
+
+    /// <summary>
+    /// Adds property names and types from a single CAD object
+    /// </summary>
+    /// <param name="obj">The CAD object</param>
+    private void AddPropertyNamesAndTypesFromObject(CadObject obj)
+    {
+        try
+        {
+            var type = obj.GetType();
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var prop in properties)
+            {
+                try
+                {
+                    // Add property name
+                    _propertyNames.Add(prop.Name);
+
+                    // Add property type (simple name for readability)
+                    var propertyType = prop.PropertyType;
+                    var typeName = propertyType.IsGenericType 
+                        ? $"{propertyType.Name.Split('`')[0]}<{string.Join(", ", propertyType.GetGenericArguments().Select(t => t.Name))}>"
+                        : propertyType.Name;
+                    _propertyTypes.Add(typeName);
+                }
+                catch
+                {
+                    // Skip properties that can't be processed
+                }
+            }
+        }
+        catch
+        {
+            // Skip objects that can't be processed
+        }
+    }
+
+    /// <summary>
+    /// Extracts property names and types from a dictionary recursively
+    /// </summary>
+    /// <param name="dictionary">The dictionary to process</param>
+    private void ExtractPropertyNamesAndTypesFromDictionary(CadDictionary? dictionary)
+    {
+        if (dictionary == null) return;
+
+        foreach (var entryName in dictionary.EntryNames)
+        {
+            if (dictionary.TryGetEntry<NonGraphicalObject>(entryName, out var entry))
+            {
+                AddPropertyNamesAndTypesFromObject(entry);
+
+                // Recursively process nested dictionaries
+                if (entry is CadDictionary nestedDict)
+                {
+                    ExtractPropertyNamesAndTypesFromDictionary(nestedDict);
                 }
             }
         }

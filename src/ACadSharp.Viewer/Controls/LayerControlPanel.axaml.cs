@@ -35,7 +35,6 @@ public partial class LayerControlPanel : UserControl
     public LayerControlPanel()
     {
         InitializeComponent();
-        DataContext = this;
         SetupSubscriptions();
     }
 

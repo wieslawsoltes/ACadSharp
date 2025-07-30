@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:ACadSharp.Viewer.Controls"
              x:Class="ACadSharp.Viewer.Controls.LayerControlPanel"
-             x:DataType="controls:LayerControlPanel">
+             x:DataType="controls:LayerControlPanel"
+             x:Name="LayerControlRoot">
     
     <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
             BorderThickness="1" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
@@ -14,7 +15,7 @@
             
             <!-- Layer List -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <ItemsControl x:Name="LayersList" ItemsSource="{Binding Layers}">
+                <ItemsControl x:Name="LayersList" ItemsSource="{Binding #LayerControlRoot.Layers}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="controls:LayerViewModel">
                             <Border Padding="5,2" Background="Transparent">

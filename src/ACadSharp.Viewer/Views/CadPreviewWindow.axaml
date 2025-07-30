@@ -59,7 +59,7 @@
             <!-- Layer Control Panel -->
             <appControls:LayerControlPanel Grid.Column="1" 
                 x:Name="LayerPanel"
-                Document="{Binding Document}"
+                Document="{Binding $parent[Window].DataContext.Document}"
                 Margin="5,0,0,0"/>
         </Grid>
     </Grid>

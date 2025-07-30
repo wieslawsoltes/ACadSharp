@@ -3,11 +3,15 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Input;
 using ACadSharp.Viewer.ViewModels;
+using ACadSharp.Viewer.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using System;
+using Avalonia.LogicalTree;
+using Avalonia.Controls.Primitives;
 
 namespace ACadSharp.Viewer.Views;
 
@@ -17,6 +21,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         SetupDragAndDrop();
+        SetupTreeViewExpansion();
     }
 
     private async void LoadDwgButton_Click(object sender, RoutedEventArgs e)
@@ -260,5 +265,75 @@ public partial class MainWindow : Window
             var viewModel = DataContext as MainWindowViewModel;
             viewModel?.NavigateToProperty(property);
         }
+    }
+
+    private void SetupTreeViewExpansion()
+    {
+        // Setup left TreeView expansion handling
+        var leftTreeView = this.FindControl<TreeView>("LeftTreeView");
+        if (leftTreeView != null)
+        {
+            SetupTreeViewItemExpansion(leftTreeView);
+        }
+
+        // Setup right TreeView expansion handling  
+        var rightTreeView = this.FindControl<TreeView>("RightTreeView");
+        if (rightTreeView != null)
+        {
+            SetupTreeViewItemExpansion(rightTreeView);
+        }
+    }
+
+    private void SetupTreeViewItemExpansion(TreeView treeView)
+    {
+        treeView.ContainerPrepared += OnTreeViewContainerPrepared;
+    }
+
+    private void OnTreeViewContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+    {
+        if (e.Container is TreeViewItem treeViewItem)
+        {
+            // Get the data context which should be the CadObjectTreeNode
+            treeViewItem.DataContextChanged += (s, args) =>
+            {
+                if (treeViewItem.DataContext is CadObjectTreeNode node)
+                {
+                    SetupTreeViewItemSync(treeViewItem, node);
+                }
+            };
+
+            // If DataContext is already set
+            if (treeViewItem.DataContext is CadObjectTreeNode existingNode)
+            {
+                SetupTreeViewItemSync(treeViewItem, existingNode);
+            }
+        }
+    }
+
+    private void SetupTreeViewItemSync(TreeViewItem treeViewItem, CadObjectTreeNode node)
+    {
+        // Sync the expansion state from the data model to the UI
+        treeViewItem.IsExpanded = node.IsExpanded;
+
+        // Listen for changes in the UI and update the data model
+        treeViewItem.GetObservable(TreeViewItem.IsExpandedProperty).Subscribe(isExpanded =>
+        {
+            if (node.IsExpanded != isExpanded)
+            {
+                node.IsExpanded = isExpanded;
+            }
+        });
+
+        // Listen for changes in the data model and update the UI
+        node.PropertyChanged += (s, args) =>
+        {
+            if (args.PropertyName == nameof(CadObjectTreeNode.IsExpanded))
+            {
+                if (treeViewItem.IsExpanded != node.IsExpanded)
+                {
+                    treeViewItem.IsExpanded = node.IsExpanded;
+                }
+            }
+        };
     }
 }

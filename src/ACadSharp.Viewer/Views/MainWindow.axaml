@@ -96,7 +96,7 @@
                             <Grid RowDefinitions="Auto,*">
                                 <TextBlock Grid.Row="0" Text="Object Tree" FontWeight="SemiBold" 
                                            Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-                                <TreeView Grid.Row="1" ItemsSource="{Binding LeftDocument.FilteredObjectTreeNodes}" 
+                                <TreeView x:Name="LeftTreeView" Grid.Row="1" ItemsSource="{Binding LeftDocument.FilteredObjectTreeNodes}" 
                                          SelectedItem="{Binding LeftDocument.SelectedTreeNode}">
                                     <TreeView.ItemTemplate>
                                         <TreeDataTemplate ItemsSource="{Binding Children}">
@@ -109,6 +109,7 @@
                                             </StackPanel>
                                         </TreeDataTemplate>
                                     </TreeView.ItemTemplate>
+
                                 </TreeView>
                             </Grid>
                         </Border>
@@ -282,7 +283,7 @@
                             <Grid RowDefinitions="Auto,*">
                                 <TextBlock Grid.Row="0" Text="Object Tree" FontWeight="SemiBold" 
                                            Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-                                <TreeView Grid.Row="1" ItemsSource="{Binding RightDocument.FilteredObjectTreeNodes}" 
+                                <TreeView x:Name="RightTreeView" Grid.Row="1" ItemsSource="{Binding RightDocument.FilteredObjectTreeNodes}" 
                                          SelectedItem="{Binding RightDocument.SelectedTreeNode}">
                                     <TreeView.ItemTemplate>
                                         <TreeDataTemplate ItemsSource="{Binding Children}">
@@ -295,6 +296,7 @@
                                             </StackPanel>
                                         </TreeDataTemplate>
                                     </TreeView.ItemTemplate>
+
                                 </TreeView>
                             </Grid>
                         </Border>

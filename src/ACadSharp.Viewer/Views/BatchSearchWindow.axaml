@@ -26,16 +26,38 @@
         <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
                 BorderThickness="1" CornerRadius="5" Padding="15">
-            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
-                <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Search Configuration" 
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="Search Configuration" 
                            FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10"/>
                 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Search Text:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SearchText}" 
-                         Watermark="Enter search text..." Height="30"/>
+                <!-- Folder Selection -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Search Folder:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding FolderPath}" 
+                         Watermark="Select or enter folder path..." Height="30"/>
+                <Button Grid.Row="1" Grid.Column="2" Content="Browse..." Command="{Binding BrowseFolderCommand}"
+                        Width="80" Height="30" Margin="10,0,0,0"/>
                 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Type:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <ComboBox Grid.Row="2" Grid.Column="1" SelectedItem="{Binding SearchType}" 
+                <!-- Search Options -->
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,10,0,0">
+                    <CheckBox Content="Include subdirectories" IsChecked="{Binding IncludeSubdirectories}" 
+                              Margin="0,0,20,0"/>
+                </StackPanel>
+                
+                <!-- File Type Filter -->
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="File Types:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,10,0,0">
+                    <CheckBox Content="DWG Files" IsChecked="{Binding IncludeDwgFiles}" Margin="0,0,20,0"/>
+                    <CheckBox Content="DXF Files" IsChecked="{Binding IncludeDxfFiles}" Margin="0,0,20,0"/>
+                </StackPanel>
+                
+                <!-- Search Text -->
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Search Text:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding SearchText}" 
+                         Watermark="Enter search text..." Height="30" Margin="0,10,0,0"/>
+                
+                <!-- Search Type -->
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Search Type:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <ComboBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" SelectedItem="{Binding SearchType}" 
                           ItemsSource="{Binding SearchTypeValues}" Height="30" Margin="0,10,0,0"/>
             </Grid>
         </Border>

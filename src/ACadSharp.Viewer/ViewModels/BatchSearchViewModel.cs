@@ -27,6 +27,10 @@ public class BatchSearchViewModel : ViewModelBase
     private int _batchSearchProgress = 0;
     private string _searchText = string.Empty;
     private SearchType _searchType = SearchType.Handle;
+    private string _folderPath = string.Empty;
+    private bool _includeSubdirectories = true;
+    private bool _includeDwgFiles = true;
+    private bool _includeDxfFiles = true;
 
     public BatchSearchViewModel(IFileDialogService? fileDialogService = null)
     {
@@ -38,6 +42,7 @@ public class BatchSearchViewModel : ViewModelBase
         // Commands
         StartBatchSearchCommand = ReactiveCommand.CreateFromTask(StartBatchSearchAsync);
         ShowBatchSearchResultsCommand = ReactiveCommand.Create(ShowBatchSearchResults);
+        BrowseFolderCommand = ReactiveCommand.CreateFromTask(BrowseFolderAsync);
 
         // Subscribe to progress events
         _batchSearchService.ProgressChanged += OnBatchSearchProgressChanged;
@@ -66,6 +71,42 @@ public class BatchSearchViewModel : ViewModelBase
     /// Available search types for the dropdown
     /// </summary>
     public SearchType[] SearchTypeValues => Enum.GetValues<SearchType>();
+
+    /// <summary>
+    /// Folder path for batch search
+    /// </summary>
+    public string FolderPath
+    {
+        get => _folderPath;
+        set => this.RaiseAndSetIfChanged(ref _folderPath, value);
+    }
+
+    /// <summary>
+    /// Whether to include subdirectories
+    /// </summary>
+    public bool IncludeSubdirectories
+    {
+        get => _includeSubdirectories;
+        set => this.RaiseAndSetIfChanged(ref _includeSubdirectories, value);
+    }
+
+    /// <summary>
+    /// Whether to include DWG files
+    /// </summary>
+    public bool IncludeDwgFiles
+    {
+        get => _includeDwgFiles;
+        set => this.RaiseAndSetIfChanged(ref _includeDwgFiles, value);
+    }
+
+    /// <summary>
+    /// Whether to include DXF files
+    /// </summary>
+    public bool IncludeDxfFiles
+    {
+        get => _includeDxfFiles;
+        set => this.RaiseAndSetIfChanged(ref _includeDxfFiles, value);
+    }
 
     /// <summary>
     /// Batch search results ViewModel
@@ -114,24 +155,34 @@ public class BatchSearchViewModel : ViewModelBase
     public ICommand ShowBatchSearchResultsCommand { get; }
 
     /// <summary>
+    /// Command to browse for folder
+    /// </summary>
+    public ICommand BrowseFolderCommand { get; }
+
+    /// <summary>
     /// Starts a batch search operation
     /// </summary>
     public async Task StartBatchSearchAsync()
     {
         try
         {
-            // Show folder picker
-            var folderPath = await _fileDialogService.ShowFolderPickerAsync();
+            // Use the folder path from the text box, or show picker if empty
+            var folderPath = FolderPath;
             if (string.IsNullOrEmpty(folderPath))
-                return;
+            {
+                folderPath = await _fileDialogService.ShowFolderPickerAsync();
+                if (string.IsNullOrEmpty(folderPath))
+                    return;
+                FolderPath = folderPath;
+            }
 
             // Create configuration model
             var configModel = new BatchSearchConfigurationModel
             {
                 RootFolder = folderPath,
-                IncludeSubdirectories = true,
-                IncludeDwgFiles = true,
-                IncludeDxfFiles = true,
+                IncludeSubdirectories = IncludeSubdirectories,
+                IncludeDwgFiles = IncludeDwgFiles,
+                IncludeDxfFiles = IncludeDxfFiles,
                 MaxFiles = 0,
                 StopOnError = false,
                 SearchText = SearchText,
@@ -234,5 +285,24 @@ public class BatchSearchViewModel : ViewModelBase
                 BatchSearchResults.AddResult(e.Result);
             }
         });
+    }
+
+    /// <summary>
+    /// Browse for folder using folder picker
+    /// </summary>
+    public async Task BrowseFolderAsync()
+    {
+        try
+        {
+            var folderPath = await _fileDialogService.ShowFolderPickerAsync();
+            if (!string.IsNullOrEmpty(folderPath))
+            {
+                FolderPath = folderPath;
+            }
+        }
+        catch (Exception ex)
+        {
+            BatchSearchStatus = $"Error selecting folder: {ex.Message}";
+        }
     }
 } 

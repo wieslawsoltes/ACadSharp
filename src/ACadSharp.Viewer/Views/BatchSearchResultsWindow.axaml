@@ -57,25 +57,26 @@
 
         <!-- Results Grid -->
         <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*">
-            <!-- Files List -->
+            <!-- Files List with DataGrid -->
             <Border Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
                     BorderThickness="0,0,1,0">
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="Files" FontWeight="SemiBold" 
                                Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-                    <ListBox Grid.Row="1" ItemsSource="{Binding FilteredResults}" 
-                             SelectedItem="{Binding SelectedResult}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="5">
-                                    <TextBlock Grid.Column="0" Text="{Binding FileName}" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding FileType}" Foreground="Gray" Margin="10,0,0,0"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding MatchCount}" Foreground="Blue" Margin="10,0,0,0"/>
-                                    <TextBlock Grid.Column="3" Text="{Binding StatusMessage}" Foreground="Gray" Margin="10,0,0,0"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding FilteredResults}" 
+                              SelectedItem="{Binding SelectedResult}"
+                              AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True"
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="*" MinWidth="120"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding FileType}" Width="60"/>
+                            <DataGridTextColumn Header="Matches" Binding="{Binding MatchCount}" Width="70"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding StatusMessage}" Width="*" MinWidth="100"/>
+                            <DataGridTextColumn Header="Processing Time" Binding="{Binding ProcessingTime, StringFormat='hh\\:mm\\:ss\\.fff'}" Width="120"/>
+                            <DataGridTextColumn Header="Loaded" Binding="{Binding IsLoaded}" Width="70"/>
+                        </DataGrid.Columns>
+
+                    </DataGrid>
                 </Grid>
             </Border>
 
@@ -88,12 +89,14 @@
                     <TextBlock Grid.Row="0" Text="Matches" FontWeight="SemiBold" 
                                Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedResult.Matches}" 
-                              AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
+                              AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True"
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Type" Binding="{Binding ObjectType}" Width="*"/>
+                            <DataGridTextColumn Header="Object Type" Binding="{Binding ObjectType}" Width="*" MinWidth="100"/>
                             <DataGridTextColumn Header="Handle" Binding="{Binding Handle, StringFormat='X'}" Width="80"/>
-                            <DataGridTextColumn Header="Name" Binding="{Binding ObjectName}" Width="*"/>
-                            <DataGridTextColumn Header="Match" Binding="{Binding MatchValue}" Width="*"/>
+                            <DataGridTextColumn Header="Object Name" Binding="{Binding ObjectName}" Width="*" MinWidth="120"/>
+                            <DataGridTextColumn Header="Match Type" Binding="{Binding MatchType}" Width="*" MinWidth="100"/>
+                            <DataGridTextColumn Header="Match Value" Binding="{Binding MatchValue}" Width="*" MinWidth="150"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

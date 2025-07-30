@@ -1050,17 +1050,20 @@ public class MainWindowViewModel : ViewModelBase
         if (property?.PropertyObject == null || !property.IsNavigable)
             return;
 
+        // Determine the property path for breadcrumb navigation
+        var propertyPath = DeterminePropertyPath(property);
+
         // If the property has a handle, try to navigate to the object in the tree first
         if (property.ObjectHandle.HasValue)
         {
             if (LeftDocument?.Document != null)
             {
-                LeftDocument.NavigateToObjectByHandle(property.ObjectHandle.Value, property.Name);
+                NavigateToPropertyInDocument(LeftDocument, property, propertyPath);
             }
 
             if (RightDocument?.Document != null)
             {
-                RightDocument.NavigateToObjectByHandle(property.ObjectHandle.Value, property.Name);
+                NavigateToPropertyInDocument(RightDocument, property, propertyPath);
             }
         }
         else
@@ -1068,13 +1071,63 @@ public class MainWindowViewModel : ViewModelBase
             // Otherwise, navigate directly to the object
             if (LeftDocument?.Document != null)
             {
-                LeftDocument.NavigateToObject(property.PropertyObject, property.Name);
+                NavigateToPropertyInDocument(LeftDocument, property, propertyPath);
             }
 
             if (RightDocument?.Document != null)
             {
-                RightDocument.NavigateToObject(property.PropertyObject, property.Name);
+                NavigateToPropertyInDocument(RightDocument, property, propertyPath);
             }
+        }
+    }
+
+    /// <summary>
+    /// Navigates to a property in a specific document with enhanced tree synchronization
+    /// </summary>
+    /// <param name="document">The document to navigate in</param>
+    /// <param name="property">The property to navigate to</param>
+    /// <param name="propertyPath">The property path for breadcrumb tracking</param>
+    private void NavigateToPropertyInDocument(CadDocumentModel document, ObjectProperty property, string propertyPath)
+    {
+        // Try to find and select the object in the tree first for better synchronization
+        if (property.PropertyObject is ACadSharp.CadObject cadObject)
+        {
+            var targetNode = FindObjectInTreeAndSelect(document, cadObject);
+            if (targetNode != null)
+            {
+                // Use the tree node navigation to maintain proper tree view state
+                document.NavigateToTreeNodeWithoutHistory(targetNode);
+                return;
+            }
+        }
+
+        // Fallback to the original navigation methods
+        if (property.ObjectHandle.HasValue)
+        {
+            document.NavigateToObjectByHandle(property.ObjectHandle.Value, propertyPath);
+        }
+        else
+        {
+            document.NavigateToObject(property.PropertyObject, propertyPath);
+        }
+    }
+
+    /// <summary>
+    /// Determines the property path for breadcrumb navigation
+    /// </summary>
+    /// <param name="property">The property to determine path for</param>
+    /// <returns>The property path string</returns>
+    private string DeterminePropertyPath(ObjectProperty property)
+    {
+        if (property.IsCollectionItem)
+        {
+            // For collection items, use the full indexed name (e.g., "Layers[0]")
+            return property.Name;
+        }
+        else
+        {
+            // For regular properties, use the property name
+            return property.Name;
         }
     }
 
@@ -1125,10 +1178,30 @@ public class MainWindowViewModel : ViewModelBase
         if (document?.Document == null || breadcrumbItem == null)
             return;
 
+        // Handle special navigation cases first
+        if (HandleSpecialBreadcrumbNavigation(document, breadcrumbItem))
+            return;
+
+        // Handle property-based navigation (collections, etc.)
+        if (!string.IsNullOrEmpty(breadcrumbItem.PropertyPath))
+        {
+            NavigateToPropertyPath(document, breadcrumbItem);
+            return;
+        }
+
         // Try different navigation strategies based on the object type
         if (breadcrumbItem.Object is ACadSharp.CadObject cadObject)
         {
-            // Create a temporary node to represent the breadcrumb item
+            // Find the object in the tree and select it for synchronization
+            var targetNode = FindObjectInTreeAndSelect(document, cadObject);
+            if (targetNode != null)
+            {
+                // Navigate using the actual tree node to maintain tree view synchronization
+                document.NavigateToTreeNodeWithoutHistory(targetNode);
+                return;
+            }
+
+            // Fallback: Create a temporary node to represent the breadcrumb item
             var tempNode = new ACadSharp.Viewer.Interfaces.CadObjectTreeNode
             {
                 Name = breadcrumbItem.Name,
@@ -1137,7 +1210,6 @@ public class MainWindowViewModel : ViewModelBase
                 Handle = breadcrumbItem.Handle
             };
 
-            // Navigate to the object in the breadcrumb using tree navigation
             document.NavigateToTreeNodeWithoutHistory(tempNode);
         }
         else if (breadcrumbItem.Handle != null)
@@ -1147,6 +1219,15 @@ public class MainWindowViewModel : ViewModelBase
             {
                 if (document.Document.TryGetCadObject(breadcrumbItem.Handle.Value, out ACadSharp.CadObject objectByHandle))
                 {
+                    // Try to find and select in tree first
+                    var targetNode = FindObjectInTreeAndSelect(document, objectByHandle);
+                    if (targetNode != null)
+                    {
+                        document.NavigateToTreeNodeWithoutHistory(targetNode);
+                        return;
+                    }
+
+                    // Fallback: Create temporary node
                     var tempNode = new ACadSharp.Viewer.Interfaces.CadObjectTreeNode
                     {
                         Name = breadcrumbItem.Name,
@@ -1176,9 +1257,153 @@ public class MainWindowViewModel : ViewModelBase
                     Object = item.Object,
                     Handle = item.Handle,
                     IsCurrent = item.IsCurrent,
-                    HistoryIndex = item.HistoryIndex
+                    HistoryIndex = item.HistoryIndex,
+                    PropertyPath = item.PropertyPath,
+                    IsCollectionItem = item.IsCollectionItem,
+                    CollectionIndex = item.CollectionIndex
                 });
             }
+        }
+    }
+
+    /// <summary>
+    /// Handles special breadcrumb navigation cases like Document, Tables, etc.
+    /// </summary>
+    /// <param name="document">The document to navigate in</param>
+    /// <param name="breadcrumbItem">The breadcrumb item</param>
+    /// <returns>True if navigation was handled</returns>
+    private bool HandleSpecialBreadcrumbNavigation(CadDocumentModel document, BreadcrumbItem breadcrumbItem)
+    {
+        switch (breadcrumbItem.Type?.ToLowerInvariant())
+        {
+            case "document":
+                // Navigate to document root - select the first node in tree if available
+                if (document.ObjectTreeNodes.Count > 0)
+                {
+                    var documentNode = document.ObjectTreeNodes.FirstOrDefault(n => n.Name == "Document" || n.ObjectType == "Document");
+                    if (documentNode != null)
+                    {
+                        SetSelectedTreeNode(document, documentNode);
+                        return true;
+                    }
+                }
+                break;
+
+            case "tables":
+            case "layers":
+            case "blocks":
+            case "linetypes":
+            case "textstyles":
+            case "dimensionstyles":
+                // Navigate to specific table sections
+                var tableNode = FindTableNode(document, breadcrumbItem.Name);
+                if (tableNode != null)
+                {
+                    SetSelectedTreeNode(document, tableNode);
+                    return true;
+                }
+                break;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Navigates to a specific property path (for collections and complex properties)
+    /// </summary>
+    /// <param name="document">The document to navigate in</param>
+    /// <param name="breadcrumbItem">The breadcrumb item with property path</param>
+    private void NavigateToPropertyPath(CadDocumentModel document, BreadcrumbItem breadcrumbItem)
+    {
+        // For now, just navigate to the object and let the property inspector show the details
+        // This could be enhanced further to scroll to specific properties
+        if (breadcrumbItem.Object != null)
+        {
+            document.NavigateToObject(breadcrumbItem.Object, breadcrumbItem.PropertyPath);
+        }
+    }
+
+    /// <summary>
+    /// Finds an object in the tree and selects the corresponding tree node
+    /// </summary>
+    /// <param name="document">The document to search in</param>
+    /// <param name="cadObject">The CAD object to find</param>
+    /// <returns>The tree node if found</returns>
+    private CadObjectTreeNode? FindObjectInTreeAndSelect(CadDocumentModel document, ACadSharp.CadObject cadObject)
+    {
+        var targetNode = FindNodeInTree(document.ObjectTreeNodes, cadObject);
+        if (targetNode != null)
+        {
+            SetSelectedTreeNode(document, targetNode);
+        }
+        return targetNode;
+    }
+
+    /// <summary>
+    /// Recursively finds a CAD object in the tree nodes
+    /// </summary>
+    /// <param name="nodes">The tree nodes to search</param>
+    /// <param name="cadObject">The CAD object to find</param>
+    /// <returns>The tree node containing the object</returns>
+    private CadObjectTreeNode? FindNodeInTree(IEnumerable<CadObjectTreeNode> nodes, ACadSharp.CadObject cadObject)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.CadObject == cadObject)
+                return node;
+
+            var childResult = FindNodeInTree(node.Children, cadObject);
+            if (childResult != null)
+                return childResult;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Finds a table node by name in the document tree
+    /// </summary>
+    /// <param name="document">The document to search in</param>
+    /// <param name="tableName">The name of the table</param>
+    /// <returns>The table node if found</returns>
+    private CadObjectTreeNode? FindTableNode(CadDocumentModel document, string tableName)
+    {
+        return FindNodeByName(document.ObjectTreeNodes, tableName);
+    }
+
+    /// <summary>
+    /// Recursively finds a node by name
+    /// </summary>
+    /// <param name="nodes">The nodes to search</param>
+    /// <param name="name">The name to search for</param>
+    /// <returns>The node if found</returns>
+    private CadObjectTreeNode? FindNodeByName(IEnumerable<CadObjectTreeNode> nodes, string name)
+    {
+        foreach (var node in nodes)
+        {
+            if (string.Equals(node.Name, name, StringComparison.OrdinalIgnoreCase))
+                return node;
+
+            var childResult = FindNodeByName(node.Children, name);
+            if (childResult != null)
+                return childResult;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Sets the selected tree node for proper tree view synchronization
+    /// </summary>
+    /// <param name="document">The document model</param>
+    /// <param name="node">The node to select</param>
+    private void SetSelectedTreeNode(CadDocumentModel document, CadObjectTreeNode node)
+    {
+        if (document == LeftDocument)
+        {
+            LeftDocument.SelectedTreeNode = node;
+        }
+        else if (document == RightDocument)
+        {
+            RightDocument.SelectedTreeNode = node;
         }
     }
 

@@ -579,17 +579,54 @@ public class CadDocumentModel : INotifyPropertyChanged
             Name = "Document",
             Type = "Document",
             Object = Document,
-            IsCurrent = false
+            IsCurrent = false,
+            PropertyPath = ""
         });
 
-        // Add the property that was clicked
-        BreadcrumbItems.Add(new BreadcrumbItem
+        // Parse property name to handle collection items (e.g., "Layers[0]")
+        var isCollectionItem = propertyName.Contains("[") && propertyName.Contains("]");
+        if (isCollectionItem)
         {
-            Name = propertyName,
-            Type = "Property",
-            Object = null,
-            IsCurrent = false
-        });
+            var baseName = propertyName.Substring(0, propertyName.IndexOf('['));
+            var indexStr = propertyName.Substring(propertyName.IndexOf('[') + 1, propertyName.IndexOf(']') - propertyName.IndexOf('[') - 1);
+            
+            if (int.TryParse(indexStr, out int index))
+            {
+                // Add the parent collection property
+                BreadcrumbItems.Add(new BreadcrumbItem
+                {
+                    Name = baseName,
+                    Type = "Collection",
+                    Object = null,
+                    IsCurrent = false,
+                    PropertyPath = baseName
+                });
+
+                // Add the collection item
+                BreadcrumbItems.Add(new BreadcrumbItem
+                {
+                    Name = $"[{index}]",
+                    Type = "CollectionItem",
+                    Object = null,
+                    IsCurrent = false,
+                    PropertyPath = propertyName,
+                    IsCollectionItem = true,
+                    CollectionIndex = index
+                });
+            }
+        }
+        else
+        {
+            // Add the property that was clicked
+            BreadcrumbItems.Add(new BreadcrumbItem
+            {
+                Name = propertyName,
+                Type = "Property",
+                Object = null,
+                IsCurrent = false,
+                PropertyPath = propertyName
+            });
+        }
 
         // Add current object
         BreadcrumbItems.Add(new BreadcrumbItem
@@ -796,6 +833,19 @@ public class CadDocumentModel : INotifyPropertyChanged
                         {
                             objectProperty.ObjectHandle = cadObj.Handle;
                         }
+
+                        // Check if this property is a collection or enumerable (but not string)
+                        if (IsCollectionType(prop.PropertyType) && value is System.Collections.IEnumerable enumerable)
+                        {
+                            // Add the collection summary property first
+                            var collectionCount = GetCollectionCount(enumerable);
+                            objectProperty.Value = $"{stringValue} (Count: {collectionCount})";
+                            properties.Add(objectProperty);
+
+                            // Add individual collection items as separate properties
+                            AddCollectionItemProperties(properties, prop.Name, enumerable);
+                            continue; // Skip adding the main property again
+                        }
                     }
 
                     properties.Add(objectProperty);
@@ -823,6 +873,91 @@ public class CadDocumentModel : INotifyPropertyChanged
         }
             
         return properties;
+    }
+
+    /// <summary>
+    /// Checks if a type is a collection type (but not string)
+    /// </summary>
+    /// <param name="type">The type to check</param>
+    /// <returns>True if the type is a collection</returns>
+    private bool IsCollectionType(Type type)
+    {
+        if (type == typeof(string))
+            return false;
+
+        return typeof(System.Collections.IEnumerable).IsAssignableFrom(type) && 
+               !typeof(System.Collections.IDictionary).IsAssignableFrom(type);
+    }
+
+    /// <summary>
+    /// Gets the count of items in a collection
+    /// </summary>
+    /// <param name="enumerable">The collection</param>
+    /// <returns>The number of items</returns>
+    private int GetCollectionCount(System.Collections.IEnumerable enumerable)
+    {
+        if (enumerable is System.Collections.ICollection collection)
+            return collection.Count;
+
+        int count = 0;
+        foreach (var _ in enumerable)
+            count++;
+        return count;
+    }
+
+    /// <summary>
+    /// Adds individual collection items as separate properties
+    /// </summary>
+    /// <param name="properties">The properties list to add to</param>
+    /// <param name="propertyName">The name of the collection property</param>
+    /// <param name="enumerable">The collection</param>
+    private void AddCollectionItemProperties(List<ObjectProperty> properties, string propertyName, System.Collections.IEnumerable enumerable)
+    {
+        int index = 0;
+        const int maxItems = 50; // Limit to prevent UI overload
+
+        foreach (var item in enumerable)
+        {
+            if (index >= maxItems)
+            {
+                properties.Add(new ObjectProperty
+                {
+                    Name = $"{propertyName}[...more]",
+                    Value = "Additional items not shown (limit reached)",
+                    Type = "Info",
+                    IsNavigable = false,
+                    IsCollectionItem = true,
+                    ParentPropertyName = propertyName
+                });
+                break;
+            }
+
+            var itemProperty = new ObjectProperty
+            {
+                Name = $"{propertyName}[{index}]",
+                Value = item?.ToString() ?? "null",
+                Type = item?.GetType().Name ?? "null",
+                IsCollectionItem = true,
+                CollectionIndex = index,
+                ParentPropertyName = propertyName
+            };
+
+            // Check if the item is navigable
+            if (item != null && !item.GetType().IsPrimitive && item.GetType() != typeof(string))
+            {
+                itemProperty.IsNavigable = true;
+                itemProperty.PropertyObject = item;
+
+                // If it's a CadObject, get its handle
+                if (item is CadObject cadObj)
+                {
+                    itemProperty.ObjectHandle = cadObj.Handle;
+                }
+            }
+
+            properties.Add(itemProperty);
+            index++;
+        }
     }
 
     private IEnumerable<ObjectProperty> GetSpecialNodeProperties(CadObjectTreeNode node)

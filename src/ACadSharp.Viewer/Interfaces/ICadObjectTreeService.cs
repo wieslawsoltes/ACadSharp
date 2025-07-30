@@ -172,6 +172,9 @@ public class ObjectProperty : INotifyPropertyChanged
     private bool _isNavigable;
     private object? _propertyObject;
     private ulong? _objectHandle;
+    private bool _isCollectionItem;
+    private int? _collectionIndex;
+    private string _parentPropertyName = string.Empty;
 
     public string Name 
     { 
@@ -233,6 +236,33 @@ public class ObjectProperty : INotifyPropertyChanged
         set => SetProperty(ref _objectHandle, value); 
     }
 
+    /// <summary>
+    /// Indicates if this property represents an item within a collection
+    /// </summary>
+    public bool IsCollectionItem 
+    { 
+        get => _isCollectionItem; 
+        set => SetProperty(ref _isCollectionItem, value); 
+    }
+
+    /// <summary>
+    /// The index of this item within its parent collection (if applicable)
+    /// </summary>
+    public int? CollectionIndex 
+    { 
+        get => _collectionIndex; 
+        set => SetProperty(ref _collectionIndex, value); 
+    }
+
+    /// <summary>
+    /// The name of the parent property that contains this collection item
+    /// </summary>
+    public string ParentPropertyName 
+    { 
+        get => _parentPropertyName; 
+        set => SetProperty(ref _parentPropertyName, value); 
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -259,6 +289,9 @@ public class BreadcrumbItem : INotifyPropertyChanged
     private object? _object;
     private ulong? _handle;
     private bool _isCurrent;
+    private string _propertyPath = string.Empty;
+    private bool _isCollectionItem;
+    private int? _collectionIndex;
 
     public string Name 
     { 
@@ -295,6 +328,33 @@ public class BreadcrumbItem : INotifyPropertyChanged
     { 
         get => _historyIndex; 
         set => SetProperty(ref _historyIndex, value); 
+    }
+
+    /// <summary>
+    /// The property path that led to this breadcrumb item (for collection navigation)
+    /// </summary>
+    public string PropertyPath 
+    { 
+        get => _propertyPath; 
+        set => SetProperty(ref _propertyPath, value); 
+    }
+
+    /// <summary>
+    /// Indicates if this breadcrumb represents an item within a collection
+    /// </summary>
+    public bool IsCollectionItem 
+    { 
+        get => _isCollectionItem; 
+        set => SetProperty(ref _isCollectionItem, value); 
+    }
+
+    /// <summary>
+    /// The index of this item within its parent collection (if applicable)
+    /// </summary>
+    public int? CollectionIndex 
+    { 
+        get => _collectionIndex; 
+        set => SetProperty(ref _collectionIndex, value); 
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

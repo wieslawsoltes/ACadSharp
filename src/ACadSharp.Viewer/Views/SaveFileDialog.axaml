@@ -1,0 +1,82 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ACadSharp.Viewer.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+        x:Class="ACadSharp.Viewer.Views.SaveFileDialog"
+        x:DataType="vm:SaveFileDialogViewModel"
+        Title="Save CAD File"
+        Width="600" Height="400"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                Padding="20,15">
+            <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold"/>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+            <!-- File Name -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,15">
+                <TextBlock Grid.Column="0" Text="File name:" VerticalAlignment="Center" Width="100"/>
+                <TextBox Grid.Column="1" Text="{Binding FileName}" Watermark="Enter file name..."/>
+            </Grid>
+
+            <!-- File Path -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,15">
+                <TextBlock Grid.Column="0" Text="Save in:" VerticalAlignment="Center" Width="100"/>
+                <TextBox Grid.Column="1" Text="{Binding FolderPath}" IsReadOnly="True" Margin="0,0,10,0"/>
+                <Button Grid.Column="2" Content="Browse..." Click="BrowseFolder_Click" Padding="15,5"/>
+            </Grid>
+
+            <!-- File Type -->
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Margin="0,0,0,15">
+                <TextBlock Grid.Column="0" Text="Save as type:" VerticalAlignment="Center" Width="100"/>
+                <ComboBox Grid.Column="1" SelectedItem="{Binding SelectedFileType}" 
+                          ItemsSource="{Binding FileTypes}" Width="200" HorizontalAlignment="Left"/>
+            </Grid>
+
+            <!-- CAD Version -->
+            <Grid Grid.Row="3" ColumnDefinitions="Auto,*" Margin="0,0,0,15">
+                <TextBlock Grid.Column="0" Text="CAD Version:" VerticalAlignment="Center" Width="100"/>
+                <ComboBox Grid.Column="1" SelectedItem="{Binding SelectedVersion}" 
+                          ItemsSource="{Binding AvailableVersions}" Width="300" HorizontalAlignment="Left"/>
+            </Grid>
+
+            <!-- Binary Option (DXF only) -->
+            <Grid Grid.Row="4" ColumnDefinitions="Auto,*" Margin="0,0,0,15"
+                  IsVisible="{Binding ShowBinaryOption}">
+                <TextBlock Grid.Column="0" Text="Format:" VerticalAlignment="Center" Width="100"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <RadioButton Content="ASCII DXF" IsChecked="{Binding !IsBinary}" Margin="0,0,20,0"/>
+                    <RadioButton Content="Binary DXF" IsChecked="{Binding IsBinary}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Info -->
+            <Border Grid.Row="5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                    Padding="15" CornerRadius="5" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="Current Document Info:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBlock Text="{Binding CurrentVersionInfo}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding SelectedVersionInfo}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Separator -->
+        <Separator Grid.Row="2"/>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" Margin="20,15">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                <Button Content="Save" Command="{Binding SaveCommand}" Padding="20,8" 
+                        IsEnabled="{Binding CanSave}"/>
+                <Button Content="Cancel" Command="{Binding CancelCommand}" Padding="20,8"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

@@ -68,10 +68,15 @@ public class MainWindowViewModel : ViewModelBase
         OpenBatchSearchCommand = ReactiveCommand.Create(OpenBatchSearch);
         GoBackCommand = ReactiveCommand.Create(GoBack);
         GoForwardCommand = ReactiveCommand.Create(GoForward);
+        SaveLeftAsDwgCommand = ReactiveCommand.CreateFromTask(SaveLeftAsDwgAsync);
+        SaveLeftAsDxfCommand = ReactiveCommand.CreateFromTask(SaveLeftAsDxfAsync);
+        SaveRightAsDwgCommand = ReactiveCommand.CreateFromTask(SaveRightAsDwgAsync);
+        SaveRightAsDxfCommand = ReactiveCommand.CreateFromTask(SaveRightAsDxfAsync);
 
 
         // Subscribe to progress events
         _cadFileService.LoadProgressChanged += OnLoadProgressChanged;
+        _cadFileService.SaveProgressChanged += OnSaveProgressChanged;
 
         // Search text and type changes
         this.WhenAnyValue(x => x.SearchText, x => x.SearchType)
@@ -266,6 +271,26 @@ public class MainWindowViewModel : ViewModelBase
     /// Command to go forward in navigation history
     /// </summary>
     public ICommand GoForwardCommand { get; }
+
+    /// <summary>
+    /// Command to save left document as DWG
+    /// </summary>
+    public ICommand SaveLeftAsDwgCommand { get; }
+
+    /// <summary>
+    /// Command to save left document as DXF
+    /// </summary>
+    public ICommand SaveLeftAsDxfCommand { get; }
+
+    /// <summary>
+    /// Command to save right document as DWG
+    /// </summary>
+    public ICommand SaveRightAsDwgCommand { get; }
+
+    /// <summary>
+    /// Command to save right document as DXF
+    /// </summary>
+    public ICommand SaveRightAsDxfCommand { get; }
 
 
 
@@ -1652,6 +1677,136 @@ public class MainWindowViewModel : ViewModelBase
         {
             System.Diagnostics.Debug.WriteLine($"Error updating search suggestions async: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Saves the left document as DWG
+    /// </summary>
+    private async Task SaveLeftAsDwgAsync()
+    {
+        if (LeftDocument.Document == null)
+        {
+            // Show error message or notification
+            return;
+        }
+
+        var defaultFileName = !string.IsNullOrEmpty(LeftDocument.FileName) 
+            ? Path.GetFileNameWithoutExtension(LeftDocument.FileName) + ".dwg"
+            : "document.dwg";
+
+        var result = await _fileDialogService.ShowDwgSaveDialogAsync(defaultFileName, LeftDocument.Document.Header.Version);
+        if (result != null)
+        {
+            try
+            {
+                await _cadFileService.SaveDwgAsync(LeftDocument.Document, result.FilePath, result.SelectedVersion);
+            }
+            catch (Exception ex)
+            {
+                // Handle error (could show a message box or notification)
+                System.Diagnostics.Debug.WriteLine($"Error saving DWG file: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Saves the left document as DXF
+    /// </summary>
+    private async Task SaveLeftAsDxfAsync()
+    {
+        if (LeftDocument.Document == null)
+        {
+            // Show error message or notification
+            return;
+        }
+
+        var defaultFileName = !string.IsNullOrEmpty(LeftDocument.FileName) 
+            ? Path.GetFileNameWithoutExtension(LeftDocument.FileName) + ".dxf"
+            : "document.dxf";
+
+        var result = await _fileDialogService.ShowDxfSaveDialogAsync(defaultFileName, LeftDocument.Document.Header.Version);
+        if (result != null)
+        {
+            try
+            {
+                await _cadFileService.SaveDxfAsync(LeftDocument.Document, result.FilePath, result.IsBinary, result.SelectedVersion);
+            }
+            catch (Exception ex)
+            {
+                // Handle error (could show a message box or notification)
+                System.Diagnostics.Debug.WriteLine($"Error saving DXF file: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Saves the right document as DWG
+    /// </summary>
+    private async Task SaveRightAsDwgAsync()
+    {
+        if (RightDocument.Document == null)
+        {
+            // Show error message or notification
+            return;
+        }
+
+        var defaultFileName = !string.IsNullOrEmpty(RightDocument.FileName) 
+            ? Path.GetFileNameWithoutExtension(RightDocument.FileName) + ".dwg"
+            : "document.dwg";
+
+        var result = await _fileDialogService.ShowDwgSaveDialogAsync(defaultFileName, RightDocument.Document.Header.Version);
+        if (result != null)
+        {
+            try
+            {
+                await _cadFileService.SaveDwgAsync(RightDocument.Document, result.FilePath, result.SelectedVersion);
+            }
+            catch (Exception ex)
+            {
+                // Handle error (could show a message box or notification)
+                System.Diagnostics.Debug.WriteLine($"Error saving DWG file: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Saves the right document as DXF
+    /// </summary>
+    private async Task SaveRightAsDxfAsync()
+    {
+        if (RightDocument.Document == null)
+        {
+            // Show error message or notification
+            return;
+        }
+
+        var defaultFileName = !string.IsNullOrEmpty(RightDocument.FileName) 
+            ? Path.GetFileNameWithoutExtension(RightDocument.FileName) + ".dxf"
+            : "document.dxf";
+
+        var result = await _fileDialogService.ShowDxfSaveDialogAsync(defaultFileName, RightDocument.Document.Header.Version);
+        if (result != null)
+        {
+            try
+            {
+                await _cadFileService.SaveDxfAsync(RightDocument.Document, result.FilePath, result.IsBinary, result.SelectedVersion);
+            }
+            catch (Exception ex)
+            {
+                // Handle error (could show a message box or notification)
+                System.Diagnostics.Debug.WriteLine($"Error saving DXF file: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles save progress events
+    /// </summary>
+    private void OnSaveProgressChanged(object? sender, FileLoadProgressEventArgs e)
+    {
+        // Could update a progress bar or status message
+        // For now, just log to debug
+        System.Diagnostics.Debug.WriteLine($"Save Progress: {e.ProgressPercentage}% - {e.StatusMessage}");
     }
 
 

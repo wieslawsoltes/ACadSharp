@@ -81,10 +81,18 @@
                     <!-- Left Panel Header -->
                     <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
                             Padding="10,5">
-                        <Grid ColumnDefinitions="*,Auto">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
                             <TextBlock Grid.Column="0" Text="DWG File" FontWeight="Bold"/>
                             <TextBlock Grid.Column="1" Text="{Binding LeftDocument.FileName}" 
-                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="0,0,10,0"/>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5">
+                                <Button Content="Save as DWG" Command="{Binding SaveLeftAsDwgCommand}" 
+                                        IsEnabled="{Binding LeftDocument.Document, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                        Padding="8,2" FontSize="12"/>
+                                <Button Content="Save as DXF" Command="{Binding SaveLeftAsDxfCommand}" 
+                                        IsEnabled="{Binding LeftDocument.Document, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                        Padding="8,2" FontSize="12"/>
+                            </StackPanel>
                         </Grid>
                     </Border>
 
@@ -268,10 +276,18 @@
                     <!-- Right Panel Header -->
                     <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
                             Padding="10,5">
-                        <Grid ColumnDefinitions="*,Auto">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
                             <TextBlock Grid.Column="0" Text="DXF File" FontWeight="Bold"/>
                             <TextBlock Grid.Column="1" Text="{Binding RightDocument.FileName}" 
-                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="0,0,10,0"/>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5">
+                                <Button Content="Save as DWG" Command="{Binding SaveRightAsDwgCommand}" 
+                                        IsEnabled="{Binding RightDocument.Document, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                        Padding="8,2" FontSize="12"/>
+                                <Button Content="Save as DXF" Command="{Binding SaveRightAsDxfCommand}" 
+                                        IsEnabled="{Binding RightDocument.Document, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                        Padding="8,2" FontSize="12"/>
+                            </StackPanel>
                         </Grid>
                     </Border>
 

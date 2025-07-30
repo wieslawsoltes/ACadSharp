@@ -31,9 +31,33 @@ public interface ICadFileService
     bool IsDxfFile(string filePath);
 
     /// <summary>
+    /// Saves a CAD document as DWG file
+    /// </summary>
+    /// <param name="document">The document to save</param>
+    /// <param name="filePath">Path where to save the file</param>
+    /// <param name="targetVersion">Target CAD version (null to use document's current version)</param>
+    /// <returns>Task representing the async operation</returns>
+    Task SaveDwgAsync(CadDocument document, string filePath, ACadVersion? targetVersion = null);
+
+    /// <summary>
+    /// Saves a CAD document as DXF file
+    /// </summary>
+    /// <param name="document">The document to save</param>
+    /// <param name="filePath">Path where to save the file</param>
+    /// <param name="binary">True for binary DXF, false for ASCII</param>
+    /// <param name="targetVersion">Target CAD version (null to use document's current version)</param>
+    /// <returns>Task representing the async operation</returns>
+    Task SaveDxfAsync(CadDocument document, string filePath, bool binary = false, ACadVersion? targetVersion = null);
+
+    /// <summary>
     /// Event raised when file loading progress changes
     /// </summary>
     event EventHandler<FileLoadProgressEventArgs> LoadProgressChanged;
+    
+    /// <summary>
+    /// Event raised when file saving progress changes
+    /// </summary>
+    event EventHandler<FileLoadProgressEventArgs> SaveProgressChanged;
 }
 
 /// <summary>

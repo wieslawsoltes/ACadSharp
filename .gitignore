@@ -352,3 +352,8 @@ MigrationBackup/
 /local
 /samples/local
 /samples/out
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+

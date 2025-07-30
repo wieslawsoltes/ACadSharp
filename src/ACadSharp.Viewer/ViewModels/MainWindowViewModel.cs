@@ -2,6 +2,7 @@ using ACadSharp;
 using ACadSharp.Viewer.Interfaces;
 using ACadSharp.Viewer.Models;
 using ACadSharp.Viewer.Services;
+using ACadSharp.Viewer.Views;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,6 @@ public class MainWindowViewModel : ViewModelBase
 {
     private readonly ICadFileService _cadFileService;
     private readonly ICadObjectTreeService _cadObjectTreeService;
-    private readonly IBatchSearchService _batchSearchService;
     private readonly IFileDialogService _fileDialogService;
     private CadDocumentModel _leftDocument;
     private CadDocumentModel _rightDocument;
@@ -35,16 +35,11 @@ public class MainWindowViewModel : ViewModelBase
     private bool _isHighlighting = false;
     private DateTime _lastRestoreTime = DateTime.MinValue;
     private readonly TimeSpan _restoreDebounceTime = TimeSpan.FromMilliseconds(100);
-    private BatchSearchResultsViewModel? _batchSearchResults;
-    private bool _isBatchSearching = false;
-    private string _batchSearchStatus = string.Empty;
-    private int _batchSearchProgress = 0;
 
     public MainWindowViewModel(IFileDialogService? fileDialogService = null)
     {
         _cadFileService = new CadFileService();
         _cadObjectTreeService = new CadObjectTreeService();
-        _batchSearchService = new BatchSearchService();
         _fileDialogService = fileDialogService ?? new FileDialogService(null!); // Will be set properly
         _leftDocument = new CadDocumentModel();
         _rightDocument = new CadDocumentModel();
@@ -59,13 +54,10 @@ public class MainWindowViewModel : ViewModelBase
         ClearSearchCommand = ReactiveCommand.Create(ClearSearch);
         NavigateToPropertyCommand = ReactiveCommand.Create<ObjectProperty>(NavigateToProperty);
         NavigateToBreadcrumbCommand = ReactiveCommand.Create<BreadcrumbItem>(NavigateToBreadcrumb);
-        StartBatchSearchCommand = ReactiveCommand.CreateFromTask(StartBatchSearchAsync);
-        ShowBatchSearchResultsCommand = ReactiveCommand.Create(ShowBatchSearchResults);
+        OpenBatchSearchCommand = ReactiveCommand.Create(OpenBatchSearch);
 
         // Subscribe to progress events
         _cadFileService.LoadProgressChanged += OnLoadProgressChanged;
-        _batchSearchService.ProgressChanged += OnBatchSearchProgressChanged;
-        _batchSearchService.FileProcessed += OnBatchSearchFileProcessed;
 
         // Search text and type changes
         this.WhenAnyValue(x => x.SearchText, x => x.SearchType)
@@ -208,14 +200,9 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand NavigateToBreadcrumbCommand { get; }
 
     /// <summary>
-    /// Command to start batch search
+    /// Command to open batch search window
     /// </summary>
-    public ICommand StartBatchSearchCommand { get; }
-
-    /// <summary>
-    /// Command to show batch search results
-    /// </summary>
-    public ICommand ShowBatchSearchResultsCommand { get; }
+    public ICommand OpenBatchSearchCommand { get; }
 
     /// <summary>
     /// Loads a file into the left panel (DWG)
@@ -880,162 +867,17 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Batch search results ViewModel
-    /// </summary>
-    public BatchSearchResultsViewModel? BatchSearchResults
-    {
-        get => _batchSearchResults;
-        set => this.RaiseAndSetIfChanged(ref _batchSearchResults, value);
-    }
+
 
     /// <summary>
-    /// Indicates if a batch search is currently in progress
+    /// Opens the batch search window
     /// </summary>
-    public bool IsBatchSearching
+    public void OpenBatchSearch()
     {
-        get => _isBatchSearching;
-        set => this.RaiseAndSetIfChanged(ref _isBatchSearching, value);
-    }
-
-    /// <summary>
-    /// Status message for batch search operations
-    /// </summary>
-    public string BatchSearchStatus
-    {
-        get => _batchSearchStatus;
-        set => this.RaiseAndSetIfChanged(ref _batchSearchStatus, value);
-    }
-
-    /// <summary>
-    /// Progress percentage for batch search operations
-    /// </summary>
-    public int BatchSearchProgress
-    {
-        get => _batchSearchProgress;
-        set => this.RaiseAndSetIfChanged(ref _batchSearchProgress, value);
-    }
-
-    /// <summary>
-    /// Starts a batch search operation
-    /// </summary>
-    public async Task StartBatchSearchAsync()
-    {
-        try
+        var batchSearchWindow = new Views.BatchSearchWindow
         {
-            // Show folder picker
-            var folderPath = await _fileDialogService.ShowFolderPickerAsync();
-            if (string.IsNullOrEmpty(folderPath))
-                return;
-
-            // Create configuration model
-            var configModel = new BatchSearchConfigurationModel
-            {
-                RootFolder = folderPath,
-                IncludeSubdirectories = true,
-                IncludeDwgFiles = true,
-                IncludeDxfFiles = true,
-                MaxFiles = 0,
-                StopOnError = false,
-                SearchText = SearchText,
-                SearchType = SearchType,
-                CaseSensitive = false
-            };
-
-            // Validate configuration
-            var (isValid, errors) = configModel.Validate();
-            if (!isValid)
-            {
-                // TODO: Show validation errors to user
-                return;
-            }
-
-            // Initialize batch search results
-            BatchSearchResults = new BatchSearchResultsViewModel();
-            IsBatchSearching = true;
-            BatchSearchStatus = "Starting batch search...";
-            BatchSearchProgress = 0;
-
-            // Convert to configuration objects
-            var configuration = configModel.ToConfiguration();
-            var searchCriteria = configModel.ToSearchCriteria();
-
-            // Perform batch search
-            var results = await _batchSearchService.SearchFilesAsync(configuration, searchCriteria);
-            var resultsList = results.ToList();
-
-            // Create summary
-            var summary = new BatchSearchSummary
-            {
-                TotalFiles = resultsList.Count,
-                ProcessedFiles = resultsList.Count,
-                SuccessfulFiles = resultsList.Count(r => r.IsLoaded && r.Error == null),
-                FailedFiles = resultsList.Count(r => !r.IsLoaded || r.Error != null),
-                TotalMatches = resultsList.Sum(r => r.MatchCount),
-                TotalProcessingTime = TimeSpan.FromMilliseconds(resultsList.Sum(r => r.ProcessingTime.TotalMilliseconds)),
-                SearchText = searchCriteria.SearchText ?? string.Empty,
-                SearchType = searchCriteria.SearchType.ToString()
-            };
-
-            // Set results
-            BatchSearchResults.SetResults(resultsList, summary);
-
-            BatchSearchStatus = $"Batch search completed. Found {summary.TotalMatches} matches in {summary.SuccessfulFiles} files.";
-            BatchSearchProgress = 100;
-        }
-        catch (Exception ex)
-        {
-            BatchSearchStatus = $"Batch search failed: {ex.Message}";
-            BatchSearchProgress = 0;
-        }
-        finally
-        {
-            IsBatchSearching = false;
-        }
-    }
-
-    /// <summary>
-    /// Shows the batch search results
-    /// </summary>
-    public void ShowBatchSearchResults()
-    {
-        if (BatchSearchResults != null)
-        {
-            var resultsWindow = new Views.BatchSearchResultsWindow
-            {
-                DataContext = BatchSearchResults
-            };
-            resultsWindow.Show();
-        }
-    }
-
-    /// <summary>
-    /// Handles batch search progress updates
-    /// </summary>
-    /// <param name="sender">Event sender</param>
-    /// <param name="e">Progress event arguments</param>
-    private void OnBatchSearchProgressChanged(object? sender, BatchSearchProgressEventArgs e)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            BatchSearchProgress = e.ProgressPercentage;
-            BatchSearchStatus = e.StatusMessage;
-        });
-    }
-
-    /// <summary>
-    /// Handles batch search file processed events
-    /// </summary>
-    /// <param name="sender">Event sender</param>
-    /// <param name="e">File processed event arguments</param>
-    private void OnBatchSearchFileProcessed(object? sender, BatchSearchFileProcessedEventArgs e)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (BatchSearchResults != null)
-            {
-                BatchSearchResults.AddResult(e.Result);
-            }
-        });
+            DataContext = new BatchSearchViewModel(_fileDialogService)
+        };
+        batchSearchWindow.Show();
     }
 }

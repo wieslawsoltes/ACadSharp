@@ -44,10 +44,7 @@
                     <Button Content="Load DXF" Click="LoadDxfButton_Click" 
                             IsEnabled="{Binding IsBusy, Converter={x:Static BoolConverters.Not}}"/>
                     <Separator/>
-                    <Button Content="Batch Search" Command="{Binding StartBatchSearchCommand}"
-                            IsEnabled="{Binding IsBatchSearching, Converter={x:Static BoolConverters.Not}}"/>
-                    <Button Content="Results" Command="{Binding ShowBatchSearchResultsCommand}"
-                            IsEnabled="{Binding BatchSearchResults, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                    <Button Content="Batch Search" Command="{Binding OpenBatchSearchCommand}"/>
                 </StackPanel>
 
                 <!-- Search Box -->
@@ -62,15 +59,10 @@
                             Margin="10,0,0,0" Padding="10,5"/>
                 </Grid>
 
-                <!-- Status -->
-                <TextBlock Grid.Column="2" Text="{Binding BatchSearchStatus}" 
-                           VerticalAlignment="Center" Margin="10,0"/>
+
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="5">
                     <ProgressBar IsIndeterminate="{Binding IsSearching}" 
                                  Width="100" Height="4" VerticalAlignment="Center"/>
-                    <ProgressBar Value="{Binding BatchSearchProgress}" 
-                                 Width="100" Height="4" VerticalAlignment="Center"
-                                 IsVisible="{Binding IsBatchSearching}"/>
                 </StackPanel>
             </Grid>
         </Border>

@@ -1,0 +1,93 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ACadSharp.Viewer.ViewModels"
+        xmlns:converters="using:ACadSharp.Viewer.Converters"
+
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+        x:Class="ACadSharp.Viewer.Views.BatchSearchWindow"
+        x:DataType="vm:BatchSearchViewModel"
+        Title="Batch Search"
+        Width="600" Height="400"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Resources>
+        <converters:SearchHighlightConverter x:Key="SearchHighlightConverter"/>
+    </Window.Resources>
+
+    <Design.DataContext>
+        <vm:BatchSearchViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="20">
+        <!-- Search Configuration -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="1" CornerRadius="5" Padding="15">
+            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Search Configuration" 
+                           FontWeight="SemiBold" FontSize="16" Margin="0,0,0,10"/>
+                
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Search Text:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SearchText}" 
+                         Watermark="Enter search text..." Height="30"/>
+                
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Search Type:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <ComboBox Grid.Row="2" Grid.Column="1" SelectedItem="{Binding SearchType}" 
+                          ItemsSource="{Binding SearchTypeValues}" Height="30" Margin="0,10,0,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Progress Section -->
+        <Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,10,0,0">
+            <Grid RowDefinitions="Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Text="Progress" FontWeight="SemiBold" FontSize="14"/>
+                
+                <ProgressBar Grid.Row="1" Value="{Binding BatchSearchProgress}" 
+                             Maximum="100" Height="20" IsIndeterminate="{Binding IsBatchSearching}"/>
+                
+                <TextBlock Grid.Row="2" Text="{Binding BatchSearchStatus}" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                           TextWrapping="Wrap"/>
+            </Grid>
+        </Border>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0" Spacing="10">
+            <Button Content="Start Batch Search" Command="{Binding StartBatchSearchCommand}"
+                    IsEnabled="{Binding IsBatchSearching, Converter={x:Static BoolConverters.Not}}"
+                    Padding="20,10" FontWeight="SemiBold"/>
+            
+            <Button Content="Show Results" Command="{Binding ShowBatchSearchResultsCommand}"
+                    IsEnabled="{Binding BatchSearchResults, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Padding="20,10" FontWeight="SemiBold"/>
+        </StackPanel>
+
+        <!-- Results Summary -->
+        <Border Grid.Row="3" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,10,0,0">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Results Summary" 
+                           FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10"/>
+                
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Total Files:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding BatchSearchResults.Summary.TotalFiles}"/>
+                
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Successful Files:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding BatchSearchResults.Summary.SuccessfulFiles}" Margin="0,5,0,0"/>
+                
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Total Matches:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding BatchSearchResults.Summary.TotalMatches}" Margin="0,5,0,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Close Button -->
+        <Button Grid.Row="4" Content="Close" HorizontalAlignment="Right" Margin="0,15,0,0"
+                Padding="20,10" Click="CloseButton_Click"/>
+    </Grid>
+</Window> 

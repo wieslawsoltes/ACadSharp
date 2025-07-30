@@ -18,6 +18,7 @@
     <Window.Resources>
         <converters:SearchHighlightConverter x:Key="SearchHighlightConverter"/>
         <converters:DataGridRowHighlightConverter x:Key="DataGridRowHighlightConverter"/>
+        <converters:PropertyEditorTemplateSelector x:Key="PropertyEditorTemplateSelector"/>
     </Window.Resources>
     
     <Window.Styles>
@@ -271,12 +272,9 @@
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>
                             <DataTemplate DataType="{x:Type interfaces:ObjectProperty}">
-                                <!-- Edit template for edit mode -->
-                                <TextBox Text="{Binding Value, Mode=TwoWay}" 
-                                         BorderThickness="0"
-                                         Padding="4,2"
-                                         Background="Transparent"
-                                         Loaded="EditTextBox_Loaded"/>
+                                <!-- Use PropertyEditorTemplateSelector for specialized property editors -->
+                                <ContentControl Content="{Binding}" 
+                                                ContentTemplate="{StaticResource PropertyEditorTemplateSelector}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
@@ -502,12 +500,9 @@
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>
                             <DataTemplate DataType="{x:Type interfaces:ObjectProperty}">
-                                <!-- Edit template for edit mode -->
-                                <TextBox Text="{Binding Value, Mode=TwoWay}" 
-                                         BorderThickness="0"
-                                         Padding="4,2"
-                                         Background="Transparent"
-                                         Loaded="EditTextBox_Loaded"/>
+                                <!-- Use PropertyEditorTemplateSelector for specialized property editors -->
+                                <ContentControl Content="{Binding}" 
+                                                ContentTemplate="{StaticResource PropertyEditorTemplateSelector}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>

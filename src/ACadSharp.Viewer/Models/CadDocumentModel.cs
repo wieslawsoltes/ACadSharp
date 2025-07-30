@@ -768,7 +768,7 @@ public class CadDocumentModel : INotifyPropertyChanged
                         IsReadOnly = !prop.CanWrite || prop.SetMethod?.IsPublic != true
                     };
 
-                    // Determine if property is editable (writable primitive types or enums)
+                    // Determine if property is editable (writable primitive types, enums, coordinates, colors)
                     var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
                     objectProperty.IsEditable = prop.CanWrite && 
                                               prop.SetMethod?.IsPublic == true && 
@@ -776,7 +776,9 @@ public class CadDocumentModel : INotifyPropertyChanged
                                               (underlyingType.IsPrimitive || 
                                                underlyingType == typeof(string) || 
                                                underlyingType == typeof(decimal) || 
-                                               underlyingType.IsEnum);
+                                               underlyingType.IsEnum ||
+                                               IsCoordinateType(value) ||
+                                               IsColorType(objectProperty.Name, value));
 
                     // Check if this property is navigable (an object type)
                     if (value != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
@@ -1395,6 +1397,34 @@ public class CadDocumentModel : INotifyPropertyChanged
             
             // Update filtered properties as well
             UpdateFilteredProperties(SearchType.Handle, null);
+        }
+        
+        /// <summary>
+        /// Checks if a property value represents a coordinate type (XY, XYZ)
+        /// </summary>
+        private static bool IsCoordinateType(object? value)
+        {
+            if (value == null) return false;
+            
+            var typeName = value.GetType().Name;
+            var fullTypeName = value.GetType().FullName ?? "";
+            
+            return typeName == "XY" || typeName == "XYZ" || 
+                   fullTypeName.Contains("CSMath.XY") || fullTypeName.Contains("CSMath.XYZ");
+        }
+
+        /// <summary>
+        /// Checks if a property represents a color type based on name and value
+        /// </summary>
+        private static bool IsColorType(string propertyName, object? value)
+        {
+            if (value == null) return false;
+            
+            var typeName = value.GetType().Name;
+            var fullTypeName = value.GetType().FullName ?? "";
+            
+            return typeName.Contains("Color") || fullTypeName.Contains("Color") ||
+                   propertyName.Contains("Color", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

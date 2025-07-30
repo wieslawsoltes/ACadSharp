@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Avalonia.Data;
 using ACadSharp.Viewer.Interfaces;
+using ACadSharp.Viewer.Controls;
 using System;
 
 namespace ACadSharp.Viewer.Converters;
@@ -29,18 +31,33 @@ public class PropertyEditorTemplateSelector : IDataTemplate
             };
         }
 
-        // For editable primitive types, create appropriate editor
-        if (property.IsPrimitiveEditable && property.UnderlyingType != null)
+        // For editable properties, create appropriate specialized editor
+        if (property.IsEditable)
         {
-            return property.UnderlyingType switch
+            // Check for coordinate types first (XY, XYZ)
+            if (IsCoordinateType(property))
             {
-                Type t when t == typeof(bool) => CreateBooleanEditor(),
-                Type t when t.IsEnum => CreateEnumEditor(t),
-                Type t when t == typeof(string) => CreateTextEditor(),
-                Type t when t == typeof(int) || t == typeof(long) || t == typeof(short) || t == typeof(byte) => CreateIntegerEditor(),
-                Type t when t == typeof(double) || t == typeof(float) || t == typeof(decimal) => CreateNumericEditor(),
-                _ => CreateTextEditor()
-            };
+                return CreateCoordinateEditor(property);
+            }
+            
+            // Check for color types
+            if (IsColorType(property))
+            {
+                return CreateColorEditor(property);
+            }
+
+            // Handle primitive types with specialized editors
+            if (property.UnderlyingType != null)
+            {
+                return property.UnderlyingType switch
+                {
+                    Type t when t == typeof(bool) => CreateBooleanEditor(property),
+                    Type t when t.IsEnum => CreateEnumEditor(property),
+                    Type t when t == typeof(string) => CreateTextEditor(property),
+                    Type t when IsNumericType(t) => CreateNumericEditor(property),
+                    _ => CreateTextEditor(property)
+                };
+            }
         }
 
         // For navigable properties, return a button
@@ -72,74 +89,75 @@ public class PropertyEditorTemplateSelector : IDataTemplate
 
     public bool Match(object? data) => data is ObjectProperty;
 
-    private Control CreateBooleanEditor()
+    private Control CreateBooleanEditor(ObjectProperty property)
     {
-        var checkBox = new CheckBox();
-        checkBox.Bind(CheckBox.IsCheckedProperty, new Avalonia.Data.Binding("Value")
-        {
-            Converter = new BooleanValueConverter()
-        });
+        var checkBox = new EditablePropertyCheckBox();
+        checkBox.Bind(EditablePropertyCheckBox.PropertyProperty, new Binding { Source = property });
         return checkBox;
     }
 
-    private Control CreateEnumEditor(Type enumType)
+    private Control CreateEnumEditor(ObjectProperty property)
     {
-        var comboBox = new ComboBox
-        {
-            ItemsSource = Enum.GetValues(enumType)
-        };
-        comboBox.Bind(ComboBox.SelectedValueProperty, new Avalonia.Data.Binding("Value")
-        {
-            Converter = new EnumValueConverter()
-        });
+        var comboBox = new EditablePropertyComboBox();
+        comboBox.Bind(EditablePropertyComboBox.PropertyProperty, new Binding { Source = property });
         return comboBox;
     }
 
-    private Control CreateTextEditor()
+    private Control CreateTextEditor(ObjectProperty property)
     {
-        var textBox = new TextBox
-        {
-            BorderThickness = new Avalonia.Thickness(1),
-            Padding = new Avalonia.Thickness(4, 2)
-        };
-        textBox.Bind(TextBox.TextProperty, new Avalonia.Data.Binding("Value")
-        {
-            Mode = Avalonia.Data.BindingMode.TwoWay
-        });
+        var textBox = new EditablePropertyTextBox();
+        textBox.Bind(EditablePropertyTextBox.PropertyProperty, new Binding { Source = property });
         return textBox;
     }
 
-    private Control CreateIntegerEditor()
+    private Control CreateNumericEditor(ObjectProperty property)
     {
-        var numericUpDown = new NumericUpDown
-        {
-            FormatString = "0",
-            Increment = 1,
-            BorderThickness = new Avalonia.Thickness(1),
-            Padding = new Avalonia.Thickness(4, 2)
-        };
-        numericUpDown.Bind(NumericUpDown.ValueProperty, new Avalonia.Data.Binding("Value")
-        {
-            Converter = new NumericValueConverter(),
-            Mode = Avalonia.Data.BindingMode.TwoWay
-        });
+        var numericUpDown = new EditablePropertyNumericUpDown();
+        numericUpDown.Bind(EditablePropertyNumericUpDown.PropertyProperty, new Binding { Source = property });
         return numericUpDown;
     }
 
-    private Control CreateNumericEditor()
+    private Control CreateCoordinateEditor(ObjectProperty property)
     {
-        var numericUpDown = new NumericUpDown
-        {
-            FormatString = "0.###",
-            Increment = 0.1m,
-            BorderThickness = new Avalonia.Thickness(1),
-            Padding = new Avalonia.Thickness(4, 2)
-        };
-        numericUpDown.Bind(NumericUpDown.ValueProperty, new Avalonia.Data.Binding("Value")
-        {
-            Converter = new NumericValueConverter(),
-            Mode = Avalonia.Data.BindingMode.TwoWay
-        });
-        return numericUpDown;
+        var coordinateEditor = new CoordinatePropertyEditor();
+        coordinateEditor.Bind(CoordinatePropertyEditor.PropertyProperty, new Binding { Source = property });
+        return coordinateEditor;
+    }
+
+    private Control CreateColorEditor(ObjectProperty property)
+    {
+        var colorEditor = new ColorPropertyEditor();
+        colorEditor.Bind(ColorPropertyEditor.PropertyProperty, new Binding { Source = property });
+        return colorEditor;
+    }
+
+    private static bool IsNumericType(Type type)
+    {
+        return type == typeof(int) || type == typeof(long) || type == typeof(short) || 
+               type == typeof(byte) || type == typeof(double) || type == typeof(float) || 
+               type == typeof(decimal) || type == typeof(sbyte) || type == typeof(uint) ||
+               type == typeof(ulong) || type == typeof(ushort);
+    }
+
+    private static bool IsCoordinateType(ObjectProperty property)
+    {
+        if (property.PropertyObject == null) return false;
+        
+        var typeName = property.PropertyObject.GetType().Name;
+        var fullTypeName = property.PropertyObject.GetType().FullName ?? "";
+        
+        return typeName == "XY" || typeName == "XYZ" || 
+               fullTypeName.Contains("CSMath.XY") || fullTypeName.Contains("CSMath.XYZ");
+    }
+
+    private static bool IsColorType(ObjectProperty property)
+    {
+        if (property.PropertyObject == null) return false;
+        
+        var typeName = property.PropertyObject.GetType().Name;
+        var fullTypeName = property.PropertyObject.GetType().FullName ?? "";
+        
+        return typeName.Contains("Color") || fullTypeName.Contains("Color") ||
+               property.Name.Contains("Color", StringComparison.OrdinalIgnoreCase);
     }
 }

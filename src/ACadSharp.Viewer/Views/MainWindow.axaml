@@ -124,39 +124,83 @@
                             <!-- Breadcrumb Navigation -->
                             <Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
                                     BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
-                                    BorderThickness="0,0,0,1" Padding="10,5">
-                                <ItemsControl ItemsSource="{Binding LeftDocument.BreadcrumbItems}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,5,0">
-                                                <Button Content="{Binding Name}" 
-                                                        Click="BreadcrumbButton_Click"
-                                                        Tag="{Binding}"
-                                                        IsEnabled="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Padding="5,2"
-                                                        Margin="0,0,2,0">
-                                                    <Button.Styles>
-                                                        <Style Selector="Button:pointerover">
-                                                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
-                                                        </Style>
-                                                        <Style Selector="Button:disabled">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                        </Style>
-                                                    </Button.Styles>
-                                                </Button>
-                                                <TextBlock Text=" > " Foreground="Gray" VerticalAlignment="Center" 
-                                                           IsVisible="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                    BorderThickness="0,0,0,1" Padding="5">
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- Back/Forward Navigation Buttons -->
+                                    <Button Content="◀" 
+                                            Command="{Binding GoBackCommand}"
+                                            IsEnabled="{Binding LeftNavigationHistory.CanGoBack}"
+                                            ToolTip.Tip="Go Back"
+                                            Background="Transparent"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            Padding="8,4"
+                                            Margin="0,0,5,0">
+                                        <Button.Styles>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                        </Button.Styles>
+                                    </Button>
+                                    
+                                    <Button Content="▶" 
+                                            Command="{Binding GoForwardCommand}"
+                                            IsEnabled="{Binding LeftNavigationHistory.CanGoForward}"
+                                            ToolTip.Tip="Go Forward"
+                                            Background="Transparent"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            Padding="8,4"
+                                            Margin="0,0,10,0">
+                                        <Button.Styles>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                        </Button.Styles>
+                                    </Button>
+                                    
+                                    <!-- Breadcrumb Items -->
+                                    <ItemsControl ItemsSource="{Binding LeftDocument.BreadcrumbItems}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,5,0">
+                                                    <Button Content="{Binding Name}" 
+                                                            Click="BreadcrumbButton_Click"
+                                                            Tag="{Binding}"
+                                                            IsEnabled="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Padding="5,2"
+                                                            Margin="0,0,2,0">
+                                                        <Button.Styles>
+                                                            <Style Selector="Button:pointerover">
+                                                                <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                                            </Style>
+                                                            <Style Selector="Button:disabled">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                            </Style>
+                                                        </Button.Styles>
+                                                    </Button>
+                                                    <TextBlock Text=" > " Foreground="Gray" VerticalAlignment="Center" 
+                                                               IsVisible="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
                             </Border>
                             
                             <DataGrid Grid.Row="2" ItemsSource="{Binding LeftDocument.FilteredSelectedObjectProperties}" 
@@ -266,39 +310,83 @@
                             <!-- Breadcrumb Navigation -->
                             <Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
                                     BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
-                                    BorderThickness="0,0,0,1" Padding="10,5">
-                                <ItemsControl ItemsSource="{Binding RightDocument.BreadcrumbItems}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,5,0">
-                                                <Button Content="{Binding Name}" 
-                                                        Click="BreadcrumbButton_Click"
-                                                        Tag="{Binding}"
-                                                        IsEnabled="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Padding="5,2"
-                                                        Margin="0,0,2,0">
-                                                    <Button.Styles>
-                                                        <Style Selector="Button:pointerover">
-                                                            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
-                                                        </Style>
-                                                        <Style Selector="Button:disabled">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                        </Style>
-                                                    </Button.Styles>
-                                                </Button>
-                                                <TextBlock Text=" > " Foreground="Gray" VerticalAlignment="Center" 
-                                                           IsVisible="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                    BorderThickness="0,0,0,1" Padding="5">
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- Back/Forward Navigation Buttons -->
+                                    <Button Content="◀" 
+                                            Command="{Binding GoBackCommand}"
+                                            IsEnabled="{Binding RightNavigationHistory.CanGoBack}"
+                                            ToolTip.Tip="Go Back"
+                                            Background="Transparent"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            Padding="8,4"
+                                            Margin="0,0,5,0">
+                                        <Button.Styles>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                        </Button.Styles>
+                                    </Button>
+                                    
+                                    <Button Content="▶" 
+                                            Command="{Binding GoForwardCommand}"
+                                            IsEnabled="{Binding RightNavigationHistory.CanGoForward}"
+                                            ToolTip.Tip="Go Forward"
+                                            Background="Transparent"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            Padding="8,4"
+                                            Margin="0,0,10,0">
+                                        <Button.Styles>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                            </Style>
+                                            <Style Selector="Button:disabled">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Style>
+                                        </Button.Styles>
+                                    </Button>
+                                    
+                                    <!-- Breadcrumb Items -->
+                                    <ItemsControl ItemsSource="{Binding RightDocument.BreadcrumbItems}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,5,0">
+                                                    <Button Content="{Binding Name}" 
+                                                            Click="BreadcrumbButton_Click"
+                                                            Tag="{Binding}"
+                                                            IsEnabled="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Padding="5,2"
+                                                            Margin="0,0,2,0">
+                                                        <Button.Styles>
+                                                            <Style Selector="Button:pointerover">
+                                                                <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+                                                            </Style>
+                                                            <Style Selector="Button:disabled">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                            </Style>
+                                                        </Button.Styles>
+                                                    </Button>
+                                                    <TextBlock Text=" > " Foreground="Gray" VerticalAlignment="Center" 
+                                                               IsVisible="{Binding IsCurrent, Converter={x:Static BoolConverters.Not}}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
                             </Border>
                             
                             <DataGrid Grid.Row="2" ItemsSource="{Binding RightDocument.FilteredSelectedObjectProperties}" 

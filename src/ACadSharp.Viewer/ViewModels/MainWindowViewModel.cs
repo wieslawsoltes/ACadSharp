@@ -47,6 +47,10 @@ public class MainWindowViewModel : ViewModelBase
         _leftDocument = new CadDocumentModel();
         _rightDocument = new CadDocumentModel();
 
+        // Set navigation history for documents
+        _leftDocument.NavigationHistory = LeftNavigationHistory;
+        _rightDocument.NavigationHistory = RightNavigationHistory;
+
         Title = "ACadSharp Viewer - DWG/DXF File Comparison";
 
         // Commands - using simple commands to avoid threading issues
@@ -58,6 +62,8 @@ public class MainWindowViewModel : ViewModelBase
         NavigateToPropertyCommand = ReactiveCommand.Create<ObjectProperty>(NavigateToProperty);
         NavigateToBreadcrumbCommand = ReactiveCommand.Create<BreadcrumbItem>(NavigateToBreadcrumb);
         OpenBatchSearchCommand = ReactiveCommand.Create(OpenBatchSearch);
+        GoBackCommand = ReactiveCommand.Create(GoBack);
+        GoForwardCommand = ReactiveCommand.Create(GoForward);
 
 
         // Subscribe to progress events
@@ -144,6 +150,26 @@ public class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _rightDocument, value ?? new CadDocumentModel());
     }
 
+    private NavigationHistory _leftNavigationHistory = new();
+    /// <summary>
+    /// Navigation history for the left document
+    /// </summary>
+    public NavigationHistory LeftNavigationHistory
+    {
+        get => _leftNavigationHistory;
+        set => this.RaiseAndSetIfChanged(ref _leftNavigationHistory, value);
+    }
+
+    private NavigationHistory _rightNavigationHistory = new();
+    /// <summary>
+    /// Navigation history for the right document
+    /// </summary>
+    public NavigationHistory RightNavigationHistory
+    {
+        get => _rightNavigationHistory;
+        set => this.RaiseAndSetIfChanged(ref _rightNavigationHistory, value);
+    }
+
     /// <summary>
     /// Search text for finding objects
     /// </summary>
@@ -226,6 +252,16 @@ public class MainWindowViewModel : ViewModelBase
     /// Command to open batch search window
     /// </summary>
     public ICommand OpenBatchSearchCommand { get; }
+
+    /// <summary>
+    /// Command to go back in navigation history
+    /// </summary>
+    public ICommand GoBackCommand { get; }
+
+    /// <summary>
+    /// Command to go forward in navigation history
+    /// </summary>
+    public ICommand GoForwardCommand { get; }
 
 
 
@@ -1051,28 +1087,183 @@ public class MainWindowViewModel : ViewModelBase
         if (breadcrumbItem == null)
             return;
 
-        // Create a temporary node to represent the breadcrumb item
-        var tempNode = new ACadSharp.Viewer.Interfaces.CadObjectTreeNode
+        // Check if this is a history-based navigation
+        if (breadcrumbItem.HistoryIndex >= 0)
         {
-            Name = breadcrumbItem.Name,
-            ObjectType = breadcrumbItem.Type,
-            CadObject = breadcrumbItem.Object as ACadSharp.CadObject,
-            Handle = breadcrumbItem.Handle
-        };
+            // Navigate using history index
+            var leftBreadcrumbs = LeftNavigationHistory.GetBreadcrumbsForHistoryIndex(breadcrumbItem.HistoryIndex);
+            var rightBreadcrumbs = RightNavigationHistory.GetBreadcrumbsForHistoryIndex(breadcrumbItem.HistoryIndex);
 
-        // Navigate to the object in the breadcrumb using tree navigation
-        if (LeftDocument?.Document != null)
-        {
-            LeftDocument.NavigateToTreeNode(tempNode);
+            if (leftBreadcrumbs.Count > 0 && LeftDocument?.Document != null)
+            {
+                var targetBreadcrumb = leftBreadcrumbs[leftBreadcrumbs.Count - 1];
+                NavigateToBreadcrumbInternal(LeftDocument, targetBreadcrumb, leftBreadcrumbs);
+            }
+
+            if (rightBreadcrumbs.Count > 0 && RightDocument?.Document != null)
+            {
+                var targetBreadcrumb = rightBreadcrumbs[rightBreadcrumbs.Count - 1];
+                NavigateToBreadcrumbInternal(RightDocument, targetBreadcrumb, rightBreadcrumbs);
+            }
         }
-
-        if (RightDocument?.Document != null)
+        else
         {
-            RightDocument.NavigateToTreeNode(tempNode);
+            // Standard breadcrumb navigation
+            NavigateToBreadcrumbInternal(LeftDocument, breadcrumbItem, null);
+            NavigateToBreadcrumbInternal(RightDocument, breadcrumbItem, null);
         }
     }
 
+    /// <summary>
+    /// Internal method to navigate to a breadcrumb in a specific document
+    /// </summary>
+    /// <param name="document">The document to navigate in</param>
+    /// <param name="breadcrumbItem">The breadcrumb item to navigate to</param>
+    /// <param name="breadcrumbPath">Optional breadcrumb path to restore</param>
+    private void NavigateToBreadcrumbInternal(CadDocumentModel? document, BreadcrumbItem breadcrumbItem, List<BreadcrumbItem>? breadcrumbPath)
+    {
+        if (document?.Document == null || breadcrumbItem == null)
+            return;
 
+        // Try different navigation strategies based on the object type
+        if (breadcrumbItem.Object is ACadSharp.CadObject cadObject)
+        {
+            // Create a temporary node to represent the breadcrumb item
+            var tempNode = new ACadSharp.Viewer.Interfaces.CadObjectTreeNode
+            {
+                Name = breadcrumbItem.Name,
+                ObjectType = breadcrumbItem.Type,
+                CadObject = cadObject,
+                Handle = breadcrumbItem.Handle
+            };
+
+            // Navigate to the object in the breadcrumb using tree navigation
+            document.NavigateToTreeNodeWithoutHistory(tempNode);
+        }
+        else if (breadcrumbItem.Handle != null)
+        {
+            // Try to navigate by handle
+            try
+            {
+                if (document.Document.TryGetCadObject(breadcrumbItem.Handle.Value, out ACadSharp.CadObject objectByHandle))
+                {
+                    var tempNode = new ACadSharp.Viewer.Interfaces.CadObjectTreeNode
+                    {
+                        Name = breadcrumbItem.Name,
+                        ObjectType = breadcrumbItem.Type,
+                        CadObject = objectByHandle,
+                        Handle = breadcrumbItem.Handle
+                    };
+                    document.NavigateToTreeNodeWithoutHistory(tempNode);
+                }
+            }
+            catch
+            {
+                // Handle not found, continue with other navigation methods
+            }
+        }
+
+        // Restore breadcrumb path if provided
+        if (breadcrumbPath != null)
+        {
+            document.BreadcrumbItems.Clear();
+            foreach (var item in breadcrumbPath)
+            {
+                document.BreadcrumbItems.Add(new BreadcrumbItem
+                {
+                    Name = item.Name,
+                    Type = item.Type,
+                    Object = item.Object,
+                    Handle = item.Handle,
+                    IsCurrent = item.IsCurrent,
+                    HistoryIndex = item.HistoryIndex
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// Goes back in navigation history
+    /// </summary>
+    public void GoBack()
+    {
+        // Try to go back in left document first, then right document
+        var leftEntry = LeftNavigationHistory.GoBack();
+        var rightEntry = RightNavigationHistory.GoBack();
+
+        if (leftEntry != null && LeftDocument?.Document != null)
+        {
+            NavigateToHistoryEntry(LeftDocument, leftEntry);
+        }
+
+        if (rightEntry != null && RightDocument?.Document != null)
+        {
+            NavigateToHistoryEntry(RightDocument, rightEntry);
+        }
+    }
+
+    /// <summary>
+    /// Goes forward in navigation history
+    /// </summary>
+    public void GoForward()
+    {
+        // Try to go forward in left document first, then right document
+        var leftEntry = LeftNavigationHistory.GoForward();
+        var rightEntry = RightNavigationHistory.GoForward();
+
+        if (leftEntry != null && LeftDocument?.Document != null)
+        {
+            NavigateToHistoryEntry(LeftDocument, leftEntry);
+        }
+
+        if (rightEntry != null && RightDocument?.Document != null)
+        {
+            NavigateToHistoryEntry(RightDocument, rightEntry);
+        }
+    }
+
+    /// <summary>
+    /// Navigates to a specific history entry
+    /// </summary>
+    /// <param name="document">The document to navigate in</param>
+    /// <param name="entry">The history entry to navigate to</param>
+    private void NavigateToHistoryEntry(CadDocumentModel document, NavigationHistoryEntry entry)
+    {
+        if (entry.Object != null && entry.Object is ACadSharp.CadObject cadObject)
+        {
+            // Create a temporary node to represent the history entry
+            var tempNode = new ACadSharp.Viewer.Interfaces.CadObjectTreeNode
+            {
+                Name = entry.Name,
+                ObjectType = entry.Type,
+                CadObject = cadObject,
+                Handle = entry.Handle
+            };
+
+            // Navigate without adding to history (to avoid infinite recursion)
+            document.NavigateToTreeNodeWithoutHistory(tempNode);
+            
+            // Restore the breadcrumb path from history
+            document.BreadcrumbItems.Clear();
+            foreach (var breadcrumbItem in entry.BreadcrumbPath)
+            {
+                document.BreadcrumbItems.Add(new BreadcrumbItem
+                {
+                    Name = breadcrumbItem.Name,
+                    Type = breadcrumbItem.Type,
+                    Object = breadcrumbItem.Object,
+                    Handle = breadcrumbItem.Handle,
+                    IsCurrent = breadcrumbItem.IsCurrent,
+                    HistoryIndex = breadcrumbItem.HistoryIndex
+                });
+            }
+        }
+        else if (entry.PropertyName != null && entry.Object != null)
+        {
+            // Navigate to property without adding to history
+            document.NavigateToObjectWithoutHistory(entry.Object, entry.PropertyName);
+        }
+    }
 
     /// <summary>
     /// Opens the batch search window

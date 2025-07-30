@@ -1,4 +1,5 @@
 using ACadSharp;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -287,6 +288,185 @@ public class BreadcrumbItem : INotifyPropertyChanged
     { 
         get => _isCurrent; 
         set => SetProperty(ref _isCurrent, value); 
+    }
+
+    private int _historyIndex = -1;
+    public int HistoryIndex 
+    { 
+        get => _historyIndex; 
+        set => SetProperty(ref _historyIndex, value); 
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+}
+
+/// <summary>
+/// Represents a navigation entry in history
+/// </summary>
+public class NavigationHistoryEntry
+{
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public object? Object { get; set; }
+    public ulong? Handle { get; set; }
+    public string? PropertyName { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.Now;
+    public List<BreadcrumbItem> BreadcrumbPath { get; set; } = new();
+}
+
+/// <summary>
+/// Manages navigation history with back/forward functionality
+/// </summary>
+public class NavigationHistory : INotifyPropertyChanged
+{
+    private readonly List<NavigationHistoryEntry> _history = new();
+    private int _currentIndex = -1;
+    private bool _canGoBack;
+    private bool _canGoForward;
+
+    public bool CanGoBack 
+    { 
+        get => _canGoBack; 
+        private set => SetProperty(ref _canGoBack, value); 
+    }
+
+    public bool CanGoForward 
+    { 
+        get => _canGoForward; 
+        private set => SetProperty(ref _canGoForward, value); 
+    }
+
+    public int CurrentIndex => _currentIndex;
+    public int Count => _history.Count;
+
+    /// <summary>
+    /// Adds a new navigation entry to the history
+    /// </summary>
+    /// <param name="entry">The navigation entry to add</param>
+    public void AddEntry(NavigationHistoryEntry entry)
+    {
+        // Remove any forward history when adding a new entry
+        if (_currentIndex < _history.Count - 1)
+        {
+            _history.RemoveRange(_currentIndex + 1, _history.Count - _currentIndex - 1);
+        }
+
+        _history.Add(entry);
+        _currentIndex = _history.Count - 1;
+
+        // Limit history size to prevent memory issues
+        if (_history.Count > 100)
+        {
+            _history.RemoveAt(0);
+            _currentIndex--;
+        }
+
+        UpdateCanNavigate();
+    }
+
+    /// <summary>
+    /// Goes back in navigation history
+    /// </summary>
+    /// <returns>The previous navigation entry, or null if can't go back</returns>
+    public NavigationHistoryEntry? GoBack()
+    {
+        if (!CanGoBack) return null;
+
+        _currentIndex--;
+        UpdateCanNavigate();
+        return _history[_currentIndex];
+    }
+
+    /// <summary>
+    /// Goes forward in navigation history
+    /// </summary>
+    /// <returns>The next navigation entry, or null if can't go forward</returns>
+    public NavigationHistoryEntry? GoForward()
+    {
+        if (!CanGoForward) return null;
+
+        _currentIndex++;
+        UpdateCanNavigate();
+        return _history[_currentIndex];
+    }
+
+    /// <summary>
+    /// Gets the current navigation entry
+    /// </summary>
+    /// <returns>The current navigation entry, or null if no history</returns>
+    public NavigationHistoryEntry? GetCurrent()
+    {
+        if (_currentIndex >= 0 && _currentIndex < _history.Count)
+            return _history[_currentIndex];
+        return null;
+    }
+
+    /// <summary>
+    /// Clears all navigation history
+    /// </summary>
+    public void Clear()
+    {
+        _history.Clear();
+        _currentIndex = -1;
+        UpdateCanNavigate();
+    }
+
+    /// <summary>
+    /// Gets all breadcrumb items for a specific history index
+    /// </summary>
+    /// <param name="historyIndex">The history index to get breadcrumbs for</param>
+    /// <returns>List of breadcrumb items</returns>
+    public List<BreadcrumbItem> GetBreadcrumbsForHistoryIndex(int historyIndex)
+    {
+        if (historyIndex >= 0 && historyIndex < _history.Count)
+        {
+            var entry = _history[historyIndex];
+            var breadcrumbs = new List<BreadcrumbItem>();
+
+            // Create breadcrumb items from the stored path
+            for (int i = 0; i < entry.BreadcrumbPath.Count; i++)
+            {
+                var originalItem = entry.BreadcrumbPath[i];
+                breadcrumbs.Add(new BreadcrumbItem
+                {
+                    Name = originalItem.Name,
+                    Type = originalItem.Type,
+                    Object = originalItem.Object,
+                    Handle = originalItem.Handle,
+                    IsCurrent = false,
+                    HistoryIndex = i < historyIndex ? i : -1 // Allow navigation to previous items in breadcrumb
+                });
+            }
+
+            // Mark the current item
+            if (breadcrumbs.Count > 0)
+            {
+                breadcrumbs[breadcrumbs.Count - 1].IsCurrent = true;
+            }
+
+            return breadcrumbs;
+        }
+
+        return new List<BreadcrumbItem>();
+    }
+
+    private void UpdateCanNavigate()
+    {
+        CanGoBack = _currentIndex > 0;
+        CanGoForward = _currentIndex < _history.Count - 1;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

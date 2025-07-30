@@ -22,6 +22,8 @@ public class CadDocumentModel : INotifyPropertyChanged
     private bool _isLoaded;
     private string _statusMessage = string.Empty;
     private int _loadProgress;
+    private bool _suppressHistoryUpdate = false;
+    private NavigationHistory? _navigationHistory;
 
     /// <summary>
     /// The underlying ACadSharp document
@@ -110,6 +112,15 @@ public class CadDocumentModel : INotifyPropertyChanged
     /// Collection of breadcrumb items for navigation
     /// </summary>
     public ObservableCollection<BreadcrumbItem> BreadcrumbItems { get; } = new();
+
+    /// <summary>
+    /// Navigation history for this document
+    /// </summary>
+    public NavigationHistory? NavigationHistory
+    {
+        get => _navigationHistory;
+        set => SetProperty(ref _navigationHistory, value);
+    }
 
     /// <summary>
     /// Currently selected object
@@ -244,6 +255,29 @@ public class CadDocumentModel : INotifyPropertyChanged
                 IsCurrent = (i == path.Count - 1)
             });
         }
+
+        // Add to navigation history if not suppressed
+        if (!_suppressHistoryUpdate && NavigationHistory != null && path.Count > 0)
+        {
+            var lastNode = path[path.Count - 1];
+            var historyEntry = new NavigationHistoryEntry
+            {
+                Name = lastNode.Name,
+                Type = lastNode.ObjectType,
+                Object = lastNode.CadObject,
+                Handle = lastNode.Handle,
+                BreadcrumbPath = new List<BreadcrumbItem>(BreadcrumbItems.Select(b => new BreadcrumbItem
+                {
+                    Name = b.Name,
+                    Type = b.Type,
+                    Object = b.Object,
+                    Handle = b.Handle,
+                    IsCurrent = b.IsCurrent,
+                    HistoryIndex = b.HistoryIndex
+                }))
+            };
+            NavigationHistory.AddEntry(historyEntry);
+        }
     }
 
     /// <summary>
@@ -269,6 +303,29 @@ public class CadDocumentModel : INotifyPropertyChanged
                 Handle = pathNode.Handle,
                 IsCurrent = (i == path.Count - 1)
             });
+        }
+
+        // Add to navigation history if not suppressed
+        if (!_suppressHistoryUpdate && NavigationHistory != null && path.Count > 0)
+        {
+            var lastNode = path[path.Count - 1];
+            var historyEntry = new NavigationHistoryEntry
+            {
+                Name = lastNode.Name,
+                Type = lastNode.ObjectType,
+                Object = lastNode.CadObject,
+                Handle = lastNode.Handle,
+                BreadcrumbPath = new List<BreadcrumbItem>(BreadcrumbItems.Select(b => new BreadcrumbItem
+                {
+                    Name = b.Name,
+                    Type = b.Type,
+                    Object = b.Object,
+                    Handle = b.Handle,
+                    IsCurrent = b.IsCurrent,
+                    HistoryIndex = b.HistoryIndex
+                }))
+            };
+            NavigationHistory.AddEntry(historyEntry);
         }
     }
 
@@ -465,6 +522,49 @@ public class CadDocumentModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Navigates to a specific tree node without adding to history (for history navigation)
+    /// </summary>
+    /// <param name="targetNode">The target node to navigate to</param>
+    public void NavigateToTreeNodeWithoutHistory(CadObjectTreeNode targetNode)
+    {
+        if (targetNode == null) return;
+
+        // Find the node in the current tree structure
+        var actualNode = FindNodeInTree(targetNode);
+        if (actualNode != null)
+        {
+            // Select the node in the tree without triggering history update
+            _suppressHistoryUpdate = true;
+            try
+            {
+                SelectedTreeNode = actualNode;
+            }
+            finally
+            {
+                _suppressHistoryUpdate = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Navigates to an object without adding to history (for history navigation)
+    /// </summary>
+    /// <param name="targetObject">The target object</param>
+    /// <param name="propertyName">The property name that led to this navigation</param>
+    public void NavigateToObjectWithoutHistory(object targetObject, string propertyName)
+    {
+        _suppressHistoryUpdate = true;
+        try
+        {
+            NavigateToObject(targetObject, propertyName);
+        }
+        finally
+        {
+            _suppressHistoryUpdate = false;
+        }
+    }
+
+    /// <summary>
     /// Updates breadcrumb navigation for an object that's not in the tree
     /// </summary>
     /// <param name="targetObject">The target object</param>
@@ -499,6 +599,28 @@ public class CadDocumentModel : INotifyPropertyChanged
             Object = targetObject,
             IsCurrent = true
         });
+
+        // Add to navigation history if not suppressed
+        if (!_suppressHistoryUpdate && NavigationHistory != null)
+        {
+            var historyEntry = new NavigationHistoryEntry
+            {
+                Name = targetObject.GetType().Name,
+                Type = targetObject.GetType().Name,
+                Object = targetObject,
+                PropertyName = propertyName,
+                BreadcrumbPath = new List<BreadcrumbItem>(BreadcrumbItems.Select(b => new BreadcrumbItem
+                {
+                    Name = b.Name,
+                    Type = b.Type,
+                    Object = b.Object,
+                    Handle = b.Handle,
+                    IsCurrent = b.IsCurrent,
+                    HistoryIndex = b.HistoryIndex
+                }))
+            };
+            NavigationHistory.AddEntry(historyEntry);
+        }
     }
 
     /// <summary>

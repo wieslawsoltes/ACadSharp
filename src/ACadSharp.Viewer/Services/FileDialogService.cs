@@ -26,22 +26,19 @@ namespace ACadSharp.Viewer.Services
         /// <returns>Selected file path or null if cancelled</returns>
         public async Task<string?> ShowDwgFilePickerAsync()
         {
-            return await Dispatcher.UIThread.InvokeAsync(async () =>
+            var options = new FilePickerOpenOptions
             {
-                var options = new FilePickerOpenOptions
+                Title = "Select DWG File",
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
                 {
-                    Title = "Select DWG File",
-                    AllowMultiple = false,
-                    FileTypeFilter = new List<FilePickerFileType>
-                    {
-                        new FilePickerFileType("DWG Files") { Patterns = new[] { "*.dwg" } },
-                        new FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
-                    }
-                };
+                    new FilePickerFileType("DWG Files") { Patterns = new[] { "*.dwg" } },
+                    new FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+                }
+            };
 
-                var result = await _mainWindow.StorageProvider.OpenFilePickerAsync(options);
-                return result.Count > 0 ? result[0].Path.LocalPath : null;
-            });
+            var result = await _mainWindow.StorageProvider.OpenFilePickerAsync(options);
+            return result.Count > 0 ? result[0].Path.LocalPath : null;
         }
 
         /// <summary>
@@ -50,22 +47,19 @@ namespace ACadSharp.Viewer.Services
         /// <returns>Selected file path or null if cancelled</returns>
         public async Task<string?> ShowDxfFilePickerAsync()
         {
-            return await Dispatcher.UIThread.InvokeAsync(async () =>
+            var options = new FilePickerOpenOptions
             {
-                var options = new FilePickerOpenOptions
+                Title = "Select DXF File",
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
                 {
-                    Title = "Select DXF File",
-                    AllowMultiple = false,
-                    FileTypeFilter = new List<FilePickerFileType>
-                    {
-                        new FilePickerFileType("DXF Files") { Patterns = new[] { "*.dxf" } },
-                        new FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
-                }
-                };
+                    new FilePickerFileType("DXF Files") { Patterns = new[] { "*.dxf" } },
+                    new FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+            }
+            };
 
-                var result = await _mainWindow.StorageProvider.OpenFilePickerAsync(options);
-                return result.Count > 0 ? result[0].Path.LocalPath : null;
-            });
+            var result = await _mainWindow.StorageProvider.OpenFilePickerAsync(options);
+            return result.Count > 0 ? result[0].Path.LocalPath : null;
         }
 
         /// <summary>
@@ -74,17 +68,14 @@ namespace ACadSharp.Viewer.Services
         /// <returns>Selected folder path or null if cancelled</returns>
         public async Task<string?> ShowFolderPickerAsync()
         {
-            return await Dispatcher.UIThread.InvokeAsync(async () =>
+            var options = new FolderPickerOpenOptions
             {
-                var options = new FolderPickerOpenOptions
-                {
-                    Title = "Select Folder for Batch Search",
-                    AllowMultiple = false
-                };
+                Title = "Select Folder for Batch Search",
+                AllowMultiple = false
+            };
 
-                var result = await _mainWindow.StorageProvider.OpenFolderPickerAsync(options);
-                return result.Count > 0 ? result[0].Path.LocalPath : null;
-            });
+            var result = await _mainWindow.StorageProvider.OpenFolderPickerAsync(options);
+            return result.Count > 0 ? result[0].Path.LocalPath : null;
         }
     }
 } 

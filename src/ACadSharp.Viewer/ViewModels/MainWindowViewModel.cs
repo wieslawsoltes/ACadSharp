@@ -492,8 +492,18 @@ public class MainWindowViewModel : ViewModelBase
             try
             {
                 var resultHandles = searchResults.Select(r => r.Handle).ToHashSet();
+                
+                // First, expand all parent nodes of matches to ensure proper visibility
+                ExpandParentNodesOfMatches(documentModel.ObjectTreeNodes, resultHandles, searchText);
+                
+                // Then filter and highlight the nodes
                 FilterAndHighlightNodes(documentModel.ObjectTreeNodes, resultHandles, searchText);
+                
+                // Update the filtered tree
                 documentModel.UpdateFilteredTreeNodes();
+                
+                // Apply expansion state to the filtered tree
+                ApplyExpansionStateToFilteredTree(documentModel.FilteredObjectTreeNodes, resultHandles, searchText);
             }
             catch (Exception ex)
             {
@@ -582,6 +592,148 @@ public class MainWindowViewModel : ViewModelBase
         }
 
         return anyMatch;
+    }
+
+    /// <summary>
+    /// Ensures all parent nodes of matching nodes are expanded
+    /// </summary>
+    /// <param name="nodes">Root nodes to process</param>
+    /// <param name="resultHandles">Set of handles that match the search</param>
+    /// <param name="searchText">Search text for name/type matching</param>
+    private void ExpandParentNodesOfMatches(ObservableCollection<CadObjectTreeNode> nodes, HashSet<ulong> resultHandles, string searchText)
+    {
+        if (nodes == null) return;
+
+        foreach (var node in nodes)
+        {
+            ExpandParentNodesOfMatchesRecursive(node, resultHandles, searchText, new List<CadObjectTreeNode>());
+        }
+    }
+
+    /// <summary>
+    /// Recursively expands parent nodes if they contain matching descendants
+    /// </summary>
+    /// <param name="node">Current node to check</param>
+    /// <param name="resultHandles">Set of handles that match the search</param>
+    /// <param name="searchText">Search text for name/type matching</param>
+    /// <param name="parentPath">List of parent nodes from root to current node</param>
+    /// <returns>True if this node or any of its descendants have a match</returns>
+    private bool ExpandParentNodesOfMatchesRecursive(CadObjectTreeNode node, HashSet<ulong> resultHandles, string searchText, List<CadObjectTreeNode> parentPath)
+    {
+        if (node == null) return false;
+
+        bool hasMatchingDescendant = false;
+        bool isDirectMatch = false;
+
+        // Check if this node directly matches
+        if (node.CadObject != null && resultHandles.Contains(node.CadObject.Handle))
+        {
+            isDirectMatch = true;
+            hasMatchingDescendant = true;
+        }
+
+        // Check if node name or type matches search text
+        if (!isDirectMatch && !string.IsNullOrEmpty(searchText))
+        {
+            var searchLower = searchText.ToLowerInvariant();
+            if (node.Name.ToLowerInvariant().Contains(searchLower) || 
+                node.ObjectType.ToLowerInvariant().Contains(searchLower))
+            {
+                isDirectMatch = true;
+                hasMatchingDescendant = true;
+            }
+        }
+
+        // Check children recursively
+        var childParentPath = new List<CadObjectTreeNode>(parentPath) { node };
+        foreach (var child in node.Children)
+        {
+            if (ExpandParentNodesOfMatchesRecursive(child, resultHandles, searchText, childParentPath))
+            {
+                hasMatchingDescendant = true;
+            }
+        }
+
+        // If this node has matching descendants, expand all ancestors in the path
+        if (hasMatchingDescendant)
+        {
+            node.IsExpanded = true;
+            
+            // Expand all ancestors in the path
+            foreach (var ancestor in parentPath)
+            {
+                ancestor.IsExpanded = true;
+            }
+        }
+
+        return hasMatchingDescendant;
+    }
+
+    /// <summary>
+    /// Applies expansion state to the filtered tree nodes to ensure matches are visible
+    /// </summary>
+    /// <param name="filteredNodes">Filtered tree nodes</param>
+    /// <param name="resultHandles">Set of handles that match the search</param>
+    /// <param name="searchText">Search text for name/type matching</param>
+    private void ApplyExpansionStateToFilteredTree(ObservableCollection<CadObjectTreeNode> filteredNodes, HashSet<ulong> resultHandles, string searchText)
+    {
+        if (filteredNodes == null) return;
+
+        foreach (var node in filteredNodes)
+        {
+            ApplyExpansionStateToFilteredNodeRecursive(node, resultHandles, searchText);
+        }
+    }
+
+    /// <summary>
+    /// Recursively applies expansion state to filtered nodes that contain matches
+    /// </summary>
+    /// <param name="node">Current filtered node</param>
+    /// <param name="resultHandles">Set of handles that match the search</param>
+    /// <param name="searchText">Search text for name/type matching</param>
+    /// <returns>True if this node or its descendants have matches</returns>
+    private bool ApplyExpansionStateToFilteredNodeRecursive(CadObjectTreeNode node, HashSet<ulong> resultHandles, string searchText)
+    {
+        if (node == null) return false;
+
+        bool hasMatchingDescendant = false;
+        bool isDirectMatch = false;
+
+        // Check if this node directly matches
+        if (node.CadObject != null && resultHandles.Contains(node.CadObject.Handle))
+        {
+            isDirectMatch = true;
+            hasMatchingDescendant = true;
+        }
+
+        // Check if node name or type matches search text
+        if (!isDirectMatch && !string.IsNullOrEmpty(searchText))
+        {
+            var searchLower = searchText.ToLowerInvariant();
+            if (node.Name.ToLowerInvariant().Contains(searchLower) || 
+                node.ObjectType.ToLowerInvariant().Contains(searchLower))
+            {
+                isDirectMatch = true;
+                hasMatchingDescendant = true;
+            }
+        }
+
+        // Check children recursively
+        foreach (var child in node.Children)
+        {
+            if (ApplyExpansionStateToFilteredNodeRecursive(child, resultHandles, searchText))
+            {
+                hasMatchingDescendant = true;
+            }
+        }
+
+        // If this node has matching descendants, expand it
+        if (hasMatchingDescendant)
+        {
+            node.IsExpanded = true;
+        }
+
+        return hasMatchingDescendant;
     }
 
     /// <summary>

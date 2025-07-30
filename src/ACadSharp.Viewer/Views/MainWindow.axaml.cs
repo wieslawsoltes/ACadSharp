@@ -276,8 +276,8 @@ public partial class MainWindow : Window
         {
             System.Diagnostics.Debug.WriteLine($"BeginningEdit: {property.Name}, IsEditable: {property.IsEditable}, IsNavigable: {property.IsNavigable}");
             
-            // Cancel edit if property is not editable or is navigable
-            if (!property.IsEditable || property.IsNavigable)
+            // Cancel edit if property is not editable
+            if (!property.IsEditable)
             {
                 e.Cancel = true;
                 System.Diagnostics.Debug.WriteLine($"Edit canceled for {property.Name}");

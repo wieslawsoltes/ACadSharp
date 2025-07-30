@@ -53,8 +53,12 @@
                     <ComboBox Grid.Column="1" SelectedItem="{Binding SearchType}" 
                               ItemsSource="{Binding SearchTypeValues}"
                               Width="120" Margin="0,0,10,0"/>
-                    <TextBox Grid.Column="2" Text="{Binding SearchText}" 
-                             Watermark="Enter search text..."/>
+                    <AutoCompleteBox Grid.Column="2" Text="{Binding SearchText}" 
+                                     ItemsSource="{Binding SearchSuggestions}"
+                                     Watermark="Enter search text..."
+                                     FilterMode="Contains"
+                                     MinimumPrefixLength="0"
+                                     IsTextCompletionEnabled="True"/>
                     <Button Grid.Column="3" Content="Reset" Command="{Binding ClearSearchCommand}"
                             Margin="10,0,0,0" Padding="10,5"/>
                 </Grid>

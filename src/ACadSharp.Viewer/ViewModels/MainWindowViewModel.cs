@@ -26,6 +26,7 @@ public class MainWindowViewModel : ViewModelBase
     private readonly ICadFileService _cadFileService;
     private readonly ICadObjectTreeService _cadObjectTreeService;
     private readonly IFileDialogService _fileDialogService;
+    private readonly SearchSuggestionService _searchSuggestionService;
     private CadDocumentModel _leftDocument;
     private CadDocumentModel _rightDocument;
     private string _searchText = string.Empty;
@@ -35,11 +36,13 @@ public class MainWindowViewModel : ViewModelBase
     private bool _isHighlighting = false;
     private DateTime _lastRestoreTime = DateTime.MinValue;
     private readonly TimeSpan _restoreDebounceTime = TimeSpan.FromMilliseconds(100);
+    private ObservableCollection<string> _searchSuggestions = new();
 
     public MainWindowViewModel(IFileDialogService? fileDialogService = null)
     {
         _cadFileService = new CadFileService();
         _cadObjectTreeService = new CadObjectTreeService();
+        _searchSuggestionService = new SearchSuggestionService();
         _fileDialogService = fileDialogService ?? new FileDialogService(null!); // Will be set properly
         _leftDocument = new CadDocumentModel();
         _rightDocument = new CadDocumentModel();
@@ -55,6 +58,7 @@ public class MainWindowViewModel : ViewModelBase
         NavigateToPropertyCommand = ReactiveCommand.Create<ObjectProperty>(NavigateToProperty);
         NavigateToBreadcrumbCommand = ReactiveCommand.Create<BreadcrumbItem>(NavigateToBreadcrumb);
         OpenBatchSearchCommand = ReactiveCommand.Create(OpenBatchSearch);
+
 
         // Subscribe to progress events
         _cadFileService.LoadProgressChanged += OnLoadProgressChanged;
@@ -110,6 +114,16 @@ public class MainWindowViewModel : ViewModelBase
         this.WhenAnyValue(x => x.SearchText, x => x.LeftDocument.SelectedTreeNode, x => x.RightDocument.SelectedTreeNode)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(_ => HighlightSelectedNodeProperties());
+
+        // Update search suggestions when search type changes
+        this.WhenAnyValue(x => x.SearchType)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ => UpdateSearchSuggestions());
+
+        // Update search suggestions when documents are loaded
+        this.WhenAnyValue(x => x.LeftDocument.Document, x => x.RightDocument.Document)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(async _ => await UpdateSearchSuggestionsAsync());
     }
 
     /// <summary>
@@ -152,6 +166,15 @@ public class MainWindowViewModel : ViewModelBase
     /// Available search types for the dropdown
     /// </summary>
     public SearchType[] SearchTypeValues => Enum.GetValues<SearchType>();
+
+    /// <summary>
+    /// Search suggestions for autocomplete
+    /// </summary>
+    public ObservableCollection<string> SearchSuggestions
+    {
+        get => _searchSuggestions;
+        set => this.RaiseAndSetIfChanged(ref _searchSuggestions, value);
+    }
 
     /// <summary>
     /// Indicates if a search is currently in progress
@@ -203,6 +226,8 @@ public class MainWindowViewModel : ViewModelBase
     /// Command to open batch search window
     /// </summary>
     public ICommand OpenBatchSearchCommand { get; }
+
+
 
     /// <summary>
     /// Loads a file into the left panel (DWG)
@@ -880,4 +905,55 @@ public class MainWindowViewModel : ViewModelBase
         };
         batchSearchWindow.Show();
     }
+
+    /// <summary>
+    /// Updates search suggestions based on the current search type
+    /// </summary>
+    private void UpdateSearchSuggestions()
+    {
+        try
+        {
+            // If search text is empty, show all suggestions for the current search type
+            var filterText = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText;
+            var suggestions = _searchSuggestionService.GetSuggestions(SearchType, filterText);
+            SearchSuggestions.Clear();
+            foreach (var suggestion in suggestions)
+            {
+                SearchSuggestions.Add(suggestion);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error updating search suggestions: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Updates search suggestions asynchronously when documents are loaded
+    /// </summary>
+    private async Task UpdateSearchSuggestionsAsync()
+    {
+        try
+        {
+            var documents = new List<CadDocument>();
+            
+            if (LeftDocument?.Document != null)
+                documents.Add(LeftDocument.Document);
+            
+            if (RightDocument?.Document != null)
+                documents.Add(RightDocument.Document);
+
+            if (documents.Any())
+            {
+                await _searchSuggestionService.UpdateSuggestionsAsync(documents);
+                UpdateSearchSuggestions();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error updating search suggestions async: {ex.Message}");
+        }
+    }
+
+
 }

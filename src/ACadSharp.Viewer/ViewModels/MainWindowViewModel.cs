@@ -71,18 +71,18 @@ public class MainWindowViewModel : ViewModelBase
             {
                 try
                 {
-                    // Prevent multiple simultaneous operations
-                    if (IsSearching) return;
-                        
                     if (string.IsNullOrWhiteSpace(tuple.Item1))
                     {
-                        // Clear search results immediately
+                        // Clear search results immediately when text is empty
+                        // Don't block on IsSearching for clearing
                         ClearSearchResults();
                         // Then restore tree view state
                         RestoreTreeViewState();
                     }
                     else
                     {
+                        // Prevent multiple simultaneous search operations
+                        if (IsSearching) return;
                         await SearchAsync();
                     }
                 }
@@ -899,10 +899,9 @@ public class MainWindowViewModel : ViewModelBase
     /// </summary>
     public void OpenBatchSearch()
     {
-        var batchSearchWindow = new Views.BatchSearchWindow
-        {
-            DataContext = new BatchSearchViewModel(_fileDialogService)
-        };
+        var batchSearchWindow = new Views.BatchSearchWindow();
+        var batchSearchFileDialogService = new FileDialogService(batchSearchWindow);
+        batchSearchWindow.DataContext = new BatchSearchViewModel(batchSearchFileDialogService);
         batchSearchWindow.Show();
     }
 

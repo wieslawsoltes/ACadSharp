@@ -7,6 +7,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Windows.Input;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using ACadSharp.Viewer.Services;
 
 namespace ACadSharp.Viewer.ViewModels;
 
@@ -236,19 +239,139 @@ public class BatchSearchResultsViewModel : ViewModelBase
     /// Opens a file in the main viewer
     /// </summary>
     /// <param name="result">The result containing the file to open</param>
-    private void OpenFile(BatchSearchResult result)
+    private async void OpenFile(BatchSearchResult result)
     {
-        // TODO: Implement file opening functionality
-        // This should load the file into the main viewer
+        if (result == null || string.IsNullOrEmpty(result.FilePath)) return;
+
+        try
+        {
+            // Find the main window
+            var mainWindow = GetMainWindow();
+            if (mainWindow?.DataContext is MainWindowViewModel mainViewModel)
+            {
+                // Load the file into the left panel of the main window
+                await mainViewModel.LoadLeftFileAsync(result.FilePath);
+
+                // If there are matches, navigate to the first one
+                if (result.Matches.Any())
+                {
+                    var firstMatch = result.Matches.First();
+                    await NavigateToMatchInMainWindow(mainViewModel, firstMatch);
+                }
+
+                // Bring main window to front
+                mainWindow.Activate();
+                mainWindow.BringIntoView();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error opening file: {ex.Message}");
+        }
     }
 
     /// <summary>
     /// Navigates to a specific match
     /// </summary>
     /// <param name="match">The match to navigate to</param>
-    private void NavigateToMatch(BatchSearchMatch match)
+    private async void NavigateToMatch(BatchSearchMatch match)
     {
-        // TODO: Implement navigation functionality
-        // This should open the file and navigate to the specific object
+        if (match == null || SelectedResult == null) return;
+
+        try
+        {
+            // Find the main window
+            var mainWindow = GetMainWindow();
+            if (mainWindow?.DataContext is MainWindowViewModel mainViewModel)
+            {
+                // First load the file if it's not already loaded
+                if (mainViewModel.LeftDocument?.FilePath != SelectedResult.FilePath)
+                {
+                    await mainViewModel.LoadLeftFileAsync(SelectedResult.FilePath);
+                }
+
+                // Navigate to the specific match
+                await NavigateToMatchInMainWindow(mainViewModel, match);
+
+                // Bring main window to front
+                mainWindow.Activate();
+                mainWindow.BringIntoView();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error navigating to match: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Helper method to get the main window
+    /// </summary>
+    /// <returns>The main window instance</returns>
+    private Window? GetMainWindow()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            return desktop.MainWindow;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Helper method to navigate to a specific match in the main window
+    /// </summary>
+    /// <param name="mainViewModel">The main window view model</param>
+    /// <param name="match">The match to navigate to</param>
+    private async System.Threading.Tasks.Task NavigateToMatchInMainWindow(MainWindowViewModel mainViewModel, BatchSearchMatch match)
+    {
+        try
+        {
+            // Set the search text and type to match the original search
+            mainViewModel.SearchText = Summary.SearchText;
+            mainViewModel.SearchType = Enum.Parse<SearchType>(Summary.SearchType);
+
+            // Wait a bit for the search to complete
+            await System.Threading.Tasks.Task.Delay(500);
+
+            // Try to find and select the tree node for the matched object
+            var treeNode = FindTreeNodeByHandle(mainViewModel.LeftDocument?.ObjectTreeNodes, match.Handle);
+            if (treeNode != null && mainViewModel.LeftDocument != null)
+            {
+                mainViewModel.LeftDocument.SelectedTreeNode = treeNode;
+                treeNode.IsExpanded = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error navigating to match in main window: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Helper method to find a tree node by CAD object handle
+    /// </summary>
+    /// <param name="nodes">The collection of tree nodes to search</param>
+    /// <param name="handle">The handle to search for</param>
+    /// <returns>The tree node with the matching handle, or null if not found</returns>
+    private CadObjectTreeNode? FindTreeNodeByHandle(ObservableCollection<CadObjectTreeNode>? nodes, ulong handle)
+    {
+        if (nodes == null) return null;
+
+        foreach (var node in nodes)
+        {
+            if (node.CadObject?.Handle == handle)
+            {
+                return node;
+            }
+
+            // Recursively search children
+            var childResult = FindTreeNodeByHandle(node.Children, handle);
+            if (childResult != null)
+            {
+                return childResult;
+            }
+        }
+
+        return null;
     }
 }

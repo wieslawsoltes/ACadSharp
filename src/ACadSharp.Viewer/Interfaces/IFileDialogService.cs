@@ -18,5 +18,11 @@ namespace ACadSharp.Viewer.Interfaces
         /// </summary>
         /// <returns>Selected file path or null if cancelled</returns>
         Task<string?> ShowDxfFilePickerAsync();
+
+        /// <summary>
+        /// Shows a folder picker dialog for batch search
+        /// </summary>
+        /// <returns>Selected folder path or null if cancelled</returns>
+        Task<string?> ShowFolderPickerAsync();
     }
 } 

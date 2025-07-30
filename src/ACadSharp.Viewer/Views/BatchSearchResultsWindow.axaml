@@ -1,0 +1,115 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ACadSharp.Viewer.ViewModels"
+        xmlns:converters="using:ACadSharp.Viewer.Converters"
+
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="ACadSharp.Viewer.Views.BatchSearchResultsWindow"
+        x:DataType="vm:BatchSearchResultsViewModel"
+        Title="Batch Search Results"
+        Width="1000" Height="700">
+
+    <Window.Resources>
+        <converters:SearchHighlightConverter x:Key="SearchHighlightConverter"/>
+    </Window.Resources>
+
+    <Design.DataContext>
+        <vm:BatchSearchResultsViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <!-- Summary Panel -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="0,0,0,1" Padding="15,10">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="Total Files:" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                <TextBlock Grid.Column="1" Text="{Binding Summary.TotalFiles}" Margin="0,0,20,0"/>
+                
+                <TextBlock Grid.Column="2" Text="Successful:" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                <TextBlock Grid.Column="3" Text="{Binding Summary.SuccessfulFiles}" Margin="0,0,20,0"/>
+                
+                <TextBlock Grid.Column="4" Text="Failed:" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                <TextBlock Grid.Column="5" Text="{Binding Summary.FailedFiles}" Margin="0,0,20,0"/>
+                
+                <TextBlock Grid.Column="6" Text="Total Matches:" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                <TextBlock Grid.Column="7" Text="{Binding Summary.TotalMatches}" Margin="0,0,20,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Filter Panel -->
+        <Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="0,0,0,1" Padding="15,10">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="Filter:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox Grid.Column="1" Text="{Binding FilterText}" 
+                         Watermark="Filter by file name, path, or content..." Margin="0,0,10,0"/>
+                <CheckBox Grid.Column="2" Content="Files with matches only" 
+                          IsChecked="{Binding ShowOnlyFilesWithMatches}" Margin="0,0,10,0"/>
+                <CheckBox Grid.Column="3" Content="Successful files only" 
+                          IsChecked="{Binding ShowOnlySuccessfulFiles}" Margin="0,0,10,0"/>
+                <Button Grid.Column="4" Content="Clear Filter" Command="{Binding ClearFilterCommand}"/>
+            </Grid>
+        </Border>
+
+        <!-- Results Grid -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*">
+            <!-- Files List -->
+            <Border Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                    BorderThickness="0,0,1,0">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0" Text="Files" FontWeight="SemiBold" 
+                               Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding FilteredResults}" 
+                             SelectedItem="{Binding SelectedResult}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="5">
+                                    <TextBlock Grid.Column="0" Text="{Binding FileName}" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding FileType}" Foreground="Gray" Margin="10,0,0,0"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding MatchCount}" Foreground="Blue" Margin="10,0,0,0"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding StatusMessage}" Foreground="Gray" Margin="10,0,0,0"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+            <!-- Matches List -->
+            <Border Grid.Column="2">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0" Text="Matches" FontWeight="SemiBold" 
+                               Padding="10,5" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedResult.Matches}" 
+                              AutoGenerateColumns="False" IsReadOnly="True" CanUserResizeColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Type" Binding="{Binding ObjectType}" Width="*"/>
+                            <DataGridTextColumn Header="Handle" Binding="{Binding Handle, StringFormat='X'}" Width="80"/>
+                            <DataGridTextColumn Header="Name" Binding="{Binding ObjectName}" Width="*"/>
+                            <DataGridTextColumn Header="Match" Binding="{Binding MatchValue}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto" Margin="10,5">
+                <TextBlock Grid.Column="0" Text="{Binding Summary.SearchText, StringFormat='Search: {0}'}" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBlock Grid.Column="1" Text="{Binding Summary.TotalProcessingTime, StringFormat='Time: {0:hh\\:mm\\:ss}'}" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window> 

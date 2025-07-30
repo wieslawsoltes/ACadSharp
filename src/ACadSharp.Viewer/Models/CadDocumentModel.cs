@@ -466,7 +466,19 @@ public class CadDocumentModel : INotifyPropertyChanged
         {
             // If not found in tree, just update properties and breadcrumb
             UpdateBreadcrumbForObject(targetObject, propertyName);
-            var properties = GetObjectPropertiesForAnyObject(targetObject);
+            
+            // Check if the target object is a collection - if so, show collection items
+            var properties = new List<ObjectProperty>();
+            if (IsCollectionType(targetObject.GetType()) && targetObject is System.Collections.IEnumerable enumerable)
+            {
+                // Show individual collection items
+                AddCollectionItemProperties(properties, "Items", enumerable);
+            }
+            else
+            {
+                // Show regular object properties
+                properties = GetObjectPropertiesForAnyObject(targetObject).ToList();
+            }
                 
             SelectedObjectProperties.Clear();
             FilteredSelectedObjectProperties.Clear();
@@ -764,6 +776,17 @@ public class CadDocumentModel : INotifyPropertyChanged
                         {
                             objectProperty.ObjectHandle = cadObj.Handle;
                         }
+
+                        // Check if this property is a collection or enumerable (but not string)
+                        if (IsCollectionType(prop.PropertyType) && value is System.Collections.IEnumerable enumerable)
+                        {
+                            // Add the collection summary property as navigable
+                            var collectionCount = GetCollectionCount(enumerable);
+                            objectProperty.Value = $"{stringValue} (Count: {collectionCount})";
+                            // Don't add individual items here - they'll be shown when navigating to this collection
+                            properties.Add(objectProperty);
+                            continue; // Skip adding the main property again
+                        }
                     }
 
                     properties.Add(objectProperty);
@@ -837,13 +860,11 @@ public class CadDocumentModel : INotifyPropertyChanged
                         // Check if this property is a collection or enumerable (but not string)
                         if (IsCollectionType(prop.PropertyType) && value is System.Collections.IEnumerable enumerable)
                         {
-                            // Add the collection summary property first
+                            // Add the collection summary property as navigable
                             var collectionCount = GetCollectionCount(enumerable);
                             objectProperty.Value = $"{stringValue} (Count: {collectionCount})";
+                            // Don't add individual items here - they'll be shown when navigating to this collection
                             properties.Add(objectProperty);
-
-                            // Add individual collection items as separate properties
-                            AddCollectionItemProperties(properties, prop.Name, enumerable);
                             continue; // Skip adding the main property again
                         }
                     }

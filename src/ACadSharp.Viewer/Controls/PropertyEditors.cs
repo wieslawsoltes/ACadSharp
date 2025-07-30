@@ -27,6 +27,8 @@ public class EditablePropertyTextBox : TextBox
         set => SetValue(PropertyProperty, value);
     }
 
+    protected override Type StyleKeyOverride => typeof(TextBox);
+
     public EditablePropertyTextBox()
     {
         LostFocus += OnLostFocus;
@@ -104,6 +106,8 @@ public class EditablePropertyCheckBox : CheckBox
         set => SetValue(PropertyProperty, value);
     }
 
+    protected override Type StyleKeyOverride => typeof(CheckBox);
+
     public EditablePropertyCheckBox()
     {
         Click += OnClick;
@@ -145,6 +149,8 @@ public class EditablePropertyComboBox : ComboBox
         get => GetValue(PropertyProperty);
         set => SetValue(PropertyProperty, value);
     }
+
+    protected override Type StyleKeyOverride => typeof(ComboBox);
 
     public EditablePropertyComboBox()
     {
@@ -196,6 +202,8 @@ public class EditablePropertyNumericUpDown : NumericUpDown
         get => GetValue(PropertyProperty);
         set => SetValue(PropertyProperty, value);
     }
+
+    protected override Type StyleKeyOverride => typeof(NumericUpDown);
 
     public EditablePropertyNumericUpDown()
     {

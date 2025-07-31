@@ -44,6 +44,20 @@ public partial class MainWindow : Window
         }
     }
 
+    private void BatchConverterButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var batchConverterWindow = new BatchConverterWindow();
+            batchConverterWindow.ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            // Log error or handle it appropriately
+            System.Diagnostics.Debug.WriteLine($"Failed to open Batch Converter: {ex.Message}");
+        }
+    }
+
     private void SetupDragAndDrop()
     {
         // Setup left panel drag and drop

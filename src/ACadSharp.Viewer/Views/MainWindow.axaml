@@ -48,6 +48,8 @@
                     <Button Content="Load DXF" Click="LoadDxfButton_Click" 
                             IsEnabled="{Binding IsBusy, Converter={x:Static BoolConverters.Not}}"/>
                     <Separator/>
+                    <Button Content="Batch Converter" Click="BatchConverterButton_Click" 
+                            IsEnabled="{Binding IsBusy, Converter={x:Static BoolConverters.Not}}"/>
                     <Button Content="Batch Search" Command="{Binding OpenBatchSearchCommand}"/>
                 </StackPanel>
 

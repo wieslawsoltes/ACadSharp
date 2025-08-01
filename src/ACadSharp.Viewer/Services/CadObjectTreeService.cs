@@ -37,7 +37,7 @@ public class CadObjectTreeService : ICadObjectTreeService
                 ObjectType = "Document",
                 Handle = document.Handle,
                 HasChildren = true,
-                IsExpanded = true
+                IsExpanded = false
             };
 
             // Header
@@ -101,7 +101,7 @@ public class CadObjectTreeService : ICadObjectTreeService
                 Name = "Tables",
                 ObjectType = "Tables",
                 HasChildren = true,
-                IsExpanded = true
+                IsExpanded = false
             };
 
             var tableNodes = new List<CadObjectTreeNode>();
@@ -274,7 +274,7 @@ public class CadObjectTreeService : ICadObjectTreeService
                     Name = "Model Space Entities",
                     ObjectType = "Model Space",
                     HasChildren = document.ModelSpace.Entities.Any(),
-                    IsExpanded = true
+                    IsExpanded = false
                 };
 
                 var modelSpaceEntityNodes = document.ModelSpace.Entities.Select(entity => new CadObjectTreeNode

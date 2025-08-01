@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using System;
+using System.ComponentModel;
 using Avalonia.LogicalTree;
 using Avalonia.Controls.Primitives;
 
@@ -19,11 +20,14 @@ namespace ACadSharp.Viewer.Views;
 
 public partial class MainWindow : Window
 {
+    private MainWindowViewModel? _viewModel;
+    private bool _searchBoxHadFocus;
     public MainWindow()
     {
         InitializeComponent();
         SetupDragAndDrop();
         SetupTreeViewExpansion();
+        this.DataContextChanged += MainWindow_DataContextChanged;
     }
 
     private async void LoadDwgButton_Click(object sender, RoutedEventArgs e)
@@ -406,6 +410,45 @@ public partial class MainWindow : Window
                 }
             }
         };
+    }
+
+    private void MainWindow_DataContextChanged(object? sender, EventArgs e)
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.PropertyChanged -= Vm_PropertyChanged;
+        }
+
+        _viewModel = DataContext as MainWindowViewModel;
+        if (_viewModel != null)
+        {
+            _viewModel.PropertyChanged += Vm_PropertyChanged;
+        }
+    }
+
+    private void Vm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainWindowViewModel.IsSearching))
+        {
+            var searchBox = this.FindControl<AutoCompleteBox>("SearchBox");
+            if (sender is MainWindowViewModel vm)
+            {
+                if (vm.IsSearching)
+                {
+                    // Capture focus state at start of search
+                    _searchBoxHadFocus = searchBox?.IsFocused ?? false;
+                }
+                else
+                {
+                    // Restore focus only if it was focused before search
+                    if (_searchBoxHadFocus)
+                    {
+                        searchBox?.Focus();
+                    }
+                    _searchBoxHadFocus = false;
+                }
+            }
+        }
     }
 
 }

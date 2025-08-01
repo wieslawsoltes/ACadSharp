@@ -59,7 +59,7 @@
                     <ComboBox Grid.Column="1" SelectedItem="{Binding SearchType}" 
                               ItemsSource="{Binding SearchTypeValues}"
                               Width="120" Margin="0,0,10,0"/>
-                    <AutoCompleteBox Grid.Column="2" Text="{Binding SearchText}" 
+                    <AutoCompleteBox x:Name="SearchBox" Grid.Column="2" Text="{Binding SearchText}" 
                                      ItemsSource="{Binding SearchSuggestions}"
                                      Watermark="Enter search text..."
                                      FilterMode="Contains"

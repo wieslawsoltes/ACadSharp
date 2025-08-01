@@ -669,10 +669,15 @@ public class MainWindowViewModel : ViewModelBase
                 
                 // Filter and highlight the nodes while preserving expanded state
                 var expandedStateDict = documentModel == LeftDocument ? _leftDocumentExpandedState : _rightDocumentExpandedState;
+                // Filter and highlight nodes
                 FilterAndHighlightNodes(documentModel.ObjectTreeNodes, resultHandles, searchText, expandedStateDict);
+                // Ensure that the full hierarchy leading to every match is expanded
+                ExpandParentNodesOfMatches(documentModel.ObjectTreeNodes, resultHandles, searchText);
                 
                 // Update the filtered tree
                 documentModel.UpdateFilteredTreeNodes();
+                // After rebuilding the filtered collection, re-apply expansion so that the full path remains visible
+                ApplyExpansionStateToFilteredTree(documentModel.FilteredObjectTreeNodes, resultHandles, searchText);
             }
             catch (Exception ex)
             {
@@ -714,16 +719,17 @@ public class MainWindowViewModel : ViewModelBase
             }
 
             // Check if node name or type matches search text
-            if (!isDirectMatch && !string.IsNullOrEmpty(searchText))
-            {
-                var searchLower = searchText.ToLowerInvariant();
-                if (node.Name.ToLowerInvariant().Contains(searchLower) || 
-                    node.ObjectType.ToLowerInvariant().Contains(searchLower))
-                {
-                    isDirectMatch = true;
-                    hasMatchingChild = true;
-                }
-            }
+            // Only perform partial name/type matching when search is not specifically for handles
+            if (!isDirectMatch && SearchType != SearchType.Handle && !string.IsNullOrEmpty(searchText))
+             {
+                 var searchLower = searchText.ToLowerInvariant();
+                 if (node.Name.ToLowerInvariant().Contains(searchLower) || 
+                     node.ObjectType.ToLowerInvariant().Contains(searchLower))
+                 {
+                     isDirectMatch = true;
+                     hasMatchingChild = true;
+                 }
+             }
 
             // Recursively check children first
             if (node.Children.Any())
@@ -739,19 +745,17 @@ public class MainWindowViewModel : ViewModelBase
             node.IsVisible = hasMatchingChild;
             node.IsHighlighted = isDirectMatch;
                 
-            // Preserve the original expanded state instead of auto-expanding
-            // Only expand if:
-            // 1. The node was originally expanded, OR
-            // 2. The node needs to be expanded to show direct matches in children
+            // Decide whether this node must be expanded to display the search path
+            bool shouldExpand = hasMatchingChild;
+
             if (expandedStateDict.TryGetValue(nodePath, out bool wasExpanded))
             {
-                node.IsExpanded = wasExpanded;
+                // Respect prior state only when we do not need to reveal matches
+                node.IsExpanded = shouldExpand ? true : wasExpanded;
             }
-            else if (hasMatchingChild && !isDirectMatch)
+            else
             {
-                // If we don't have stored state but have matching children,
-                // expand to show the path to matches (but only if this node itself is not a direct match)
-                node.IsExpanded = true;
+                node.IsExpanded = shouldExpand;
             }
 
             // Highlight properties if this node is selected and directly matches
@@ -815,16 +819,17 @@ public class MainWindowViewModel : ViewModelBase
         }
 
         // Check if node name or type matches search text
-        if (!isDirectMatch && !string.IsNullOrEmpty(searchText))
-        {
-            var searchLower = searchText.ToLowerInvariant();
-            if (node.Name.ToLowerInvariant().Contains(searchLower) || 
-                node.ObjectType.ToLowerInvariant().Contains(searchLower))
-            {
-                isDirectMatch = true;
-                hasMatchingDescendant = true;
-            }
-        }
+            // Only consider partial name/type match for non-handle searches
+            if (!isDirectMatch && SearchType != SearchType.Handle && !string.IsNullOrEmpty(searchText))
+             {
+                 var searchLower = searchText.ToLowerInvariant();
+                 if (node.Name.ToLowerInvariant().Contains(searchLower) || 
+                     node.ObjectType.ToLowerInvariant().Contains(searchLower))
+                 {
+                     isDirectMatch = true;
+                     hasMatchingDescendant = true;
+                 }
+             }
 
         // Check children recursively
         var childParentPath = new List<CadObjectTreeNode>(parentPath) { node };
@@ -889,16 +894,17 @@ public class MainWindowViewModel : ViewModelBase
         }
 
         // Check if node name or type matches search text
-        if (!isDirectMatch && !string.IsNullOrEmpty(searchText))
-        {
-            var searchLower = searchText.ToLowerInvariant();
-            if (node.Name.ToLowerInvariant().Contains(searchLower) || 
-                node.ObjectType.ToLowerInvariant().Contains(searchLower))
-            {
-                isDirectMatch = true;
-                hasMatchingDescendant = true;
-            }
-        }
+            // Skip partial name/type matching when searching by handle
+            if (!isDirectMatch && SearchType != SearchType.Handle && !string.IsNullOrEmpty(searchText))
+             {
+                 var searchLower = searchText.ToLowerInvariant();
+                 if (node.Name.ToLowerInvariant().Contains(searchLower) || 
+                     node.ObjectType.ToLowerInvariant().Contains(searchLower))
+                 {
+                     isDirectMatch = true;
+                     hasMatchingDescendant = true;
+                 }
+             }
 
         // Check children recursively
         foreach (var child in node.Children)

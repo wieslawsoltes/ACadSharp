@@ -116,7 +116,7 @@
                                 <TreeView x:Name="LeftTreeView" Grid.Row="1" ItemsSource="{Binding LeftDocument.FilteredObjectTreeNodes}" 
                                          SelectedItem="{Binding LeftDocument.SelectedTreeNode}">
                                     <TreeView.ItemTemplate>
-                                        <TreeDataTemplate ItemsSource="{Binding Children}">
+                                        <TreeDataTemplate DataType="{x:Type interfaces:CadObjectTreeNode}" ItemsSource="{Binding Children}">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding Name}" 
                                                            Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"/>
@@ -126,7 +126,11 @@
                                             </StackPanel>
                                         </TreeDataTemplate>
                                     </TreeView.ItemTemplate>
-
+                                    <TreeView.ItemContainerTheme>
+                                        <ControlTheme TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}" x:DataType="interfaces:CadObjectTreeNode">
+                                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                        </ControlTheme>
+                                    </TreeView.ItemContainerTheme>
                                 </TreeView>
                             </Grid>
                         </Border>
@@ -345,7 +349,7 @@
                                 <TreeView x:Name="RightTreeView" Grid.Row="1" ItemsSource="{Binding RightDocument.FilteredObjectTreeNodes}" 
                                          SelectedItem="{Binding RightDocument.SelectedTreeNode}">
                                     <TreeView.ItemTemplate>
-                                        <TreeDataTemplate ItemsSource="{Binding Children}">
+                                        <TreeDataTemplate DataType="{x:Type interfaces:CadObjectTreeNode}" ItemsSource="{Binding Children}">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{Binding Name}" 
                                                            Background="{Binding IsHighlighted, Converter={StaticResource SearchHighlightConverter}}"/>
@@ -355,7 +359,11 @@
                                             </StackPanel>
                                         </TreeDataTemplate>
                                     </TreeView.ItemTemplate>
-
+                                    <TreeView.ItemContainerTheme>
+                                        <ControlTheme TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}" x:DataType="interfaces:CadObjectTreeNode">
+                                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                        </ControlTheme>
+                                    </TreeView.ItemContainerTheme>
                                 </TreeView>
                             </Grid>
                         </Border>
@@ -553,4 +561,4 @@
     </Grid>
 
     <!-- File picker functionality is handled in code-behind using StorageProvider -->
-</Window> 
+</Window>

@@ -27,13 +27,13 @@ namespace ACadSharp.IO.DXF
 
 		public abstract void Read();
 
-		protected void readCommonObjectData(out string name, out ulong handle, out ulong? ownerHandle, out ulong? xdictHandle, out List<ulong> reactors)
+		protected void readCommonObjectData(out string name, out ulong handle, out ulong? ownerHandle, out ulong? xdictHandle, out HashSet<ulong> reactors)
 		{
 			name = null;
 			handle = 0;
 			ownerHandle = null;
 			xdictHandle = null;
-			reactors = new List<ulong>();
+			reactors = new HashSet<ulong>();
 
 			if (this._reader.DxfCode == DxfCode.Start
 					|| this._reader.DxfCode == DxfCode.Subclass)
@@ -1052,6 +1052,7 @@ namespace ACadSharp.IO.DXF
 			CadSplineTemplate tmp = template as CadSplineTemplate;
 
 			XYZ controlPoint;
+			XYZ fitPoint;
 
 			switch (this._reader.Code)
 			{
@@ -1068,6 +1069,20 @@ namespace ACadSharp.IO.DXF
 					controlPoint = tmp.CadObject.ControlPoints.LastOrDefault();
 					controlPoint.Z = this._reader.ValueAsDouble;
 					tmp.CadObject.ControlPoints[tmp.CadObject.ControlPoints.Count - 1] = controlPoint;
+					return true;
+				case 11:
+					fitPoint = new CSMath.XYZ(this._reader.ValueAsDouble, 0, 0);
+					tmp.CadObject.FitPoints.Add(fitPoint);
+					return true;
+				case 21:
+					fitPoint = tmp.CadObject.FitPoints.LastOrDefault();
+					fitPoint.Y = this._reader.ValueAsDouble;
+					tmp.CadObject.FitPoints[tmp.CadObject.FitPoints.Count - 1] = fitPoint;
+					return true;
+				case 31:
+					fitPoint = tmp.CadObject.FitPoints.LastOrDefault();
+					fitPoint.Z = this._reader.ValueAsDouble;
+					tmp.CadObject.FitPoints[tmp.CadObject.FitPoints.Count - 1] = fitPoint;
 					return true;
 				case 40:
 					tmp.CadObject.Knots.Add(this._reader.ValueAsDouble);
@@ -1674,16 +1689,16 @@ namespace ACadSharp.IO.DXF
 
 		private void readDefinedGroups(CadTemplate template)
 		{
-			this.readDefinedGroups(out ulong? xdict, out List<ulong> reactorsHandles);
+			this.readDefinedGroups(out ulong? xdict, out HashSet<ulong> reactorsHandles);
 
 			template.XDictHandle = xdict;
-			template.ReactorsHandles = reactorsHandles;
+			template.ReactorsHandles.UnionWith(reactorsHandles);
 		}
 
-		private void readDefinedGroups(out ulong? xdictHandle, out List<ulong> reactors)
+		private void readDefinedGroups(out ulong? xdictHandle, out HashSet<ulong> reactors)
 		{
 			xdictHandle = null;
-			reactors = new List<ulong>();
+			reactors = new HashSet<ulong>();
 
 			switch (this._reader.ValueAsString)
 			{
@@ -1707,9 +1722,9 @@ namespace ACadSharp.IO.DXF
 			}
 		}
 
-		private List<ulong> readReactors()
+		private HashSet<ulong> readReactors()
 		{
-			List<ulong> reactors = new List<ulong>();
+			HashSet<ulong> reactors = new();
 
 			this._reader.ReadNext();
 

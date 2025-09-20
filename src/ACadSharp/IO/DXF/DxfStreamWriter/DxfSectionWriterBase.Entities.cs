@@ -2,10 +2,7 @@
 using ACadSharp.Objects;
 using CSMath;
 using System;
-using System.IO;
 using System.Linq;
-using System.Text;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ACadSharp.IO.DXF
 {
@@ -17,6 +14,8 @@ namespace ACadSharp.IO.DXF
 			//TODO: Implement complex entities in a separated branch
 			switch (entity)
 			{
+				case Shape when !this.Configuration.WriteShapes:
+					return;
 				case TableEntity:
 				case Solid3D:
 				case UnknownEntity:
@@ -443,7 +442,7 @@ namespace ACadSharp.IO.DXF
 
 			this._writer.Write(10, ellipse.Center, map);
 
-			this._writer.Write(11, ellipse.EndPoint, map);
+			this._writer.Write(11, ellipse.MajorAxisEndPoint, map);
 
 			this._writer.Write(210, ellipse.Normal, map);
 
@@ -707,7 +706,7 @@ namespace ACadSharp.IO.DXF
 
 		private void writeMultiLeader(MultiLeader multiLeader)
 		{
-			MultiLeaderAnnotContext contextData = multiLeader.ContextData;
+			MultiLeaderObjectContextData contextData = multiLeader.ContextData;
 
 			this._writer.Write(100, "AcDbMLeader");
 
@@ -758,7 +757,7 @@ namespace ACadSharp.IO.DXF
 			this._writer.Write(295, 0);
 		}
 
-		private void writeMultiLeaderAnnotContext(MultiLeaderAnnotContext contextData)
+		private void writeMultiLeaderAnnotContext(MultiLeaderObjectContextData contextData)
 		{
 			this._writer.Write(300, "CONTEXT_DATA{");
 			this._writer.Write(40, contextData.ScaleFactor);
@@ -815,7 +814,7 @@ namespace ACadSharp.IO.DXF
 
 			this._writer.Write(297, contextData.NormalReversed);
 
-			foreach (MultiLeaderAnnotContext.LeaderRoot leaderRoot in contextData.LeaderRoots)
+			foreach (MultiLeaderObjectContextData.LeaderRoot leaderRoot in contextData.LeaderRoots)
 			{
 				writeLeaderRoot(leaderRoot);
 			}
@@ -825,7 +824,7 @@ namespace ACadSharp.IO.DXF
 			this._writer.Write(301, "}");       //	CONTEXT_DATA
 		}
 
-		private void writeLeaderRoot(MultiLeaderAnnotContext.LeaderRoot leaderRoot)
+		private void writeLeaderRoot(MultiLeaderObjectContextData.LeaderRoot leaderRoot)
 		{
 			this._writer.Write(302, "LEADER{");
 
@@ -840,7 +839,7 @@ namespace ACadSharp.IO.DXF
 			this._writer.Write(90, leaderRoot.LeaderIndex);
 			this._writer.Write(40, leaderRoot.LandingDistance);
 
-			foreach (MultiLeaderAnnotContext.LeaderLine leaderLine in leaderRoot.Lines)
+			foreach (MultiLeaderObjectContextData.LeaderLine leaderLine in leaderRoot.Lines)
 			{
 				writeLeaderLine(leaderLine);
 			}
@@ -849,7 +848,7 @@ namespace ACadSharp.IO.DXF
 			this._writer.Write(303, "}");   //	LEADER
 		}
 
-		private void writeLeaderLine(MultiLeaderAnnotContext.LeaderLine leaderLine)
+		private void writeLeaderLine(MultiLeaderObjectContextData.LeaderLine leaderLine)
 		{
 			this._writer.Write(304, "LEADER_LINE{");
 
@@ -862,7 +861,7 @@ namespace ACadSharp.IO.DXF
 			this._writer.Write(305, "}");   //	LEADER_Line
 		}
 
-		private void writePdfUnderlay<T,R>(T underlay)
+		private void writePdfUnderlay<T, R>(T underlay)
 			where T : UnderlayEntity<R>
 			where R : UnderlayDefinition
 		{
@@ -1024,8 +1023,14 @@ namespace ACadSharp.IO.DXF
 			this._writer.Write(43, spline.ControlPointTolerance, map);
 			this._writer.Write(44, spline.FitTolerance, map);
 
-			this._writer.Write(12, spline.StartTangent, map);
-			this._writer.Write(13, spline.EndTangent, map);
+			if (!spline.StartTangent.IsZero())
+			{
+				this._writer.Write(12, spline.StartTangent, map);
+			}
+			if (!spline.EndTangent.IsZero())
+			{
+				this._writer.Write(13, spline.EndTangent, map);
+			}
 
 			foreach (double knot in spline.Knots)
 			{
@@ -1142,13 +1147,17 @@ namespace ACadSharp.IO.DXF
 				this._writer.Write(74, (short)att.VerticalAlignment);
 			}
 
-			if (this.Version > ACadVersion.AC1027 && att.MText != null)
+			if (this.Version > ACadVersion.AC1027 && att.AttributeType != AttributeType.SingleLine)
 			{
 				this._writer.Write(71, (short)att.AttributeType);
 				this._writer.Write(72, (short)0);
 				this._writer.Write(11, att.AlignmentPoint);
 
-				this.writeMText(att.MText, false);
+				if (att.MText != null)
+				{
+					this._writer.Write(101, "Embedded Object");
+					this.writeMText(att.MText, false);
+				}
 			}
 		}
 

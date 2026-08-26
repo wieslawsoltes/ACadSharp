@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Class BlockGripExpression | ACadSharp </title>
+      <title>Class BlockPolarGrip | ACadSharp </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Class BlockGripExpression | ACadSharp ">
+      <meta name="title" content="Class BlockPolarGrip | ACadSharp ">
       
-      <meta name="description" content="Represents a BLOCKGRIPLOCATIONCOMPONENT object.">
+      <meta name="description" content="Represents a BLOCKPOLARGRIP object.">
       <link rel="icon" href="../favicon.ico">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/wieslawsoltes/ACadSharp/new/master/apiSpec/new?filename=ACadSharp_Objects_Evaluations_BlockGripExpression.md&amp;value=---%0Auid%3A%20ACadSharp.Objects.Evaluations.BlockGripExpression%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="docfx:docurl" content="https://github.com/wieslawsoltes/ACadSharp/new/master/apiSpec/new?filename=ACadSharp_Objects_Evaluations_BlockPolarGrip.md&amp;value=---%0Auid%3A%20ACadSharp.Objects.Evaluations.BlockPolarGrip%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -84,12 +84,12 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression">
+        <article data-uid="ACadSharp.Objects.Evaluations.BlockPolarGrip">
 
 
 
-  <h1 id="ACadSharp_Objects_Evaluations_BlockGripExpression" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression" class="text-break">
-Class BlockGripExpression  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockGripExpression.cs/#L12"><i class="bi bi-code-slash"></i></a>
+  <h1 id="ACadSharp_Objects_Evaluations_BlockPolarGrip" data-uid="ACadSharp.Objects.Evaluations.BlockPolarGrip" class="text-break">
+Class BlockPolarGrip  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockPolarGrip.cs/#L13"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -97,14 +97,14 @@ Class BlockGripExpression  <a class="header-action link-secondary" title="View s
   <dl><dt>Assembly</dt><dd>ACadSharp.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>Represents a BLOCKGRIPLOCATIONCOMPONENT object.</p>
+  <div class="markdown summary"><p>Represents a BLOCKPOLARGRIP object.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">[DxfName(&quot;BLOCKGRIPLOCATIONCOMPONENT&quot;)]
-[DxfSubClass(&quot;AcDbBlockGripExpr&quot;)]
-public class BlockGripExpression : EvaluationExpression, IHandledCadObject</code></pre>
+    <pre><code class="lang-csharp hljs">[DxfName(&quot;BLOCKPOLARGRIP&quot;)]
+[DxfSubClass(&quot;AcDbBlockPolarGrip&quot;)]
+public class BlockPolarGrip : BlockGrip, IHandledCadObject, INamedCadObject, IDxfClassDefined</code></pre>
   </div>
 
 
@@ -115,8 +115,11 @@ public class BlockGripExpression : EvaluationExpression, IHandledCadObject</code
     <dd>
       <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
       <div><a class="xref" href="ACadSharp.CadObject.html">CadObject</a></div>
+      <div><a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html">NonGraphicalObject</a></div>
       <div><a class="xref" href="ACadSharp.Objects.Evaluations.EvaluationExpression.html">EvaluationExpression</a></div>
-      <div><span class="xref">BlockGripExpression</span></div>
+      <div><a class="xref" href="ACadSharp.Objects.Evaluations.BlockElement.html">BlockElement</a></div>
+      <div><a class="xref" href="ACadSharp.Objects.Evaluations.BlockGrip.html">BlockGrip</a></div>
+      <div><span class="xref">BlockPolarGrip</span></div>
     </dd>
   </dl>
 
@@ -124,6 +127,8 @@ public class BlockGripExpression : EvaluationExpression, IHandledCadObject</code
     <dt>Implements</dt>
     <dd>
       <div><a class="xref" href="ACadSharp.IHandledCadObject.html">IHandledCadObject</a></div>
+      <div><a class="xref" href="ACadSharp.INamedCadObject.html">INamedCadObject</a></div>
+      <div><a class="xref" href="ACadSharp.Classes.IDxfClassDefined.html">IDxfClassDefined</a></div>
     </dd>
   </dl>
 
@@ -131,6 +136,30 @@ public class BlockGripExpression : EvaluationExpression, IHandledCadObject</code
   <dl class="typelist inheritedMembers">
     <dt>Inherited Members</dt>
     <dd>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.BlockGrip.html#ACadSharp_Objects_Evaluations_BlockGrip_Location">BlockGrip.Location</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.BlockGrip.html#ACadSharp_Objects_Evaluations_BlockGrip_Cycling">BlockGrip.Cycling</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.BlockGrip.html#ACadSharp_Objects_Evaluations_BlockGrip_ExpressionId1">BlockGrip.ExpressionId1</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.BlockGrip.html#ACadSharp_Objects_Evaluations_BlockGrip_ExpressionId2">BlockGrip.ExpressionId2</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.BlockGrip.html#ACadSharp_Objects_Evaluations_BlockGrip_Value93">BlockGrip.Value93</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.BlockElement.html#ACadSharp_Objects_Evaluations_BlockElement_ElementName">BlockElement.ElementName</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.BlockElement.html#ACadSharp_Objects_Evaluations_BlockElement_Value1071">BlockElement.Value1071</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.EvaluationExpression.html#ACadSharp_Objects_Evaluations_EvaluationExpression_EvaluatedValue">EvaluationExpression.EvaluatedValue</a>
+    </div>
     <div>
       <a class="xref" href="ACadSharp.Objects.Evaluations.EvaluationExpression.html#ACadSharp_Objects_Evaluations_EvaluationExpression_Id">EvaluationExpression.Id</a>
     </div>
@@ -142,6 +171,18 @@ public class BlockGripExpression : EvaluationExpression, IHandledCadObject</code
     </div>
     <div>
       <a class="xref" href="ACadSharp.Objects.Evaluations.EvaluationExpression.html#ACadSharp_Objects_Evaluations_EvaluationExpression_Value99">EvaluationExpression.Value99</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html#ACadSharp_Objects_NonGraphicalObject_OnNameChanged">NonGraphicalObject.OnNameChanged</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html#ACadSharp_Objects_NonGraphicalObject_Name">NonGraphicalObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html#ACadSharp_Objects_NonGraphicalObject_Clone">NonGraphicalObject.Clone()</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html#ACadSharp_Objects_NonGraphicalObject_ToString">NonGraphicalObject.ToString()</a>
     </div>
     <div>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_Document">CadObject.Document</a>
@@ -171,16 +212,16 @@ public class BlockGripExpression : EvaluationExpression, IHandledCadObject</code
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_CleanReactors">CadObject.CleanReactors()</a>
     </div>
     <div>
-      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_Clone">CadObject.Clone()</a>
-    </div>
-    <div>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_CreateExtendedDictionary">CadObject.CreateExtendedDictionary()</a>
     </div>
     <div>
-      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_RemoveReactor_ACadSharp_CadObject_">CadObject.RemoveReactor(CadObject)</a>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_IsValid_ACadSharp_IO_CadFileFormat_ACadSharp_ACadVersion_">CadObject.IsValid(CadFileFormat, ACadVersion)</a>
     </div>
     <div>
-      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_ToString">CadObject.ToString()</a>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_IsValid_ACadSharp_IO_CadFileFormat_ACadSharp_ACadVersion_System_Collections_Generic_IList_System_String___">CadObject.IsValid(CadFileFormat, ACadVersion, out IList&lt;string&gt;)</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_RemoveReactor_ACadSharp_CadObject_">CadObject.RemoveReactor(CadObject)</a>
     </div>
     <div>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_updateCollection__1___0_ACadSharp_ICadCollection___0__">CadObject.updateCollection&lt;T&gt;(T, ICadCollection&lt;T&gt;)</a>
@@ -209,18 +250,21 @@ public class BlockGripExpression : EvaluationExpression, IHandledCadObject</code
     <dt>Extension Methods</dt>
     <dd>
   <div>
+      <a class="xref" href="ACadSharp.Extensions.INamedCadObjectExtensions.html#ACadSharp_Extensions_INamedCadObjectExtensions_HasValidDxfName_ACadSharp_INamedCadObject_ACadSharp_ACadVersion_">INamedCadObjectExtensions.HasValidDxfName(INamedCadObject, ACadVersion)</a>
+  </div>
+  <div>
       <a class="xref" href="ACadSharp.Extensions.CadObjectExtensions.html#ACadSharp_Extensions_CadObjectExtensions_CloneTyped__1___0_">CadObjectExtensions.CloneTyped&lt;T&gt;(T)</a>
   </div>
   <div>
-      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__2___0___0___1__">LineExtensions.TryFindIntersection&lt;T, R&gt;(T, T, out R)</a>
+      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__3___0___1___2__">LineExtensions.TryFindIntersection&lt;T, S, R&gt;(T, S, out R)</a>
   </div>
   </dd></dl>
 
 
 
-  <h2 id="ACadSharp_Objects_Evaluations_BlockGripExpression_remarks">Remarks</h2>
-  <div class="markdown level0 remarks"><p>Object name <a class="xref" href="ACadSharp.DxfFileToken.html#ACadSharp_DxfFileToken_ObjectBlockGripLocationComponent">ObjectBlockGripLocationComponent</a> <br>
-Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_DxfSubclassMarker_BlockGripExpression">BlockGripExpression</a></p>
+  <h2 id="ACadSharp_Objects_Evaluations_BlockPolarGrip_remarks">Remarks</h2>
+  <div class="markdown level0 remarks"><p>Object name <a class="xref" href="ACadSharp.DxfFileToken.html#ACadSharp_DxfFileToken_ObjectBlockPolarGrip">ObjectBlockPolarGrip</a> <br>
+Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_DxfSubclassMarker_BlockPolarGrip">BlockPolarGrip</a></p>
 </div>
 
 
@@ -228,11 +272,11 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 </h2>
 
 
-  <a id="ACadSharp_Objects_Evaluations_BlockGripExpression_ObjectName_" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression.ObjectName*"></a>
+  <a id="ACadSharp_Objects_Evaluations_BlockPolarGrip_ObjectName_" data-uid="ACadSharp.Objects.Evaluations.BlockPolarGrip.ObjectName*"></a>
 
-  <h3 id="ACadSharp_Objects_Evaluations_BlockGripExpression_ObjectName" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression.ObjectName">
+  <h3 id="ACadSharp_Objects_Evaluations_BlockPolarGrip_ObjectName" data-uid="ACadSharp.Objects.Evaluations.BlockPolarGrip.ObjectName">
   ObjectName
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockGripExpression.cs/#L17"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockPolarGrip.cs/#L18"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>The CAD class name of an object.</p>
@@ -260,11 +304,11 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
 
 
-  <a id="ACadSharp_Objects_Evaluations_BlockGripExpression_SubclassMarker_" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression.SubclassMarker*"></a>
+  <a id="ACadSharp_Objects_Evaluations_BlockPolarGrip_SubclassMarker_" data-uid="ACadSharp.Objects.Evaluations.BlockPolarGrip.SubclassMarker*"></a>
 
-  <h3 id="ACadSharp_Objects_Evaluations_BlockGripExpression_SubclassMarker" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression.SubclassMarker">
+  <h3 id="ACadSharp_Objects_Evaluations_BlockPolarGrip_SubclassMarker" data-uid="ACadSharp.Objects.Evaluations.BlockPolarGrip.SubclassMarker">
   SubclassMarker
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockGripExpression.cs/#L20"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockPolarGrip.cs/#L21"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Object Subclass marker.</p>
@@ -292,62 +336,35 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
 
 
-  <a id="ACadSharp_Objects_Evaluations_BlockGripExpression_Value300_" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression.Value300*"></a>
+  <h2 class="section" id="methods">Methods
+</h2>
 
-  <h3 id="ACadSharp_Objects_Evaluations_BlockGripExpression_Value300" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression.Value300">
-  Value300
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockGripExpression.cs/#L22"><i class="bi bi-code-slash"></i></a>
+
+  <a id="ACadSharp_Objects_Evaluations_BlockPolarGrip_GetDxfClass_" data-uid="ACadSharp.Objects.Evaluations.BlockPolarGrip.GetDxfClass*"></a>
+
+  <h3 id="ACadSharp_Objects_Evaluations_BlockPolarGrip_GetDxfClass" data-uid="ACadSharp.Objects.Evaluations.BlockPolarGrip.GetDxfClass">
+  GetDxfClass()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockPolarGrip.cs/#L24"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 summary"><p>Gets the <a class="xref" href="ACadSharp.Classes.DxfClass.html">DxfClass</a> instance associated with this class.</p>
+</div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">[DxfCodeValue(new int[] { 300 })]
-public string Value300 { get; set; }</code></pre>
+    <pre><code class="lang-csharp hljs">public DxfClass GetDxfClass()</code></pre>
   </div>
 
 
-
-
-
-  <h4 class="section">Property Value</h4>
+  <h4 class="section">Returns</h4>
   <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
-    <dd></dd>
+    <dt><a class="xref" href="ACadSharp.Classes.DxfClass.html">DxfClass</a></dt>
+    <dd><p>The <a class="xref" href="ACadSharp.Classes.DxfClass.html">DxfClass</a> instance associated with this class.</p>
+</dd>
   </dl>
 
 
 
-
-
-
-
-
-  <a id="ACadSharp_Objects_Evaluations_BlockGripExpression_Value91_" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression.Value91*"></a>
-
-  <h3 id="ACadSharp_Objects_Evaluations_BlockGripExpression_Value91" data-uid="ACadSharp.Objects.Evaluations.BlockGripExpression.Value91">
-  Value91
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockGripExpression.cs/#L25"><i class="bi bi-code-slash"></i></a>
-  </h3>
-
-  <div class="markdown level1 summary"></div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">[DxfCodeValue(new int[] { 91 })]
-public int Value91 { get; set; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
-    <dd></dd>
-  </dl>
 
 
 
@@ -360,7 +377,7 @@ public int Value91 { get; set; }</code></pre>
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockGripExpression.cs/#L12" class="edit-link">Edit this page</a>
+          <a href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockPolarGrip.cs/#L13" class="edit-link">Edit this page</a>
         </div>
 
 

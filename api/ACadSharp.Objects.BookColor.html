@@ -89,7 +89,7 @@
 
 
   <h1 id="ACadSharp_Objects_BookColor" data-uid="ACadSharp.Objects.BookColor" class="text-break">
-Class BookColor  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L15"><i class="bi bi-code-slash"></i></a>
+Class BookColor  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L16"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -104,7 +104,7 @@ Class BookColor  <a class="header-action link-secondary" title="View source" hre
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">[DxfName(&quot;DBCOLOR&quot;)]
 [DxfSubClass(&quot;AcDbColor&quot;)]
-public class BookColor : NonGraphicalObject, IHandledCadObject, INamedCadObject</code></pre>
+public class BookColor : NonGraphicalObject, IHandledCadObject, INamedCadObject, IDxfClassDefined</code></pre>
   </div>
 
 
@@ -125,6 +125,7 @@ public class BookColor : NonGraphicalObject, IHandledCadObject, INamedCadObject<
     <dd>
       <div><a class="xref" href="ACadSharp.IHandledCadObject.html">IHandledCadObject</a></div>
       <div><a class="xref" href="ACadSharp.INamedCadObject.html">INamedCadObject</a></div>
+      <div><a class="xref" href="ACadSharp.Classes.IDxfClassDefined.html">IDxfClassDefined</a></div>
     </dd>
   </dl>
 
@@ -175,6 +176,12 @@ public class BookColor : NonGraphicalObject, IHandledCadObject, INamedCadObject<
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_CreateExtendedDictionary">CadObject.CreateExtendedDictionary()</a>
     </div>
     <div>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_IsValid_ACadSharp_IO_CadFileFormat_ACadSharp_ACadVersion_">CadObject.IsValid(CadFileFormat, ACadVersion)</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_IsValid_ACadSharp_IO_CadFileFormat_ACadSharp_ACadVersion_System_Collections_Generic_IList_System_String___">CadObject.IsValid(CadFileFormat, ACadVersion, out IList&lt;string&gt;)</a>
+    </div>
+    <div>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_RemoveReactor_ACadSharp_CadObject_">CadObject.RemoveReactor(CadObject)</a>
     </div>
     <div>
@@ -204,13 +211,13 @@ public class BookColor : NonGraphicalObject, IHandledCadObject, INamedCadObject<
     <dt>Extension Methods</dt>
     <dd>
   <div>
-      <a class="xref" href="ACadSharp.Extensions.INamedCadObjectExtensions.html#ACadSharp_Extensions_INamedCadObjectExtensions_IsValidDxfName_ACadSharp_INamedCadObject_ACadSharp_ACadVersion_">INamedCadObjectExtensions.IsValidDxfName(INamedCadObject, ACadVersion)</a>
+      <a class="xref" href="ACadSharp.Extensions.INamedCadObjectExtensions.html#ACadSharp_Extensions_INamedCadObjectExtensions_HasValidDxfName_ACadSharp_INamedCadObject_ACadSharp_ACadVersion_">INamedCadObjectExtensions.HasValidDxfName(INamedCadObject, ACadVersion)</a>
   </div>
   <div>
       <a class="xref" href="ACadSharp.Extensions.CadObjectExtensions.html#ACadSharp_Extensions_CadObjectExtensions_CloneTyped__1___0_">CadObjectExtensions.CloneTyped&lt;T&gt;(T)</a>
   </div>
   <div>
-      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__2___0___0___1__">LineExtensions.TryFindIntersection&lt;T, R&gt;(T, T, out R)</a>
+      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__3___0___1___2__">LineExtensions.TryFindIntersection&lt;T, S, R&gt;(T, S, out R)</a>
   </div>
   </dd></dl>
 
@@ -230,7 +237,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Objects_BookColor__ctor" data-uid="ACadSharp.Objects.BookColor.#ctor">
   BookColor()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L73"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L74"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Default constructor.</p>
@@ -257,7 +264,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Objects_BookColor__ctor_System_String_" data-uid="ACadSharp.Objects.BookColor.#ctor(System.String)">
   BookColor(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L79"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L80"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Initialize a <a class="xref" href="ACadSharp.Objects.BookColor.html">BookColor</a> with an specific name.</p>
@@ -289,7 +296,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Objects_BookColor__ctor_System_String_System_String_" data-uid="ACadSharp.Objects.BookColor.#ctor(System.String,System.String)">
   BookColor(string, string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L88"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L89"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Initialize a <a class="xref" href="ACadSharp.Objects.BookColor.html">BookColor</a> with an specific book and color name.</p>
@@ -327,7 +334,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Objects_BookColor_BookName" data-uid="ACadSharp.Objects.BookColor.BookName">
   BookName
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L67"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L68"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Book name where the color is stored.</p>
@@ -359,7 +366,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Objects_BookColor_Color" data-uid="ACadSharp.Objects.BookColor.Color">
   Color
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L69"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L70"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"></div>
@@ -391,7 +398,7 @@ public Color Color { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Objects_BookColor_ColorName" data-uid="ACadSharp.Objects.BookColor.ColorName">
   ColorName
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L62"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L63"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Color name.</p>
@@ -423,7 +430,7 @@ public Color Color { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Objects_BookColor_Name" data-uid="ACadSharp.Objects.BookColor.Name">
   Name
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L30"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L31"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Returns the full name of the color, following the structure BookName$ColorName,
@@ -459,7 +466,7 @@ if when set doesn't follow this structure only the name will be changed.</p>
 
   <h3 id="ACadSharp_Objects_BookColor_ObjectName" data-uid="ACadSharp.Objects.BookColor.ObjectName">
   ObjectName
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L20"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L21"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>The CAD class name of an object.</p>
@@ -491,7 +498,7 @@ if when set doesn't follow this structure only the name will be changed.</p>
 
   <h3 id="ACadSharp_Objects_BookColor_SubclassMarker" data-uid="ACadSharp.Objects.BookColor.SubclassMarker">
   SubclassMarker
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L23"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L24"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Object Subclass marker.</p>
@@ -519,11 +526,48 @@ if when set doesn't follow this structure only the name will be changed.</p>
 
 
 
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="ACadSharp_Objects_BookColor_GetDxfClass_" data-uid="ACadSharp.Objects.BookColor.GetDxfClass*"></a>
+
+  <h3 id="ACadSharp_Objects_BookColor_GetDxfClass" data-uid="ACadSharp.Objects.BookColor.GetDxfClass">
+  GetDxfClass()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L96"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the <a class="xref" href="ACadSharp.Classes.DxfClass.html">DxfClass</a> instance associated with this class.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DxfClass GetDxfClass()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="ACadSharp.Classes.DxfClass.html">DxfClass</a></dt>
+    <dd><p>The <a class="xref" href="ACadSharp.Classes.DxfClass.html">DxfClass</a> instance associated with this class.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
 
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L15" class="edit-link">Edit this page</a>
+          <a href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/BookColor.cs/#L16" class="edit-link">Edit this page</a>
         </div>
 
 

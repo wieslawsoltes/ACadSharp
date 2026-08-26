@@ -145,6 +145,9 @@ public class TextStyle : TableEntry, IHandledCadObject, INamedCadObject</code></
       <a class="xref" href="ACadSharp.Tables.TableEntry.html#ACadSharp_Tables_TableEntry_Clone">TableEntry.Clone()</a>
     </div>
     <div>
+      <a class="xref" href="ACadSharp.Tables.TableEntry.html#ACadSharp_Tables_TableEntry_IsValid_ACadSharp_IO_CadFileFormat_ACadSharp_ACadVersion_System_Collections_Generic_IList_System_String___">TableEntry.IsValid(CadFileFormat, ACadVersion, out IList&lt;string&gt;)</a>
+    </div>
+    <div>
       <a class="xref" href="ACadSharp.Tables.TableEntry.html#ACadSharp_Tables_TableEntry_ToString">TableEntry.ToString()</a>
     </div>
     <div>
@@ -178,6 +181,9 @@ public class TextStyle : TableEntry, IHandledCadObject, INamedCadObject</code></
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_CreateExtendedDictionary">CadObject.CreateExtendedDictionary()</a>
     </div>
     <div>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_IsValid_ACadSharp_IO_CadFileFormat_ACadSharp_ACadVersion_">CadObject.IsValid(CadFileFormat, ACadVersion)</a>
+    </div>
+    <div>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_RemoveReactor_ACadSharp_CadObject_">CadObject.RemoveReactor(CadObject)</a>
     </div>
     <div>
@@ -207,13 +213,13 @@ public class TextStyle : TableEntry, IHandledCadObject, INamedCadObject</code></
     <dt>Extension Methods</dt>
     <dd>
   <div>
-      <a class="xref" href="ACadSharp.Extensions.INamedCadObjectExtensions.html#ACadSharp_Extensions_INamedCadObjectExtensions_IsValidDxfName_ACadSharp_INamedCadObject_ACadSharp_ACadVersion_">INamedCadObjectExtensions.IsValidDxfName(INamedCadObject, ACadVersion)</a>
+      <a class="xref" href="ACadSharp.Extensions.INamedCadObjectExtensions.html#ACadSharp_Extensions_INamedCadObjectExtensions_HasValidDxfName_ACadSharp_INamedCadObject_ACadSharp_ACadVersion_">INamedCadObjectExtensions.HasValidDxfName(INamedCadObject, ACadVersion)</a>
   </div>
   <div>
       <a class="xref" href="ACadSharp.Extensions.CadObjectExtensions.html#ACadSharp_Extensions_CadObjectExtensions_CloneTyped__1___0_">CadObjectExtensions.CloneTyped&lt;T&gt;(T)</a>
   </div>
   <div>
-      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__2___0___0___1__">LineExtensions.TryFindIntersection&lt;T, R&gt;(T, T, out R)</a>
+      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__3___0___1___2__">LineExtensions.TryFindIntersection&lt;T, S, R&gt;(T, S, out R)</a>
   </div>
   </dd></dl>
 
@@ -233,7 +239,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Tables_TextStyle__ctor_System_String_" data-uid="ACadSharp.Tables.TextStyle.#ctor(System.String)">
   TextStyle(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L97"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L95"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Default constructor.</p>
@@ -274,7 +280,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Tables_TextStyle_DefaultName" data-uid="ACadSharp.Tables.TextStyle.DefaultName">
   DefaultName
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L17"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L92"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"></div>
@@ -309,7 +315,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Tables_TextStyle_BigFontFilename" data-uid="ACadSharp.Tables.TextStyle.BigFontFilename">
   BigFontFilename
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L47"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L25"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Big-font file name, blank if none.</p>
@@ -342,7 +348,7 @@ public string BigFontFilename { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_Default" data-uid="ACadSharp.Tables.TextStyle.Default">
   Default
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L31"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L20"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Default text style.</p>
@@ -374,7 +380,7 @@ public string BigFontFilename { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_Filename" data-uid="ACadSharp.Tables.TextStyle.Filename">
   Filename
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L41"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L31"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Primary font file name.</p>
@@ -407,7 +413,7 @@ public string Filename { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_Flags" data-uid="ACadSharp.Tables.TextStyle.Flags">
   Flags
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L36"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L37"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Style state flags.</p>
@@ -439,7 +445,7 @@ public string Filename { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_Height" data-uid="ACadSharp.Tables.TextStyle.Height">
   Height
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L53"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L42"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Fixed text height; 0 if not fixed</p>
@@ -472,7 +478,7 @@ public double Height { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_IsShapeFile" data-uid="ACadSharp.Tables.TextStyle.IsShapeFile">
   IsShapeFile
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L92"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L48"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Flag that indicates weather this <a class="xref" href="ACadSharp.Tables.TextStyle.html">TextStyle</a> is linked to a Shape file</p>
@@ -504,7 +510,7 @@ public double Height { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_LastHeight" data-uid="ACadSharp.Tables.TextStyle.LastHeight">
   LastHeight
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L65"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L53"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Last height used</p>
@@ -537,7 +543,7 @@ public double LastHeight { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_MirrorFlag" data-uid="ACadSharp.Tables.TextStyle.MirrorFlag">
   MirrorFlag
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L80"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L59"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Mirror flags.</p>
@@ -570,7 +576,7 @@ public TextMirrorFlag MirrorFlag { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_ObjectName" data-uid="ACadSharp.Tables.TextStyle.ObjectName">
   ObjectName
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L23"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L63"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>The CAD class name of an object.</p>
@@ -602,7 +608,7 @@ public TextMirrorFlag MirrorFlag { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_ObjectType" data-uid="ACadSharp.Tables.TextStyle.ObjectType">
   ObjectType
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L20"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L66"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Get the object type.</p>
@@ -668,7 +674,7 @@ public double ObliqueAngle { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_SubclassMarker" data-uid="ACadSharp.Tables.TextStyle.SubclassMarker">
   SubclassMarker
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L26"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L78"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Object Subclass marker.</p>
@@ -700,7 +706,7 @@ public double ObliqueAngle { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_TrueType" data-uid="ACadSharp.Tables.TextStyle.TrueType">
   TrueType
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L86"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L83"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>A long value which contains a true-type font’s pitch and family, character set, and italic and bold flags</p>
@@ -733,7 +739,7 @@ public FontFlags TrueType { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Tables_TextStyle_Width" data-uid="ACadSharp.Tables.TextStyle.Width">
   Width
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L59"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Tables/TextStyle.cs/#L89"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Width factor</p>

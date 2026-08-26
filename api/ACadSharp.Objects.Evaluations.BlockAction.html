@@ -102,7 +102,7 @@ Class BlockAction  <a class="header-action link-secondary" title="View source" h
 
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">[DxfSubClass(&quot;AcDbBlockAction&quot;)]
-public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
+public abstract class BlockAction : BlockElement, IHandledCadObject, INamedCadObject</code></pre>
   </div>
 
 
@@ -113,6 +113,7 @@ public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
     <dd>
       <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
       <div><a class="xref" href="ACadSharp.CadObject.html">CadObject</a></div>
+      <div><a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html">NonGraphicalObject</a></div>
       <div><a class="xref" href="ACadSharp.Objects.Evaluations.EvaluationExpression.html">EvaluationExpression</a></div>
       <div><a class="xref" href="ACadSharp.Objects.Evaluations.BlockElement.html">BlockElement</a></div>
       <div><span class="xref">BlockAction</span></div>
@@ -123,6 +124,7 @@ public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
     <dt>Implements</dt>
     <dd>
       <div><a class="xref" href="ACadSharp.IHandledCadObject.html">IHandledCadObject</a></div>
+      <div><a class="xref" href="ACadSharp.INamedCadObject.html">INamedCadObject</a></div>
     </dd>
   </dl>
 
@@ -130,7 +132,11 @@ public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
     <dt>Derived</dt>
     <dd>
       <div><a class="xref" href="ACadSharp.Objects.Evaluations.BlockActionBasePt.html">BlockActionBasePt</a></div>
+      <div><a class="xref" href="ACadSharp.Objects.Evaluations.BlockArrayAction.html">BlockArrayAction</a></div>
       <div><a class="xref" href="ACadSharp.Objects.Evaluations.BlockFlipAction.html">BlockFlipAction</a></div>
+      <div><a class="xref" href="ACadSharp.Objects.Evaluations.BlockLookupAction.html">BlockLookupAction</a></div>
+      <div><a class="xref" href="ACadSharp.Objects.Evaluations.BlockMoveAction.html">BlockMoveAction</a></div>
+      <div><a class="xref" href="ACadSharp.Objects.Evaluations.StretchActionBase.html">StretchActionBase</a></div>
     </dd>
   </dl>
 
@@ -144,6 +150,9 @@ public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
       <a class="xref" href="ACadSharp.Objects.Evaluations.BlockElement.html#ACadSharp_Objects_Evaluations_BlockElement_Value1071">BlockElement.Value1071</a>
     </div>
     <div>
+      <a class="xref" href="ACadSharp.Objects.Evaluations.EvaluationExpression.html#ACadSharp_Objects_Evaluations_EvaluationExpression_EvaluatedValue">EvaluationExpression.EvaluatedValue</a>
+    </div>
+    <div>
       <a class="xref" href="ACadSharp.Objects.Evaluations.EvaluationExpression.html#ACadSharp_Objects_Evaluations_EvaluationExpression_Id">EvaluationExpression.Id</a>
     </div>
     <div>
@@ -154,6 +163,18 @@ public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
     </div>
     <div>
       <a class="xref" href="ACadSharp.Objects.Evaluations.EvaluationExpression.html#ACadSharp_Objects_Evaluations_EvaluationExpression_Value99">EvaluationExpression.Value99</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html#ACadSharp_Objects_NonGraphicalObject_OnNameChanged">NonGraphicalObject.OnNameChanged</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html#ACadSharp_Objects_NonGraphicalObject_Name">NonGraphicalObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html#ACadSharp_Objects_NonGraphicalObject_Clone">NonGraphicalObject.Clone()</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.Objects.NonGraphicalObject.html#ACadSharp_Objects_NonGraphicalObject_ToString">NonGraphicalObject.ToString()</a>
     </div>
     <div>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_Document">CadObject.Document</a>
@@ -186,16 +207,16 @@ public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_CleanReactors">CadObject.CleanReactors()</a>
     </div>
     <div>
-      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_Clone">CadObject.Clone()</a>
-    </div>
-    <div>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_CreateExtendedDictionary">CadObject.CreateExtendedDictionary()</a>
     </div>
     <div>
-      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_RemoveReactor_ACadSharp_CadObject_">CadObject.RemoveReactor(CadObject)</a>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_IsValid_ACadSharp_IO_CadFileFormat_ACadSharp_ACadVersion_">CadObject.IsValid(CadFileFormat, ACadVersion)</a>
     </div>
     <div>
-      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_ToString">CadObject.ToString()</a>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_IsValid_ACadSharp_IO_CadFileFormat_ACadSharp_ACadVersion_System_Collections_Generic_IList_System_String___">CadObject.IsValid(CadFileFormat, ACadVersion, out IList&lt;string&gt;)</a>
+    </div>
+    <div>
+      <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_RemoveReactor_ACadSharp_CadObject_">CadObject.RemoveReactor(CadObject)</a>
     </div>
     <div>
       <a class="xref" href="ACadSharp.CadObject.html#ACadSharp_CadObject_updateCollection__1___0_ACadSharp_ICadCollection___0__">CadObject.updateCollection&lt;T&gt;(T, ICadCollection&lt;T&gt;)</a>
@@ -224,10 +245,13 @@ public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
     <dt>Extension Methods</dt>
     <dd>
   <div>
+      <a class="xref" href="ACadSharp.Extensions.INamedCadObjectExtensions.html#ACadSharp_Extensions_INamedCadObjectExtensions_HasValidDxfName_ACadSharp_INamedCadObject_ACadSharp_ACadVersion_">INamedCadObjectExtensions.HasValidDxfName(INamedCadObject, ACadVersion)</a>
+  </div>
+  <div>
       <a class="xref" href="ACadSharp.Extensions.CadObjectExtensions.html#ACadSharp_Extensions_CadObjectExtensions_CloneTyped__1___0_">CadObjectExtensions.CloneTyped&lt;T&gt;(T)</a>
   </div>
   <div>
-      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__2___0___0___1__">LineExtensions.TryFindIntersection&lt;T, R&gt;(T, T, out R)</a>
+      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__3___0___1___2__">LineExtensions.TryFindIntersection&lt;T, S, R&gt;(T, S, out R)</a>
   </div>
   </dd></dl>
 
@@ -239,44 +263,11 @@ public abstract class BlockAction : BlockElement, IHandledCadObject</code></pre>
 </h2>
 
 
-  <a id="ACadSharp_Objects_Evaluations_BlockAction_ActionPoint_" data-uid="ACadSharp.Objects.Evaluations.BlockAction.ActionPoint*"></a>
-
-  <h3 id="ACadSharp_Objects_Evaluations_BlockAction_ActionPoint" data-uid="ACadSharp.Objects.Evaluations.BlockAction.ActionPoint">
-  ActionPoint
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockAction.cs/#L14"><i class="bi bi-code-slash"></i></a>
-  </h3>
-
-  <div class="markdown level1 summary"><p>Whatever this is?</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">[DxfCodeValue(new int[] { 1010, 1020, 1030 })]
-public XYZ ActionPoint { get; set; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="CSMath.XYZ.html">XYZ</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
   <a id="ACadSharp_Objects_Evaluations_BlockAction_Entities_" data-uid="ACadSharp.Objects.Evaluations.BlockAction.Entities*"></a>
 
   <h3 id="ACadSharp_Objects_Evaluations_BlockAction_Entities" data-uid="ACadSharp.Objects.Evaluations.BlockAction.Entities">
   Entities
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockAction.cs/#L20"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockAction.cs/#L14"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the list of <a class="xref" href="ACadSharp.Entities.Entity.html">Entity</a> objects affected by this <a class="xref" href="ACadSharp.Objects.Evaluations.BlockAction.html">BlockAction</a>.</p>
@@ -296,6 +287,72 @@ public List&lt;Entity&gt; Entities { get; }</code></pre>
   <h4 class="section">Property Value</h4>
   <dl class="parameters">
     <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="ACadSharp.Entities.Entity.html">Entity</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="ACadSharp_Objects_Evaluations_BlockAction_LabelPosition_" data-uid="ACadSharp.Objects.Evaluations.BlockAction.LabelPosition*"></a>
+
+  <h3 id="ACadSharp_Objects_Evaluations_BlockAction_LabelPosition" data-uid="ACadSharp.Objects.Evaluations.BlockAction.LabelPosition">
+  LabelPosition
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockAction.cs/#L21"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the position of the action label.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">[DxfCodeValue(new int[] { 1010, 1020, 1030 })]
+public XYZ LabelPosition { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="CSMath.XYZ.html">XYZ</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="ACadSharp_Objects_Evaluations_BlockAction_ParametersIds_" data-uid="ACadSharp.Objects.Evaluations.BlockAction.ParametersIds*"></a>
+
+  <h3 id="ACadSharp_Objects_Evaluations_BlockAction_ParametersIds" data-uid="ACadSharp.Objects.Evaluations.BlockAction.ParametersIds">
+  ParametersIds
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockAction.cs/#L27"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">[DxfCodeValue(DxfReferenceType.Count, new int[] { 70 })]
+[DxfCollectionCodeValue(new int[] { 91 })]
+public List&lt;int&gt; ParametersIds { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
     <dd></dd>
   </dl>
 
@@ -328,38 +385,6 @@ public List&lt;Entity&gt; Entities { get; }</code></pre>
   <h4 class="section">Property Value</h4>
   <dl class="parameters">
     <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
-  <a id="ACadSharp_Objects_Evaluations_BlockAction_Value70_" data-uid="ACadSharp.Objects.Evaluations.BlockAction.Value70*"></a>
-
-  <h3 id="ACadSharp_Objects_Evaluations_BlockAction_Value70" data-uid="ACadSharp.Objects.Evaluations.BlockAction.Value70">
-  Value70
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Objects/Evaluations/BlockAction.cs/#L27"><i class="bi bi-code-slash"></i></a>
-  </h3>
-
-  <div class="markdown level1 summary"></div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">[DxfCodeValue(new int[] { 70 })]
-public short Value70 { get; set; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int16">short</a></dt>
     <dd></dd>
   </dl>
 

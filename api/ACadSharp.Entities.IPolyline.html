@@ -101,7 +101,7 @@ Interface IPolyline  <a class="header-action link-secondary" title="View source"
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IPolyline : IEntity, IHandledCadObject, IGeometricEntity</code></pre>
+    <pre><code class="lang-csharp hljs">public interface IPolyline : IEntity, IHandledCadObject, IGeometricEntity, IOrientable</code></pre>
   </div>
 
 
@@ -161,6 +161,9 @@ Interface IPolyline  <a class="header-action link-secondary" title="View source"
     <div>
       <a class="xref" href="ACadSharp.Entities.IGeometricEntity.html#ACadSharp_Entities_IGeometricEntity_GetBoundingBox">IGeometricEntity.GetBoundingBox()</a>
     </div>
+    <div>
+      <a class="xref" href="ACadSharp.IOrientable.html#ACadSharp_IOrientable_Normal">IOrientable.Normal</a>
+    </div>
   </dd></dl>
 
   <dl class="typelist extensionMethods">
@@ -176,7 +179,7 @@ Interface IPolyline  <a class="header-action link-secondary" title="View source"
       <a class="xref" href="ACadSharp.Extensions.PolylineExtensions.html#ACadSharp_Extensions_PolylineExtensions_GetPoints__1_ACadSharp_Entities_IPolyline_System_Int32_">PolylineExtensions.GetPoints&lt;T&gt;(IPolyline, int)</a>
   </div>
   <div>
-      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__2___0___0___1__">LineExtensions.TryFindIntersection&lt;T, R&gt;(T, T, out R)</a>
+      <a class="xref" href="CSMath.Geometry.LineExtensions.html#CSMath_Geometry_LineExtensions_TryFindIntersection__3___0___1___2__">LineExtensions.TryFindIntersection&lt;T, S, R&gt;(T, S, out R)</a>
   </div>
   </dd></dl>
 
@@ -252,43 +255,11 @@ Interface IPolyline  <a class="header-action link-secondary" title="View source"
 
 
 
-  <a id="ACadSharp_Entities_IPolyline_Normal_" data-uid="ACadSharp.Entities.IPolyline.Normal*"></a>
-
-  <h3 id="ACadSharp_Entities_IPolyline_Normal" data-uid="ACadSharp.Entities.IPolyline.Normal">
-  Normal
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/IPolyline.cs/#L21"><i class="bi bi-code-slash"></i></a>
-  </h3>
-
-  <div class="markdown level1 summary"><p>Specifies the three-dimensional normal unit vector for the object.</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">XYZ Normal { get; set; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="CSMath.XYZ.html">XYZ</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
   <a id="ACadSharp_Entities_IPolyline_Thickness_" data-uid="ACadSharp.Entities.IPolyline.Thickness*"></a>
 
   <h3 id="ACadSharp_Entities_IPolyline_Thickness" data-uid="ACadSharp.Entities.IPolyline.Thickness">
   Thickness
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/IPolyline.cs/#L26"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/IPolyline.cs/#L21"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Specifies the distance a 2D object is extruded above or below its elevation.</p>
@@ -320,7 +291,7 @@ Interface IPolyline  <a class="header-action link-secondary" title="View source"
 
   <h3 id="ACadSharp_Entities_IPolyline_Vertices" data-uid="ACadSharp.Entities.IPolyline.Vertices">
   Vertices
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/IPolyline.cs/#L31"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/IPolyline.cs/#L26"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Vertices that form the Polyline.</p>

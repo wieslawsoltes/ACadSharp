@@ -1506,7 +1506,7 @@ internal abstract class DxfSectionReaderBase
 		switch (this._reader.Code)
 		{
 			case 2:
-				tmp.ShapeFileName = this._reader.ValueAsString;
+				tmp.ShapeName = this._reader.ValueAsString;
 				return true;
 			default:
 				return this.tryAssignCurrentValue(template.CadObject, map.SubClasses[tmp.CadObject.SubclassMarker]);

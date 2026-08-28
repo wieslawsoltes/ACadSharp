@@ -51,20 +51,30 @@ public class Shape : Entity, IOrientable
 	public double Rotation { get; set; } = 0;
 
 	/// <summary>
-	/// Shape name.
+	/// Name of the shape stored in DXF group code 2.
 	/// </summary>
 	[DxfCodeValue(DxfReferenceType.Name, 2)]
+	public string ShapeName { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Shape-file text style that owns the shape definition.
+	/// </summary>
+	/// <remarks>
+	/// DWG stores this relationship explicitly. DXF stores only
+	/// <see cref="ShapeName"/>, so this property can be <see langword="null"/>
+	/// until a host resolves the loaded SHX shape files.
+	/// </remarks>
 	public TextStyle ShapeStyle
 	{
 		get { return this._style; }
 		set
 		{
-			if (value == null || !value.IsShapeFile)
+			if (value != null && !value.IsShapeFile)
 			{
-				throw new ArgumentNullException(nameof(value));
+				throw new ArgumentException("The text style must reference a shape file.", nameof(value));
 			}
 
-			if (this.Document != null)
+			if (value != null && this.Document != null)
 			{
 				this._style = CadObject.updateCollection(value, this.Document.TextStyles);
 			}
@@ -90,7 +100,14 @@ public class Shape : Entity, IOrientable
 	[DxfCodeValue(39)]
 	public double Thickness { get; set; } = 0.0;
 
-	internal ushort ShapeIndex { get; set; }
+	/// <summary>
+	/// Number of the shape within <see cref="ShapeStyle"/>'s SHX file.
+	/// </summary>
+	/// <remarks>
+	/// DWG stores the number directly. DXF stores the corresponding
+	/// <see cref="ShapeName"/> instead.
+	/// </remarks>
+	public ushort ShapeNumber { get; set; }
 
 	private TextStyle _style;
 

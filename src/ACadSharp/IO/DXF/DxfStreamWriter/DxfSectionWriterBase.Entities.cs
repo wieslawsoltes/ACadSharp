@@ -1208,7 +1208,7 @@ internal abstract partial class DxfSectionWriterBase
 
 		this._writer.Write(40, shape.Size, map);
 
-		this._writer.WriteName(2, shape.ShapeStyle, map);
+		this._writer.Write(2, shape.ShapeName, map);
 
 		this._writer.Write(50, shape.Rotation, map);
 

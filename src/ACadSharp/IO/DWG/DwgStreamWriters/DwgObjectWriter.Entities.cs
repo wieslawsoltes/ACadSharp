@@ -2168,13 +2168,13 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//When reading from DXF, the shape is found by iterating over all the text styles
 		//(SHAPEFILE, see paragraph 20.4.56) and when the text style contains a shape file,
 		//iterating over all the shapes until the one with the matching name is found.
-		this._writer.WriteBitShort((short)shape.ShapeIndex);
+		this._writer.WriteBitShort((short)shape.ShapeNumber);
 
 		//Extrusion 3BD 210
 		this._writer.Write3BitDouble(shape.Normal);
 
 		//H SHAPEFILE (hard pointer)
-		this._writer.HandleReference(DwgReferenceType.HardPointer, null);
+		this._writer.HandleReference(DwgReferenceType.HardPointer, shape.ShapeStyle);
 	}
 
 	private void writeSolid(Solid solid)

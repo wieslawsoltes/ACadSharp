@@ -5,11 +5,9 @@ namespace ACadSharp.IO.Templates
 {
 	internal class CadShapeTemplate : CadEntityTemplate
 	{
-		public ushort? ShapeIndex { get; set; }
-
 		public ulong? ShapeFileHandle { get; set; }
 
-		public string ShapeFileName { get; set; }
+		public string ShapeName { get; set; }
 
 		public CadShapeTemplate(Shape shape) : base(shape) { }
 
@@ -18,8 +16,10 @@ namespace ACadSharp.IO.Templates
 			base.build(builder);
 
 			Shape shape = this.CadObject as Shape;
+			shape.ShapeName = this.ShapeName ?? shape.ShapeName;
 
-			if (this.getTableReference(builder, this.ShapeFileHandle, this.ShapeFileName, out TextStyle text))
+			if (this.ShapeFileHandle.HasValue &&
+				this.getTableReference(builder, this.ShapeFileHandle, null, out TextStyle text))
 			{
 				if (text.IsShapeFile)
 				{
@@ -27,7 +27,7 @@ namespace ACadSharp.IO.Templates
 				}
 				else
 				{
-					builder.Notify($"Shape style {this.ShapeFileHandle} | {this.ShapeFileName} not found", NotificationType.Warning);
+					builder.Notify($"Shape style {this.ShapeFileHandle} is not a shape-file style", NotificationType.Warning);
 				}
 			}
 		}

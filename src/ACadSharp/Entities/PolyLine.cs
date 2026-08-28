@@ -146,6 +146,19 @@ public abstract class Polyline<T> : Entity, IPolyline
 	{
 		var newNormal = this.transformNormal(transform, this.Normal);
 
+		// DXF stores 3D polyline and mesh vertex locations in WCS. Only the
+		// legacy 2D polyline vertex representation needs the OCS conversion.
+		if (this is Polyline3D or PolygonMesh or PolyfaceMesh)
+		{
+			foreach (var vertex in this.Vertices)
+			{
+				vertex.Location = transform.ApplyTransform(vertex.Location.Convert<XYZ>());
+			}
+
+			this.Normal = newNormal;
+			return;
+		}
+
 		this.getWorldMatrix(transform, this.Normal, newNormal, out Matrix3 transOW, out Matrix3 transWO);
 
 		foreach (var vertex in this.Vertices)

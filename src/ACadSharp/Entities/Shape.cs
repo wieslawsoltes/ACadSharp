@@ -154,7 +154,7 @@ public class Shape : Entity, IOrientable
 		double xLength = Math.Sqrt(
 			(transformedX.X * transformedX.X) +
 			(transformedX.Y * transformedX.Y));
-		if (!(xLength > 0.0) || !double.IsFinite(xLength))
+		if (!(xLength > 0.0) || double.IsNaN(xLength) || double.IsInfinity(xLength))
 		{
 			throw new ArgumentException("The transform collapses the SHAPE X axis.", nameof(transform));
 		}
@@ -168,14 +168,15 @@ public class Shape : Entity, IOrientable
 		double height =
 			(-transformedY.X * rotatedSine) +
 			(transformedY.Y * rotatedCosine);
-		if (!(height > 0.0) || !double.IsFinite(height))
+		if (!(height > 0.0) || double.IsNaN(height) || double.IsInfinity(height))
 		{
 			throw new ArgumentException("The transform reflects or collapses the SHAPE Y axis.", nameof(transform));
 		}
 
 		double width = xLength / height;
 		double oblique = Math.Atan2(along, height);
-		if (!double.IsFinite(width) || !double.IsFinite(oblique))
+		if (double.IsNaN(width) || double.IsInfinity(width) ||
+			double.IsNaN(oblique) || double.IsInfinity(oblique))
 		{
 			throw new ArgumentException("The transformed SHAPE frame is not finite.", nameof(transform));
 		}

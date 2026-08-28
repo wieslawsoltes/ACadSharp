@@ -295,7 +295,7 @@ Dxf class name <a class="xref" href="ACadSharp.DxfSubclassMarker.html#ACadSharp_
 
   <h3 id="ACadSharp_Entities_Shape__ctor_ACadSharp_Tables_TextStyle_" data-uid="ACadSharp.Entities.Shape.#ctor(ACadSharp.Tables.TextStyle)">
   Shape(TextStyle)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L118"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L101"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Initializes a shape by the <a class="xref" href="ACadSharp.Tables.TextStyle.html">TextStyle</a></p>
@@ -557,88 +557,20 @@ public double Rotation { get; set; }</code></pre>
 
 
 
-  <a id="ACadSharp_Entities_Shape_ShapeName_" data-uid="ACadSharp.Entities.Shape.ShapeName*"></a>
+  <a id="ACadSharp_Entities_Shape_ShapeStyle_" data-uid="ACadSharp.Entities.Shape.ShapeStyle*"></a>
 
-  <h3 id="ACadSharp_Entities_Shape_ShapeName" data-uid="ACadSharp.Entities.Shape.ShapeName">
-  ShapeName
+  <h3 id="ACadSharp_Entities_Shape_ShapeStyle" data-uid="ACadSharp.Entities.Shape.ShapeStyle">
+  ShapeStyle
   <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L56"><i class="bi bi-code-slash"></i></a>
   </h3>
 
-  <div class="markdown level1 summary"><p>Name of the shape stored in DXF group code 2.</p>
+  <div class="markdown level1 summary"><p>Shape name.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">[DxfCodeValue(DxfReferenceType.Name, new int[] { 2 })]
-public string ShapeName { get; set; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
-  <a id="ACadSharp_Entities_Shape_ShapeNumber_" data-uid="ACadSharp.Entities.Shape.ShapeNumber*"></a>
-
-  <h3 id="ACadSharp_Entities_Shape_ShapeNumber" data-uid="ACadSharp.Entities.Shape.ShapeNumber">
-  ShapeNumber
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L110"><i class="bi bi-code-slash"></i></a>
-  </h3>
-
-  <div class="markdown level1 summary"><p>Number of the shape within <a class="xref" href="ACadSharp.Entities.Shape.html#ACadSharp_Entities_Shape_ShapeStyle">ShapeStyle</a>'s SHX file.</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public ushort ShapeNumber { get; set; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">ushort</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-  <h4 class="section" id="ACadSharp_Entities_Shape_ShapeNumber_remarks">Remarks</h4>
-  <div class="markdown level1 remarks"><p>DWG stores the number directly. DXF stores the corresponding
-<a class="xref" href="ACadSharp.Entities.Shape.html#ACadSharp_Entities_Shape_ShapeName">ShapeName</a> instead.</p>
-</div>
-
-
-
-
-  <a id="ACadSharp_Entities_Shape_ShapeStyle_" data-uid="ACadSharp.Entities.Shape.ShapeStyle*"></a>
-
-  <h3 id="ACadSharp_Entities_Shape_ShapeStyle" data-uid="ACadSharp.Entities.Shape.ShapeStyle">
-  ShapeStyle
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L67"><i class="bi bi-code-slash"></i></a>
-  </h3>
-
-  <div class="markdown level1 summary"><p>Shape-file text style that owns the shape definition.</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public TextStyle ShapeStyle { get; set; }</code></pre>
+public TextStyle ShapeStyle { get; set; }</code></pre>
   </div>
 
 
@@ -654,11 +586,6 @@ public string ShapeName { get; set; }</code></pre>
 
 
 
-  <h4 class="section" id="ACadSharp_Entities_Shape_ShapeStyle_remarks">Remarks</h4>
-  <div class="markdown level1 remarks"><p>DWG stores this relationship explicitly. DXF stores only
-<a class="xref" href="ACadSharp.Entities.Shape.html#ACadSharp_Entities_Shape_ShapeName">ShapeName</a>, so this property can be <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/null">null</a>
-until a host resolves the loaded SHX shape files.</p>
-</div>
 
 
 
@@ -667,7 +594,7 @@ until a host resolves the loaded SHX shape files.</p>
 
   <h3 id="ACadSharp_Entities_Shape_Size" data-uid="ACadSharp.Entities.Shape.Size">
   Size
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L91"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L81"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Size.</p>
@@ -700,7 +627,7 @@ public double Size { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Entities_Shape_SubclassMarker" data-uid="ACadSharp.Entities.Shape.SubclassMarker">
   SubclassMarker
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L95"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L85"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Object Subclass marker.</p>
@@ -732,7 +659,7 @@ public double Size { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Entities_Shape_Thickness" data-uid="ACadSharp.Entities.Shape.Thickness">
   Thickness
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L100"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L90"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Thickness.</p>
@@ -769,7 +696,7 @@ public double Thickness { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Entities_Shape_ApplyTransform_CSMath_Transform_" data-uid="ACadSharp.Entities.Shape.ApplyTransform(CSMath.Transform)">
   ApplyTransform(Transform)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L128"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L111"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Apply a transform matrix to this entity.</p>
@@ -801,7 +728,7 @@ public double Thickness { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Entities_Shape_Clone" data-uid="ACadSharp.Entities.Shape.Clone">
   Clone()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L192"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L118"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Creates a new object that is a copy of the current instance.</p>
@@ -837,7 +764,7 @@ public double Thickness { get; set; }</code></pre>
 
   <h3 id="ACadSharp_Entities_Shape_GetBoundingBox" data-uid="ACadSharp.Entities.Shape.GetBoundingBox">
   GetBoundingBox()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L202"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/Entities/Shape.cs/#L128"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the bounding box aligned with the axis XYZ that occupies this entity.</p>

@@ -23043,32 +23043,6 @@ references:
   isSpec: "True"
   fullName: ACadSharp.Entities.Shape.Rotation
   nameWithType: Shape.Rotation
-- uid: ACadSharp.Entities.Shape.ShapeName
-  name: ShapeName
-  href: api/ACadSharp.Entities.Shape.html#ACadSharp_Entities_Shape_ShapeName
-  commentId: P:ACadSharp.Entities.Shape.ShapeName
-  fullName: ACadSharp.Entities.Shape.ShapeName
-  nameWithType: Shape.ShapeName
-- uid: ACadSharp.Entities.Shape.ShapeName*
-  name: ShapeName
-  href: api/ACadSharp.Entities.Shape.html#ACadSharp_Entities_Shape_ShapeName_
-  commentId: Overload:ACadSharp.Entities.Shape.ShapeName
-  isSpec: "True"
-  fullName: ACadSharp.Entities.Shape.ShapeName
-  nameWithType: Shape.ShapeName
-- uid: ACadSharp.Entities.Shape.ShapeNumber
-  name: ShapeNumber
-  href: api/ACadSharp.Entities.Shape.html#ACadSharp_Entities_Shape_ShapeNumber
-  commentId: P:ACadSharp.Entities.Shape.ShapeNumber
-  fullName: ACadSharp.Entities.Shape.ShapeNumber
-  nameWithType: Shape.ShapeNumber
-- uid: ACadSharp.Entities.Shape.ShapeNumber*
-  name: ShapeNumber
-  href: api/ACadSharp.Entities.Shape.html#ACadSharp_Entities_Shape_ShapeNumber_
-  commentId: Overload:ACadSharp.Entities.Shape.ShapeNumber
-  isSpec: "True"
-  fullName: ACadSharp.Entities.Shape.ShapeNumber
-  nameWithType: Shape.ShapeNumber
 - uid: ACadSharp.Entities.Shape.ShapeStyle
   name: ShapeStyle
   href: api/ACadSharp.Entities.Shape.html#ACadSharp_Entities_Shape_ShapeStyle

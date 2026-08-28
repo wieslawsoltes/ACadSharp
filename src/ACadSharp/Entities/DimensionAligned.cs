@@ -92,13 +92,11 @@ namespace ACadSharp.Entities
 		/// <inheritdoc/>
 		public override void ApplyTransform(Transform transform)
 		{
-			XYZ newNormal = this.transformNormal(transform, this.Normal);
-			this.getWorldMatrix(transform, this.Normal, newNormal, out Matrix3 transOW, out Matrix3 transWO);
-
 			base.ApplyTransform(transform);
 
-			this.FirstPoint = this.applyWorldMatrix(this.FirstPoint, transform, transOW, transWO);
-			this.SecondPoint = this.applyWorldMatrix(this.SecondPoint, transform, transOW, transWO);
+			// DXF groups 13 and 14 are stored in WCS for every dimension type.
+			this.FirstPoint = transform.ApplyTransform(this.FirstPoint);
+			this.SecondPoint = transform.ApplyTransform(this.SecondPoint);
 		}
 
 		/// <inheritdoc/>

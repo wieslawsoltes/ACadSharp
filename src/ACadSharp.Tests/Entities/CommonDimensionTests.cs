@@ -1,5 +1,6 @@
 ﻿using ACadSharp.Entities;
 using ACadSharp.Tables;
+using CSMath;
 using System;
 using Xunit;
 
@@ -76,6 +77,44 @@ public abstract class CommonDimensionTests<T> : CommonEntityTests<T>
 
 		Assert.NotNull(dim.Block);
 		Assert.True(dim.Block.IsAnonymous);
+	}
+
+	[Fact]
+	public void TranslationKeepsWorldAndObjectCoordinateFieldsDistinct()
+	{
+		T dim = new T
+		{
+			Normal = XYZ.AxisY,
+			DefinitionPoint = new XYZ(10, 20, 30),
+			IsTextUserDefinedLocation = true,
+			TextMiddlePoint = new XYZ(1, 2, 3),
+		};
+
+		dim.ApplyTranslation(new XYZ(5, 6, 7));
+
+		Assert.Equal(new XYZ(15, 26, 37), dim.DefinitionPoint);
+		// OCS X/Y/Z for normal +Y are WCS -X/+Z/+Y.
+		Assert.Equal(new XYZ(-4, 9, 9), dim.TextMiddlePoint);
+	}
+
+	[Fact]
+	public void AddingCloneKeepsItsPersistedPictureIndependent()
+	{
+		var document = new CadDocument();
+		T source = new T
+		{
+			Block = new BlockRecord("SOURCE_DIMENSION_PICTURE"),
+		};
+		source.Block.Entities.Add(new Line(XYZ.Zero, XYZ.AxisX));
+		document.Entities.Add(source);
+
+		T clone = (T)source.Clone();
+		document.Entities.Add(clone);
+
+		Assert.NotSame(source.Block, clone.Block);
+		Assert.NotEqual(source.Block.Name, clone.Block.Name);
+		Assert.Single(source.Block.Entities);
+		Assert.Single(clone.Block.Entities);
 	}
 
 	protected virtual T createDim()

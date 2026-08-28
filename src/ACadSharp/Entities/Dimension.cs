@@ -261,7 +261,9 @@ public abstract class Dimension : Entity, IOrientable
 		XYZ newNormal = this.transformNormal(transform, this.Normal);
 		this.getWorldMatrix(transform, this.Normal, newNormal, out Matrix3 transOW, out Matrix3 transWO);
 
-		this.DefinitionPoint = this.applyWorldMatrix(this.DefinitionPoint, transform, transOW, transWO);
+		// DXF group 10 is stored in WCS. Only the text middle point (group
+		// 11) is stored in OCS and requires the old/new arbitrary-axis maps.
+		this.DefinitionPoint = transform.ApplyTransform(this.DefinitionPoint);
 
 		if (this.IsTextUserDefinedLocation)
 		{
@@ -537,14 +539,15 @@ public abstract class Dimension : Entity, IOrientable
 		base.AssignDocument(doc);
 
 		this._style = CadObject.updateCollection(this.Style, doc.DimensionStyles);
-		this._block = CadObject.updateCollection(this.Block, doc.BlockRecords);
 
 		if (this._block != null)
 		{
+			// Rename a detached cloned picture before table registration so it
+			// cannot alias the source dimension's block by its old name.
 			this._block.Name = this.generateBlockName();
 		}
 
-		this._block = CadObject.updateCollection(this.Block, this.Document.BlockRecords);
+		this._block = CadObject.updateCollection(this._block, this.Document.BlockRecords);
 
 		doc.DimensionStyles.OnRemove += this.tableOnRemove;
 		doc.BlockRecords.OnRemove += this.tableOnRemove;

@@ -127,8 +127,65 @@ public class Shape : Entity, IOrientable
 	/// <inheritdoc/>
 	public override void ApplyTransform(Transform transform)
 	{
-		this.Normal = this.transformNormal(transform, this.Normal);
-		this.InsertionPoint = transform.ApplyTranslation(this.InsertionPoint);
+		XYZ oldOrigin = this.InsertionPoint;
+		XYZ newOrigin = transform.ApplyTransform(oldOrigin);
+		XYZ newNormal = this.transformNormal(transform, this.Normal);
+		Matrix3 objectToWorld = Matrix3.ArbitraryAxis(this.Normal);
+
+		double cosine = Math.Cos(this.Rotation);
+		double sine = Math.Sin(this.Rotation);
+		double shear = this.Size * Math.Tan(this.ObliqueAngle);
+		XYZ localX = new XYZ(
+			cosine * this.Size * this.RelativeXScale,
+			sine * this.Size * this.RelativeXScale,
+			0.0);
+		XYZ localY = new XYZ(
+			(cosine * shear) - (sine * this.Size),
+			(sine * shear) + (cosine * this.Size),
+			0.0);
+		XYZ worldX = objectToWorld * localX;
+		XYZ worldY = objectToWorld * localY;
+		worldX = transform.ApplyTransform(oldOrigin + worldX) - newOrigin;
+		worldY = transform.ApplyTransform(oldOrigin + worldY) - newOrigin;
+
+		Matrix3 worldToObject = Matrix3.ArbitraryAxis(newNormal).Transpose();
+		XYZ transformedX = worldToObject * worldX;
+		XYZ transformedY = worldToObject * worldY;
+		double xLength = Math.Sqrt(
+			(transformedX.X * transformedX.X) +
+			(transformedX.Y * transformedX.Y));
+		if (!(xLength > 0.0) || !double.IsFinite(xLength))
+		{
+			throw new ArgumentException("The transform collapses the SHAPE X axis.", nameof(transform));
+		}
+
+		double rotation = Math.Atan2(transformedX.Y, transformedX.X);
+		double rotatedCosine = transformedX.X / xLength;
+		double rotatedSine = transformedX.Y / xLength;
+		double along =
+			(transformedY.X * rotatedCosine) +
+			(transformedY.Y * rotatedSine);
+		double height =
+			(-transformedY.X * rotatedSine) +
+			(transformedY.Y * rotatedCosine);
+		if (!(height > 0.0) || !double.IsFinite(height))
+		{
+			throw new ArgumentException("The transform reflects or collapses the SHAPE Y axis.", nameof(transform));
+		}
+
+		double width = xLength / height;
+		double oblique = Math.Atan2(along, height);
+		if (!double.IsFinite(width) || !double.IsFinite(oblique))
+		{
+			throw new ArgumentException("The transformed SHAPE frame is not finite.", nameof(transform));
+		}
+
+		this.InsertionPoint = newOrigin;
+		this.Normal = newNormal;
+		this.Rotation = rotation;
+		this.Size = height;
+		this.RelativeXScale = width;
+		this.ObliqueAngle = oblique;
 	}
 
 	/// <inheritdoc/>

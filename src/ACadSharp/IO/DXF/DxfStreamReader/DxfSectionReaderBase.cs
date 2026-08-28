@@ -917,6 +917,7 @@ internal abstract class DxfSectionReaderBase
 				return true;
 			//Information about the hatch pattern
 			case 75:
+				hatch.Style = (HatchStyleType)this._reader.ValueAsShort;
 				return true;
 			//Number of pattern definition lines
 			case 78:

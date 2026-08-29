@@ -1798,6 +1798,11 @@ internal class DxfObjectsSectionReader : DxfSectionReaderBase
 	{
 		CadLayoutTemplate tmp = template as CadLayoutTemplate;
 
+		if (this.currentSubclass == DxfSubclassMarker.PlotSettings)
+		{
+			return this.readPlotSettings(template, map);
+		}
+
 		switch (this._reader.Code)
 		{
 			case 330 when template.OwnerHandle.HasValue:

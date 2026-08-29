@@ -8,6 +8,7 @@ using ACadSharp.Blocks;
 using System.Linq;
 using System.Diagnostics;
 using ACadSharp.Objects;
+using ACadSharp.Tables.Collections;
 
 namespace ACadSharp.Tests;
 
@@ -401,10 +402,12 @@ public class CadDocumentTests
 		int singleRemoveEvents = 0;
 		int rangeRemoveEvents = 0;
 		Layer[] observedLayers = null;
+		LayerCollectionChangedEventArgs observedArgs = null;
 		doc.Layers.OnRemove += (_, _) => singleRemoveEvents++;
 		doc.Layers.OnRemoveRange += (_, e) =>
 		{
 			rangeRemoveEvents++;
+			observedArgs = e;
 			observedLayers = e.Layers.ToArray();
 		};
 
@@ -412,6 +415,8 @@ public class CadDocumentTests
 
 		Assert.Equal(new[] { layerB, layerA }, removed);
 		Assert.Equal(new[] { layerB, layerA }, observedLayers);
+		removed[0] = doc.Layers[Layer.DefaultName];
+		Assert.Same(layerB, observedArgs.Layers.Span[0]);
 		Assert.Equal(0, singleRemoveEvents);
 		Assert.Equal(1, rangeRemoveEvents);
 		Assert.False(doc.Layers.Contains(layerA.Name));

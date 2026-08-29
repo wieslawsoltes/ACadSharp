@@ -15,8 +15,12 @@ public sealed class LayerCollectionChangedEventArgs : EventArgs
 
 	internal LayerCollectionChangedEventArgs(Layer[] layers)
 	{
-		this._layers = layers ?? throw new ArgumentNullException(nameof(layers));
-		this._layerSet = new HashSet<Layer>(layers, LayerReferenceComparer.Instance);
+		if (layers == null)
+			throw new ArgumentNullException(nameof(layers));
+		this._layers = (Layer[])layers.Clone();
+		this._layerSet = new HashSet<Layer>(
+			this._layers,
+			LayerReferenceComparer.Instance);
 	}
 
 	/// <summary>Returns whether the range contains the exact layer instance.</summary>

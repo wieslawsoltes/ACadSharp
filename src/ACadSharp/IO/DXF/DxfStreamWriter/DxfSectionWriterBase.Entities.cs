@@ -179,6 +179,11 @@ internal abstract partial class DxfSectionWriterBase
 
 	private void writeAttributeBase(AttributeBase att)
 	{
+		if (this.Version >= ACadVersion.AC1024)
+		{
+			this._writer.Write(280, att.Version);
+		}
+
 		this._writer.Write(2, att.Tag);
 
 		this._writer.Write(70, (short)att.Flags);
@@ -187,6 +192,11 @@ internal abstract partial class DxfSectionWriterBase
 		if (att.VerticalAlignment != 0)
 		{
 			this._writer.Write(74, (short)att.VerticalAlignment);
+		}
+
+		if (this.Version >= ACadVersion.AC1021)
+		{
+			this._writer.Write(280, att.IsLocked ? (byte)1 : (byte)0);
 		}
 
 		if (this.Version > ACadVersion.AC1027 && att.AttributeType != AttributeType.SingleLine)

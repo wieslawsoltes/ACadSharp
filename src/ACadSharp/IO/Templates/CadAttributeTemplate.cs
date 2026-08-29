@@ -6,6 +6,8 @@ namespace ACadSharp.IO.Templates
 	{
 		public CadTextEntityTemplate MTextTemplate { get; set; }
 
+		public bool HasReadVersion { get; set; }
+
 		public CadAttributeTemplate(AttributeBase entity) : base(entity) { }
 
 		protected override void build(CadDocumentBuilder builder)

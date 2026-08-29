@@ -397,6 +397,19 @@ internal abstract class DxfSectionReaderBase
 
 		switch (this._reader.Code)
 		{
+			case 280:
+				var attribute = (AttributeBase)tmp.CadObject;
+				if (this._builder.Version >= ACadVersion.AC1024 &&
+					!tmp.HasReadVersion)
+				{
+					attribute.Version = (byte)this._reader.ValueAsShort;
+					tmp.HasReadVersion = true;
+				}
+				else if (this._builder.Version >= ACadVersion.AC1021)
+				{
+					attribute.IsLocked = this._reader.ValueAsBool;
+				}
+				return true;
 			case 44:
 			case 46:
 				return true;

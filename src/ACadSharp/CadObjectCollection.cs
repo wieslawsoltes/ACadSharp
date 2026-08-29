@@ -71,14 +71,48 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	}
 
 	/// <summary>
-	/// Add multiple <see cref="CadObject"/> to the collection, this method triggers <see cref="OnAdd"/>.
+	/// Adds a stable set of detached <see cref="CadObject"/> instances after
+	/// validating the complete batch, then triggers <see cref="OnAdd"/>.
 	/// </summary>
-	/// <param name="items"></param>
+	/// <remarks>
+	/// Invalid input leaves the collection unchanged. All structural additions
+	/// and owner assignments are completed before notifications are published,
+	/// so observers do not see a partially attached batch. Work and temporary
+	/// storage are O(N) for N distinct items.
+	/// </remarks>
+	/// <param name="items">Distinct detached items to add.</param>
 	public void AddRange(IEnumerable<T> items)
 	{
-		foreach (var item in items)
+		if (items is null)
+			throw new ArgumentNullException(nameof(items));
+
+		List<T> addition = new List<T>();
+		HashSet<T> unique = new HashSet<T>();
+		foreach (T item in items)
 		{
-			this.Add(item);
+			if (item is null)
+				throw new ArgumentException("An addition batch cannot contain null items.", nameof(items));
+			if (!unique.Add(item))
+				throw new ArgumentException("An addition batch cannot contain duplicate items.", nameof(items));
+			if (item.Owner != null || this._entries.Contains(item))
+				throw new ArgumentException("Every addition-batch item must be detached from a collection.", nameof(items));
+
+			addition.Add(item);
+		}
+
+		foreach (T item in addition)
+		{
+			if (!this._entries.Add(item))
+				throw new InvalidOperationException("A preflighted item could not be added to the collection.");
+			item.Owner = this.Owner;
+		}
+
+		if (this.OnAdd != null)
+		{
+			foreach (T item in addition)
+			{
+				this.OnAdd.Invoke(this, new CollectionChangedEventArgs(item));
+			}
 		}
 	}
 

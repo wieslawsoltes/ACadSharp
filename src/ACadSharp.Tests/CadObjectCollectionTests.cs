@@ -8,6 +8,52 @@ namespace ACadSharp.Tests
 	public class CadObjectCollectionTests
 	{
 		[Fact]
+		public void AddRangePublishesOnlyTheCompleteStructuralBatch()
+		{
+			CadDocument document = new CadDocument();
+			Line retained = new Line(XYZ.Zero, XYZ.AxisX);
+			Line first = new Line(XYZ.AxisY, XYZ.AxisY + XYZ.AxisX);
+			Line second = new Line(XYZ.AxisZ, XYZ.AxisZ + XYZ.AxisX);
+			document.Entities.Add(retained);
+			int observedCount = -1;
+			document.Entities.OnAdd += (_, _) => observedCount = document.Entities.Count;
+
+			document.Entities.AddRange(new[] { first, second });
+
+			Assert.Equal(3, observedCount);
+			Assert.Equal(3, document.Entities.Count);
+			Assert.Same(document.ModelSpace, first.Owner);
+			Assert.Same(document.ModelSpace, second.Owner);
+			Assert.Same(document, first.Document);
+			Assert.Same(document, second.Document);
+			Assert.NotEqual(0UL, first.Handle);
+			Assert.NotEqual(0UL, second.Handle);
+		}
+
+		[Fact]
+		public void AddRangeRejectsDuplicateOrOwnedItemsBeforeMutation()
+		{
+			CadDocument document = new CadDocument();
+			Line attached = new Line(XYZ.Zero, XYZ.AxisX);
+			Line detached = new Line(XYZ.AxisY, XYZ.AxisY + XYZ.AxisX);
+			document.Entities.Add(attached);
+			int notificationCount = 0;
+			document.Entities.OnAdd += (_, _) => notificationCount++;
+
+			Assert.Throws<ArgumentException>(() =>
+				document.Entities.AddRange(new[] { detached, detached }));
+			Assert.Throws<ArgumentException>(() =>
+				document.Entities.AddRange(new[] { detached, attached }));
+
+			Assert.Equal(0, notificationCount);
+			Assert.Single(document.Entities);
+			Assert.Contains(attached, document.Entities);
+			Assert.Null(detached.Owner);
+			Assert.Null(detached.Document);
+			Assert.Equal(0UL, detached.Handle);
+		}
+
+		[Fact]
 		public void TryRemoveRangePublishesOnlyTheCompleteStructuralBatch()
 		{
 			CadDocument document = new CadDocument();

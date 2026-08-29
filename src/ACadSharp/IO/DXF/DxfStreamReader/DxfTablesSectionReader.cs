@@ -688,6 +688,7 @@ internal class DxfTablesSectionReader : DxfSectionReaderBase
 					template.Segment.ShapeNumber = (short)this._reader.ValueAsInt;
 					break;
 				case 340:
+					template.StyleHandle = this._reader.ValueAsHandle;
 					break;
 				default:
 					this._builder.Notify($"[LineTypeSegment] Unhandeled dxf code {this._reader.Code} with value {this._reader.ValueAsString}, positon {this._reader.Position}", NotificationType.None);

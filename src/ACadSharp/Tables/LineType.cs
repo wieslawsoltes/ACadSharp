@@ -117,7 +117,7 @@ namespace ACadSharp.Tables
 		/// <returns>The previous segments, detached in their original order.</returns>
 		/// <remarks>
 		/// Every input is validated before ownership changes. For an attached line
-		/// type, referenced text styles must already belong to the same document;
+		/// type, referenced text-style names must already exist in the same document;
 		/// the operation never creates table entries as a side effect.
 		/// </remarks>
 		public Segment[] ReplaceSegments(IEnumerable<Segment> segments)
@@ -126,22 +126,26 @@ namespace ACadSharp.Tables
 				throw new ArgumentNullException(nameof(segments));
 
 			Segment[] replacement = segments.ToArray();
+			TextStyle[] registeredStyles = new TextStyle[replacement.Length];
 			var unique = new HashSet<Segment>();
-			foreach (Segment segment in replacement)
+			for (int i = 0; i < replacement.Length; i++)
 			{
+				Segment segment = replacement[i];
 				if (segment == null)
 					throw new ArgumentException("Line type segments cannot contain null entries.", nameof(segments));
 				if (!unique.Add(segment))
 					throw new ArgumentException("A line type segment instance cannot occur more than once.", nameof(segments));
 				if (segment.Owner != null)
 					throw new ArgumentException($"Segment already assigned to a LineType: {segment.Owner.Name}", nameof(segments));
-				if (this.Document != null && segment.Style != null &&
-					(!this.Document.TextStyles.TryGetValue(segment.Style.Name, out TextStyle registered) ||
-					 !ReferenceEquals(registered, segment.Style)))
+				if (this.Document != null && segment.Style != null)
 				{
-					throw new ArgumentException(
-						$"Segment text style '{segment.Style.Name}' is not registered in the line type document.",
-						nameof(segments));
+					if (!this.Document.TextStyles.TryGetValue(segment.Style.Name, out TextStyle registered))
+					{
+						throw new ArgumentException(
+							$"Segment text style '{segment.Style.Name}' is not registered in the line type document.",
+							nameof(segments));
+					}
+					registeredStyles[i] = registered;
 				}
 			}
 
@@ -154,8 +158,11 @@ namespace ACadSharp.Tables
 			}
 
 			this._segments = new List<Segment>(replacement.Length);
-			foreach (Segment segment in replacement)
+			for (int i = 0; i < replacement.Length; i++)
 			{
+				Segment segment = replacement[i];
+				if (registeredStyles[i] != null)
+					segment.Style = registeredStyles[i];
 				segment.Owner = this;
 				if (this.Document != null && segment.Style != null)
 					segment.AssignDocument(this.Document);

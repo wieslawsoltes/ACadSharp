@@ -91,6 +91,11 @@ namespace ACadSharp.Tests.Tables
 			Assert.Equal(new[] { previousDash, previousGap }, lineType.Segments);
 			Assert.Same(replacement, Assert.Single(secondDetached));
 			Assert.Null(replacement.Owner);
+
+			lineType.ReplaceSegments(secondDetached);
+
+			Assert.Same(replacement, Assert.Single(lineType.Segments));
+			Assert.Same(style, replacement.Style);
 		}
 
 		[Fact]

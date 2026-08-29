@@ -53,8 +53,10 @@ namespace ACadSharp.Tests.XData
 			ExtendedData extendedData = new ExtendedData();
 			ExtendedDataRecord extendedDataRecord = new ExtendedDataString("extended data record");
 			extendedData.Records.Add(extendedDataRecord);
+			Assert.Equal(0, line.ExtendedData.Count);
 
 			line.ExtendedData.Add(app, extendedData);
+			Assert.Equal(1, line.ExtendedData.Count);
 
 			doc.Entities.Add(line);
 
@@ -64,6 +66,9 @@ namespace ACadSharp.Tests.XData
 			Assert.NotEmpty(line.ExtendedData);
 			Assert.NotEmpty(line.ExtendedData.Get(appName).Records);
 			Assert.Equal(extendedDataRecord, line.ExtendedData.Get(appName).Records.First());
+
+			line.ExtendedData.Clear();
+			Assert.Equal(0, line.ExtendedData.Count);
 		}
 
 		[Fact]

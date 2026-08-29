@@ -13,6 +13,11 @@ namespace ACadSharp.XData;
 /// </summary>
 public class ExtendedDataDictionary : IEnumerable<KeyValuePair<AppId, ExtendedData>>
 {
+	/// <summary>
+	/// Gets the number of application entries in the dictionary.
+	/// </summary>
+	public int Count => this._data.Count;
+
 	public CadDocument Document { get { return this.Owner?.Document; } }
 
 	/// <summary>

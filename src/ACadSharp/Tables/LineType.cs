@@ -99,12 +99,69 @@ namespace ACadSharp.Tables
 		/// <exception cref="ArgumentException"></exception>
 		public void AddSegment(Segment segment)
 		{
+			if (segment == null)
+				throw new ArgumentNullException(nameof(segment));
 			if (segment.Owner != null)
 				throw new ArgumentException($"Segment already assigned to a LineType: {segment.Owner.Name}");
 
 			segment.Style = CadObject.updateCollection(segment.Style, this.Document?.TextStyles);
 			segment.Owner = this;
 			this._segments.Add(segment);
+		}
+
+		/// <summary>
+		/// Atomically replaces the ordered segment definition while preserving this
+		/// line type entry and every reference to it.
+		/// </summary>
+		/// <param name="segments">Detached segments in their new pattern order.</param>
+		/// <returns>The previous segments, detached in their original order.</returns>
+		/// <remarks>
+		/// Every input is validated before ownership changes. For an attached line
+		/// type, referenced text styles must already belong to the same document;
+		/// the operation never creates table entries as a side effect.
+		/// </remarks>
+		public Segment[] ReplaceSegments(IEnumerable<Segment> segments)
+		{
+			if (segments == null)
+				throw new ArgumentNullException(nameof(segments));
+
+			Segment[] replacement = segments.ToArray();
+			var unique = new HashSet<Segment>();
+			foreach (Segment segment in replacement)
+			{
+				if (segment == null)
+					throw new ArgumentException("Line type segments cannot contain null entries.", nameof(segments));
+				if (!unique.Add(segment))
+					throw new ArgumentException("A line type segment instance cannot occur more than once.", nameof(segments));
+				if (segment.Owner != null)
+					throw new ArgumentException($"Segment already assigned to a LineType: {segment.Owner.Name}", nameof(segments));
+				if (this.Document != null && segment.Style != null &&
+					(!this.Document.TextStyles.TryGetValue(segment.Style.Name, out TextStyle registered) ||
+					 !ReferenceEquals(registered, segment.Style)))
+				{
+					throw new ArgumentException(
+						$"Segment text style '{segment.Style.Name}' is not registered in the line type document.",
+						nameof(segments));
+				}
+			}
+
+			Segment[] previous = this._segments.ToArray();
+			foreach (Segment segment in previous)
+			{
+				if (this.Document != null && segment.Style != null)
+					segment.UnassignDocument();
+				segment.Owner = null;
+			}
+
+			this._segments = new List<Segment>(replacement.Length);
+			foreach (Segment segment in replacement)
+			{
+				segment.Owner = this;
+				if (this.Document != null && segment.Style != null)
+					segment.AssignDocument(this.Document);
+				this._segments.Add(segment);
+			}
+			return previous;
 		}
 
 		/// <inheritdoc/>

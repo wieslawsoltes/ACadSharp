@@ -334,6 +334,21 @@ public class CadDocument : IHandledCadObject
 	}
 
 	/// <summary>
+	/// Enumerates every document-registered object assignable to the requested
+	/// CAD object type.
+	/// </summary>
+	/// <typeparam name="T">The registered CAD object type to enumerate.</typeparam>
+	/// <returns>
+	/// A live enumeration of the document registry. Callers must not mutate the
+	/// document while the enumeration is in progress.
+	/// </returns>
+	public IEnumerable<T> GetCadObjects<T>()
+		where T : CadObject
+	{
+		return this._cadObjects.Values.OfType<T>();
+	}
+
+	/// <summary>
 	/// Retrieves the current object of the specified type from the document's configuration.
 	/// </summary>
 	/// <typeparam name="T">The type of the object to retrieve. Must be a type that implements <see cref="CadObject"/> and <see

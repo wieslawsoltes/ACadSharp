@@ -88,6 +88,27 @@ public class CadDocumentTests
 	}
 
 	[Fact]
+	public void EnumerateRegisteredCadObjectsByType()
+	{
+		CadDocument doc = new CadDocument();
+		Line modelLine = new Line();
+		Circle paperCircle = new Circle();
+		doc.Entities.Add(modelLine);
+		doc.PaperSpace.Entities.Add(paperCircle);
+
+		Entity[] entities = doc.GetCadObjects<Entity>().ToArray();
+
+		Assert.Contains(modelLine, entities);
+		Assert.Contains(paperCircle, entities);
+		Assert.Contains(
+			doc.Layers[Layer.DefaultName],
+			doc.GetCadObjects<Layer>());
+		Assert.Contains(
+			doc.Layers[Layer.DefaultName],
+			doc.GetCadObjects<CadObject>());
+	}
+
+	[Fact]
 	public void AddCadObjectWithNewLayer()
 	{
 		Line line = new Line();

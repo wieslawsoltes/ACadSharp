@@ -401,11 +401,21 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	{
 	}
 
-	private protected virtual void releaseInactiveSequenceObjects()
+	private protected virtual void releaseInactiveSequenceObjects(
+		int originalCount,
+		int replacementCount)
 	{
 	}
 
-	private protected virtual void validateInactiveSequenceObjects()
+	private protected virtual void validateInactiveSequenceObjects(
+		int originalCount,
+		int replacementCount)
+	{
+	}
+
+	private protected virtual void retainSequenceReplacement(
+		int originalCount,
+		int replacementCount)
 	{
 	}
 
@@ -472,6 +482,9 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 
 			this._removedOriginal = this._original.Where(item => !target.Contains(item)).ToArray();
 			this._addedReplacement = this._replacement.Where(item => !original.Contains(item)).ToArray();
+			collection.retainSequenceReplacement(
+				this._original.Length,
+				this._replacement.Length);
 		}
 
 		/// <summary>Applies the replacement for the first time or after a revert.</summary>
@@ -520,7 +533,9 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 				if (item.Document != null && !item.Document.IsLeasedCadObject(item))
 					throw new InvalidOperationException("An inactive replacement item lost its lease.");
 			}
-			this._collection.validateInactiveSequenceObjects();
+			this._collection.validateInactiveSequenceObjects(
+				this._original.Length,
+				this._replacement.Length);
 			foreach (T item in inactive)
 			{
 				if (item.Document != null)
@@ -528,7 +543,9 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 					item.Document.ReleaseLeasedCadObject(item);
 				}
 			}
-			this._collection.releaseInactiveSequenceObjects();
+			this._collection.releaseInactiveSequenceObjects(
+				this._original.Length,
+				this._replacement.Length);
 			this._state = ReplacementState.Released;
 		}
 	}

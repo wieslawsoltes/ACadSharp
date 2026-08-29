@@ -254,6 +254,36 @@ namespace ACadSharp.Tests
 		}
 
 		[Fact]
+		public void SharedSeqendLeaseSurvivesReleaseOfLaterRevertedReplacement()
+		{
+			CadDocument document = new CadDocument();
+			Insert insert = new Insert();
+			AttributeEntity original = new AttributeEntity { Tag = "ORIGINAL" };
+			insert.Attributes.Add(original);
+			document.Entities.Add(insert);
+			Seqend seqend = insert.Attributes.Seqend;
+			ulong seqendHandle = seqend.Handle;
+			CadObjectCollection<AttributeEntity>.ReversibleReplacement earlier =
+				insert.Attributes.CreateReversibleReplacement(
+					Array.Empty<AttributeEntity>());
+			Assert.True(earlier.TryApply());
+			AttributeEntity laterAttribute = new AttributeEntity { Tag = "LATER" };
+			CadObjectCollection<AttributeEntity>.ReversibleReplacement later =
+				insert.Attributes.CreateReversibleReplacement(new[] { laterAttribute });
+			Assert.True(later.TryApply());
+			Assert.True(later.TryRevert());
+
+			later.Release();
+
+			Assert.Same(document, seqend.Document);
+			Assert.Equal(seqendHandle, seqend.Handle);
+			Assert.True(earlier.TryRevert());
+			Assert.Same(seqend, insert.Attributes.Seqend);
+			Assert.Same(seqend, document.GetCadObject<Seqend>(seqendHandle));
+			earlier.Release();
+		}
+
+		[Fact]
 		public void EmptyReplacementLeasesAndRestoresSeqend()
 		{
 			CadDocument document = new CadDocument();

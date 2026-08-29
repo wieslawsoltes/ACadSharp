@@ -186,8 +186,6 @@ namespace ACadSharp.Tests
 			CadObjectCollection<AttributeEntity>.ReversibleReplacement replacement =
 				insert.Attributes.CreateReversibleReplacement(new[] { added, retained });
 
-			Assert.Throws<InvalidOperationException>(() =>
-				insert.Attributes.Add(new AttributeEntity()));
 			Assert.True(replacement.TryApply());
 			ulong addedHandle = added.Handle;
 			Assert.NotEqual(0UL, addedHandle);
@@ -220,6 +218,39 @@ namespace ACadSharp.Tests
 			Assert.Equal(0UL, third.Handle);
 			insert.Attributes.Add(new AttributeEntity { Tag = "AFTER_RELEASE" });
 			Assert.Equal(3, insert.Attributes.Count);
+		}
+
+		[Fact]
+		public void ReversibleReplacementsComposeInHistoryOrder()
+		{
+			CadDocument document = new CadDocument();
+			Insert insert = new Insert();
+			AttributeEntity first = new AttributeEntity { Tag = "FIRST" };
+			insert.Attributes.Add(first);
+			document.Entities.Add(insert);
+			AttributeEntity second = new AttributeEntity { Tag = "SECOND" };
+			CadObjectCollection<AttributeEntity>.ReversibleReplacement earlier =
+				insert.Attributes.CreateReversibleReplacement(new[] { first, second });
+
+			Assert.True(earlier.TryApply());
+			AttributeEntity third = new AttributeEntity { Tag = "THIRD" };
+			CadObjectCollection<AttributeEntity>.ReversibleReplacement later =
+				insert.Attributes.CreateReversibleReplacement(new[] { second, third });
+
+			Assert.True(later.TryApply());
+			Assert.Equal(new[] { second, third }, insert.Attributes.ToArray());
+			Assert.True(later.TryRevert());
+			Assert.Equal(new[] { first, second }, insert.Attributes.ToArray());
+			Assert.True(earlier.TryRevert());
+			Assert.Same(first, Assert.Single(insert.Attributes));
+			Assert.True(earlier.TryApply());
+			Assert.True(later.TryApply());
+			Assert.Equal(new[] { second, third }, insert.Attributes.ToArray());
+
+			earlier.Release();
+			later.Release();
+			Assert.Null(first.Document);
+			Assert.Equal(0UL, first.Handle);
 		}
 
 		[Fact]

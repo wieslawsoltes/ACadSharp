@@ -40,8 +40,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	protected readonly HashSet<T> _entries = new HashSet<T>();
 	protected readonly List<T> _orderedEntries = new List<T>();
 
-	private ReversibleReplacement _activeReplacement;
-
 	/// <summary>
 	/// Default constructor for a <see cref="CadObjectCollection{T}"/> with it's owner assigned.
 	/// </summary>
@@ -59,7 +57,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <exception cref="ArgumentNullException"></exception>
 	public virtual void Add(T item)
 	{
-		this.ensureNoActiveReplacement();
 		if (item is null) throw new ArgumentNullException(nameof(item));
 
 		if (item.Owner != null)
@@ -93,7 +90,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <param name="items">Distinct detached items to add.</param>
 	public virtual void AddRange(IEnumerable<T> items)
 	{
-		this.ensureNoActiveReplacement();
 		if (items is null)
 			throw new ArgumentNullException(nameof(items));
 
@@ -152,7 +148,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// </returns>
 	public virtual bool TryRemoveRange(IEnumerable<T> items)
 	{
-		this.ensureNoActiveReplacement();
 		if (items is null)
 			throw new ArgumentNullException(nameof(items));
 
@@ -219,7 +214,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// </summary>
 	public void Clear()
 	{
-		this.ensureNoActiveReplacement();
 		Queue<T> q = new(this._orderedEntries);
 		while (q.TryDequeue(out T entry))
 		{
@@ -248,7 +242,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <returns>true if the item was successfully removed; otherwise, false.</returns>
 	public virtual bool Remove(T item)
 	{
-		this.ensureNoActiveReplacement();
 		if (this.OnBeforeRemove != null)
 		{
 			CollectionChangedEventArgs args = new(item);
@@ -292,26 +285,15 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <remarks>
 	/// The replacement may retain current items and add detached items. Removed
 	/// document objects retain their handles in an inactive lease until the
-	/// replacement is reverted or released. Only one replacement may own a
-	/// collection at a time. Creation and each transition use O(C + R) work and
-	/// storage for C current and R replacement items.
+	/// replacement is reverted or released. Plans may compose in strict history
+	/// order; every transition rejects a collection that no longer exactly
+	/// matches its expected contents. Creation and each transition use O(C + R)
+	/// work and storage for C current and R replacement items.
 	/// </remarks>
 	public ReversibleReplacement CreateReversibleReplacement(
 		IEnumerable<T> replacement)
 	{
-		this.ensureNoActiveReplacement();
-		ReversibleReplacement plan = new ReversibleReplacement(this, replacement);
-		this._activeReplacement = plan;
-		return plan;
-	}
-
-	private void ensureNoActiveReplacement()
-	{
-		if (this._activeReplacement != null)
-		{
-			throw new InvalidOperationException(
-				"The collection is owned by an active reversible replacement.");
-		}
+		return new ReversibleReplacement(this, replacement);
 	}
 
 	private bool transition(
@@ -322,8 +304,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 		T[] addition,
 		ReplacementState targetState)
 	{
-		if (!ReferenceEquals(this._activeReplacement, plan))
-			throw new InvalidOperationException("The replacement no longer owns this collection.");
 		this.validateSequence(expected);
 		this.validateTransitionItems(removal, addition);
 
@@ -530,9 +510,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 		{
 			if (this._state == ReplacementState.Released)
 				return;
-			if (!ReferenceEquals(this._collection._activeReplacement, this))
-				throw new InvalidOperationException("The replacement no longer owns this collection.");
-
 			T[] inactive = this._state == ReplacementState.Applied
 				? this._removedOriginal
 				: this._state == ReplacementState.Reverted
@@ -552,7 +529,6 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 				}
 			}
 			this._collection.releaseInactiveSequenceObjects();
-			this._collection._activeReplacement = null;
 			this._state = ReplacementState.Released;
 		}
 	}

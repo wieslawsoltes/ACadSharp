@@ -387,6 +387,74 @@ public class CadDocumentTests
 	}
 
 	[Fact]
+	public void RemoveLayerRangePublishesOneTypedEventAndRepairsEntities()
+	{
+		CadDocument doc = new CadDocument();
+		Layer layerA = new Layer("range-a");
+		Layer layerB = new Layer("range-b");
+		Line lineA = new Line { Layer = layerA };
+		Line lineB = new Line { Layer = layerB };
+		doc.Entities.Add(lineA);
+		doc.Entities.Add(lineB);
+		ulong handleA = layerA.Handle;
+		ulong handleB = layerB.Handle;
+		int singleRemoveEvents = 0;
+		int rangeRemoveEvents = 0;
+		Layer[] observedLayers = null;
+		doc.Layers.OnRemove += (_, _) => singleRemoveEvents++;
+		doc.Layers.OnRemoveRange += (_, e) =>
+		{
+			rangeRemoveEvents++;
+			observedLayers = e.Layers.ToArray();
+		};
+
+		Layer[] removed = doc.Layers.RemoveRange(new[] { layerB.Name, layerA.Name });
+
+		Assert.Equal(new[] { layerB, layerA }, removed);
+		Assert.Equal(new[] { layerB, layerA }, observedLayers);
+		Assert.Equal(0, singleRemoveEvents);
+		Assert.Equal(1, rangeRemoveEvents);
+		Assert.False(doc.Layers.Contains(layerA.Name));
+		Assert.False(doc.Layers.Contains(layerB.Name));
+		Assert.Null(doc.GetCadObject(handleA));
+		Assert.Null(doc.GetCadObject(handleB));
+		Assert.Null(layerA.Document);
+		Assert.Null(layerB.Document);
+		Assert.Equal(0UL, layerA.Handle);
+		Assert.Equal(0UL, layerB.Handle);
+		Assert.Same(doc.Layers[Layer.DefaultName], lineA.Layer);
+		Assert.Same(doc.Layers[Layer.DefaultName], lineB.Layer);
+	}
+
+	[Fact]
+	public void RemoveLayerRangePreflightIsAtomic()
+	{
+		CadDocument doc = new CadDocument();
+		Layer layerA = new Layer("range-a");
+		Layer layerB = new Layer("range-b");
+		doc.Layers.Add(layerA);
+		doc.Layers.Add(layerB);
+		ulong handleA = layerA.Handle;
+		ulong handleB = layerB.Handle;
+		int rangeRemoveEvents = 0;
+		doc.Layers.OnRemoveRange += (_, _) => rangeRemoveEvents++;
+
+		Assert.Throws<ArgumentException>(() => doc.Layers.RemoveRange(Array.Empty<string>()));
+		Assert.Throws<ArgumentException>(() => doc.Layers.RemoveRange(new[] { layerA.Name, " " }));
+		Assert.Throws<ArgumentException>(() => doc.Layers.RemoveRange(new[] { layerA.Name, layerA.Name.ToUpperInvariant() }));
+		Assert.Throws<InvalidOperationException>(() => doc.Layers.RemoveRange(new[] { layerA.Name, "missing" }));
+		Assert.Throws<InvalidOperationException>(() => doc.Layers.RemoveRange(new[] { layerA.Name, Layer.DefaultName }));
+
+		Assert.Equal(0, rangeRemoveEvents);
+		Assert.Same(layerA, doc.Layers[layerA.Name]);
+		Assert.Same(layerB, doc.Layers[layerB.Name]);
+		Assert.Same(layerA, doc.GetCadObject(handleA));
+		Assert.Same(layerB, doc.GetCadObject(handleB));
+		Assert.Same(doc, layerA.Document);
+		Assert.Same(doc, layerB.Document);
+	}
+
+	[Fact]
 	public void RemoveLineType()
 	{
 		string ltypeName = "custom_ltype";

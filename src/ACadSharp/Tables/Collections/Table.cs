@@ -142,6 +142,45 @@ namespace ACadSharp.Tables.Collections
 		}
 
 		/// <summary>
+		/// Atomically validates and removes several non-default entries without
+		/// raising the single-entry <see cref="OnRemove"/> event. Derived tables
+		/// must publish one typed range notification after this method returns.
+		/// </summary>
+		/// <param name="keys">Distinct entry names to remove.</param>
+		/// <returns>The detached entries in the requested order.</returns>
+		protected T[] removeRange(IReadOnlyList<string> keys)
+		{
+			if (keys == null)
+				throw new ArgumentNullException(nameof(keys));
+			if (keys.Count == 0)
+				throw new ArgumentException("At least one entry name is required.", nameof(keys));
+
+			var removed = new T[keys.Count];
+			var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			for (int i = 0; i < keys.Count; i++)
+			{
+				string key = keys[i];
+				if (string.IsNullOrWhiteSpace(key))
+					throw new ArgumentException("Entry names cannot be empty.", nameof(keys));
+				if (!names.Add(key))
+					throw new ArgumentException($"Entry name '{key}' is duplicated.", nameof(keys));
+				if (!this.entries.TryGetValue(key, out T item))
+					throw new InvalidOperationException($"Entry '{key}' does not exist.");
+				if (this.defaultEntries.Contains(item.Name, StringComparer.OrdinalIgnoreCase))
+					throw new InvalidOperationException($"Default entry '{item.Name}' cannot be removed.");
+				removed[i] = item;
+			}
+
+			foreach (T item in removed)
+			{
+				this.entries.Remove(item.Name);
+				item.Owner = null;
+				item.OnNameChanged -= this.onEntryNameChanged;
+			}
+			return removed;
+		}
+
+		/// <summary>
 		/// Gets the value associated with the specified key.
 		/// </summary>
 		/// <param name="key">The key of the value to get.</param>

@@ -694,6 +694,7 @@ public class CadDocument : IHandledCadObject
 			case LayersTable:
 				this.Layers = (LayersTable)collection;
 				this.Layers.Owner = this;
+				this.Layers.OnRemoveRange += this.onLayersRemoveRange;
 				break;
 			case LineTypesTable:
 				this.LineTypes = (LineTypesTable)collection;
@@ -830,6 +831,14 @@ public class CadDocument : IHandledCadObject
 		else
 		{
 			this.RemoveCadObject(e.Item);
+		}
+	}
+
+	private void onLayersRemoveRange(object sender, LayerCollectionChangedEventArgs e)
+	{
+		foreach (Layer layer in e.Layers.Span)
+		{
+			this.RemoveCadObject(layer);
 		}
 	}
 

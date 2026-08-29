@@ -28,10 +28,27 @@ public class RasterVariables : NonGraphicalObject, IDxfClassDefined
 	public ImageDisplayQuality DisplayQuality { get; set; } = ImageDisplayQuality.High;
 
 	/// <summary>
-	/// Gets or sets if the image frame is shown.
+	/// Gets or sets whether raster-image frames are displayed and plotted.
 	/// </summary>
 	[DxfCodeValue(70)]
-	public bool IsDisplayFrameShown { get; set; }
+	public ImageFrameType FrameType { get; set; }
+
+	/// <summary>
+	/// Gets or sets whether the image frame is shown.
+	/// </summary>
+	/// <remarks>
+	/// This compatibility view cannot distinguish plotted frames from displayed
+	/// non-plotting frames. Use <see cref="FrameType"/> when that distinction
+	/// matters.
+	/// </remarks>
+	[System.Obsolete("Use FrameType to preserve display-versus-plot semantics.")]
+	public bool IsDisplayFrameShown
+	{
+		get => this.FrameType != ImageFrameType.NoDisplayOrPlotted;
+		set => this.FrameType = value
+			? ImageFrameType.DisplayAndPlotted
+			: ImageFrameType.NoDisplayOrPlotted;
+	}
 
 	/// <inheritdoc/>
 	public override string ObjectName => DxfFileToken.ObjectRasterVariables;

@@ -4995,7 +4995,7 @@ namespace ACadSharp.IO.DWG
 			//Classver BL 90 classversion
 			vars.ClassVersion = this._mergedReaders.ReadBitLong();
 			//Dispfrm BS 70 displayframe
-			vars.IsDisplayFrameShown = this._mergedReaders.ReadBitShort() != 0;
+			vars.FrameType = (ImageFrameType)this._mergedReaders.ReadBitShort();
 			//Dispqual BS 71 display quality
 			vars.DisplayQuality = (ImageDisplayQuality)this._mergedReaders.ReadBitShort();
 			//Units BS 72 units

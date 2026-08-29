@@ -2075,7 +2075,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 		//Classver BL 90 classversion
 		this._writer.WriteBitLong(vars.ClassVersion);
 		//Dispfrm BS 70 displayframe
-		this._writer.WriteBitShort(vars.IsDisplayFrameShown ? (short)1 : (short)0);
+		this._writer.WriteBitShort((short)vars.FrameType);
 		//Dispqual BS 71 display quality
 		this._writer.WriteBitShort((short)vars.DisplayQuality);
 		//Units BS 72 units

@@ -77,6 +77,11 @@ public class CadDictionary : NonGraphicalObject, IObservableCadCollection<NonGra
 	public const string AcadImageDict = "ACAD_IMAGE_DICT";
 
 	/// <summary>
+	/// ACAD_IMAGE_VARS raster-variable entry.
+	/// </summary>
+	public const string AcadImageVars = "ACAD_IMAGE_VARS";
+
+	/// <summary>
 	/// ACAD_LAYOUT dictionary entry.
 	/// </summary>
 	public const string AcadLayout = "ACAD_LAYOUT";

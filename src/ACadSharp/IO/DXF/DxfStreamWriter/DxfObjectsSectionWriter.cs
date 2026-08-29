@@ -635,9 +635,9 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 		this._writer.Write(100, DxfSubclassMarker.RasterVariables);
 
 		this._writer.Write(90, variables.ClassVersion, map);
-		this._writer.Write(70, variables.IsDisplayFrameShown ? 1 : 0, map);
+		this._writer.Write(70, (short)variables.FrameType, map);
 		this._writer.Write(71, (short)variables.DisplayQuality, map);
-		this._writer.Write(72, (short)variables.DisplayQuality, map);
+		this._writer.Write(72, (short)variables.Units, map);
 	}
 
 	protected void writeScale(Scale scale)

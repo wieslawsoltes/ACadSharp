@@ -83,6 +83,78 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	}
 
 	/// <summary>
+	/// Attempts to remove a stable set of owned items after every removal has
+	/// passed the collection's cancellable preflight event.
+	/// </summary>
+	/// <remarks>
+	/// The collection is not mutated when any <see cref="OnBeforeRemove"/>
+	/// subscriber cancels an item. After a successful preflight, all structural
+	/// removals are completed before <see cref="OnRemove"/> notifications are
+	/// published, so observers cannot see a partially removed batch. Work and
+	/// temporary storage are O(N) for N distinct items.
+	/// </remarks>
+	/// <param name="items">Distinct items currently owned by this collection.</param>
+	/// <returns>
+	/// <see langword="true"/> when the complete batch was removed; otherwise,
+	/// <see langword="false"/> when a preflight subscriber cancelled removal.
+	/// </returns>
+	public bool TryRemoveRange(IEnumerable<T> items)
+	{
+		if (items is null)
+			throw new ArgumentNullException(nameof(items));
+
+		List<T> removal = new List<T>();
+		HashSet<T> unique = new HashSet<T>();
+		foreach (T item in items)
+		{
+			if (item is null)
+				throw new ArgumentException("A removal batch cannot contain null items.", nameof(items));
+			if (!unique.Add(item))
+				throw new ArgumentException("A removal batch cannot contain duplicate items.", nameof(items));
+			if (!ReferenceEquals(item.Owner, this.Owner) || !this._entries.Contains(item))
+				throw new ArgumentException("Every removal-batch item must be owned by this collection.", nameof(items));
+
+			removal.Add(item);
+		}
+
+		if (this.OnBeforeRemove != null)
+		{
+			foreach (T item in removal)
+			{
+				CollectionChangedEventArgs args = new CollectionChangedEventArgs(item);
+				this.OnBeforeRemove.Invoke(this, args);
+				if (args.Cancel)
+					return false;
+			}
+		}
+
+		// A preflight callback is allowed to inspect the collection, but it must not
+		// mutate the proposed batch behind this transaction boundary.
+		foreach (T item in removal)
+		{
+			if (!ReferenceEquals(item.Owner, this.Owner) || !this._entries.Contains(item))
+				throw new InvalidOperationException("The collection changed during removal preflight.");
+		}
+
+		foreach (T item in removal)
+		{
+			if (!this._entries.Remove(item))
+				throw new InvalidOperationException("A preflighted item could not be removed from the collection.");
+			item.Owner = null;
+		}
+
+		if (this.OnRemove != null)
+		{
+			foreach (T item in removal)
+			{
+				this.OnRemove.Invoke(this, new CollectionChangedEventArgs(item));
+			}
+		}
+
+		return true;
+	}
+
+	/// <summary>
 	/// Removes all elements from the Collection.
 	/// </summary>
 	public void Clear()

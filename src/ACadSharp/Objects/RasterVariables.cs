@@ -31,7 +31,7 @@ public class RasterVariables : NonGraphicalObject, IDxfClassDefined
 	/// Gets or sets whether raster-image frames are displayed and plotted.
 	/// </summary>
 	[DxfCodeValue(70)]
-	public ImageFrameType FrameType { get; set; }
+	public ImageFrameType FrameType { get; set; } = ImageFrameType.DisplayAndPlotted;
 
 	/// <summary>
 	/// Gets or sets whether the image frame is shown.

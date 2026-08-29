@@ -9,6 +9,14 @@ namespace ACadSharp.Tests.Objects;
 public class RasterVariablesTests
 {
 	[Fact]
+	public void DefaultFrameModeDisplaysAndPlots()
+	{
+		Assert.Equal(
+			ImageFrameType.DisplayAndPlotted,
+			new RasterVariables().FrameType);
+	}
+
+	[Fact]
 	public void DxfRoundTripPreservesDisplayWithoutPlotAndUnits()
 	{
 		CadDocument source = CreateDocument();

@@ -3,7 +3,6 @@ using CSMath;
 using System.Collections.Generic;
 using System;
 using ACadSharp.Objects;
-using System.Linq;
 using CSUtilities.Extensions;
 using ACadSharp.IO;
 
@@ -214,9 +213,10 @@ public abstract class CadWipeoutBase : Entity
 	/// <inheritdoc/>
 	public override void ApplyTransform(Transform transform)
 	{
-		this.InsertPoint = transform.ApplyTransform(this.InsertPoint);
-		this.UVector = transform.ApplyTransform(this.UVector);
-		this.VVector = transform.ApplyTransform(this.VVector);
+		XYZ insertPoint = transform.ApplyTransform(this.InsertPoint);
+		this.UVector = transform.ApplyTransform(this.InsertPoint + this.UVector) - insertPoint;
+		this.VVector = transform.ApplyTransform(this.InsertPoint + this.VVector) - insertPoint;
+		this.InsertPoint = insertPoint;
 	}
 
 	/// <inheritdoc/>
@@ -225,6 +225,7 @@ public abstract class CadWipeoutBase : Entity
 		CadWipeoutBase clone = (CadWipeoutBase)base.Clone();
 
 		clone.Definition = (ImageDefinition)this.Definition?.Clone();
+		clone.ClipBoundaryVertices = new List<XY>(this.ClipBoundaryVertices);
 
 		return clone;
 	}
@@ -232,22 +233,53 @@ public abstract class CadWipeoutBase : Entity
 	/// <inheritdoc/>
 	public override BoundingBox GetBoundingBox()
 	{
-		if (!this.ClipBoundaryVertices.Any())
+		bool useInsideClip = this.ClippingState &&
+			this.Flags.HasFlag(ImageDisplayFlags.UseClippingBoundary) &&
+			this.ClipMode == ClipMode.Inside;
+		if (useInsideClip && this.ClipBoundaryVertices.Count < 2)
 		{
 			return BoundingBox.Null;
 		}
 
-		double minX = this.ClipBoundaryVertices.Select(v => v.X).Min();
-		double minY = this.ClipBoundaryVertices.Select(v => v.Y).Min();
-		XYZ min = new XYZ(minX, minY, 0) + this.InsertPoint;
+		BoundingBox bounds = BoundingBox.Null;
+		if (!useInsideClip)
+		{
+			includeImagePoint(0.0, 0.0);
+			includeImagePoint(this.Size.X, 0.0);
+			includeImagePoint(this.Size.X, this.Size.Y);
+			includeImagePoint(0.0, this.Size.Y);
+			return bounds;
+		}
 
-		double maxX = this.ClipBoundaryVertices.Select(v => v.X).Max();
-		double maxY = this.ClipBoundaryVertices.Select(v => v.Y).Max();
-		XYZ max = new XYZ(maxX, maxY, 0) + this.InsertPoint;
+		if (this.ClipType == ClipType.Rectangular)
+		{
+			XY first = this.ClipBoundaryVertices[0];
+			XY second = this.ClipBoundaryVertices[1];
+			includeClipPoint(first.X, first.Y);
+			includeClipPoint(second.X, first.Y);
+			includeClipPoint(second.X, second.Y);
+			includeClipPoint(first.X, second.Y);
+		}
+		else
+		{
+			foreach (XY vertex in this.ClipBoundaryVertices)
+			{
+				includeClipPoint(vertex.X, vertex.Y);
+			}
+		}
 
-		BoundingBox box = new BoundingBox(min, max);
+		return bounds;
 
-		return box;
+		void includeClipPoint(double u, double v)
+		{
+			includeImagePoint(u + 0.5, v + 0.5);
+		}
+
+		void includeImagePoint(double u, double v)
+		{
+			XYZ point = this.InsertPoint + (this.UVector * u) + (this.VVector * v);
+			bounds = bounds.Merge(new BoundingBox(point));
+		}
 	}
 
 	/// <inheritdoc/>

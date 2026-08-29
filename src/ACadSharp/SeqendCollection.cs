@@ -22,7 +22,7 @@ public class SeqendCollection<T> : CadObjectCollection<T>, ISeqendCollection
 	{
 		get
 		{
-			if (this._entries.Any())
+			if (this.Count > 0)
 				return this._seqend;
 			else
 				return null;
@@ -41,32 +41,44 @@ public class SeqendCollection<T> : CadObjectCollection<T>, ISeqendCollection
 		this._seqend = new Seqend(owner);
 	}
 
-	/// <inheritdoc/>
-	public override void Add(T item)
+	private protected override void onCountChanged(
+		int previousCount,
+		CollectionIdentityMode removedMode,
+		CollectionIdentityMode addedMode)
 	{
-		bool addSeqend = false;
-		if (!this._entries.Any())
+		if (previousCount == 0 && this.Count > 0)
 		{
-			addSeqend = true;
+			CollectionIdentityMode mode = this._seqend.Document == null
+				? CollectionIdentityMode.Normal
+				: addedMode;
+			this.OnSeqendAdded?.Invoke(
+				this,
+				new CollectionChangedEventArgs(this._seqend, mode));
 		}
-
-		base.Add(item);
-
-		// The add could fail due an Exception
-		if (addSeqend && this._entries.Any())
+		else if (previousCount > 0 && this.Count == 0)
 		{
-			this.OnSeqendAdded?.Invoke(this, new CollectionChangedEventArgs(this._seqend));
+			this.OnSeqendRemoved?.Invoke(
+				this,
+				new CollectionChangedEventArgs(this._seqend, removedMode));
 		}
 	}
 
-	/// <inheritdoc/>
-	public override bool Remove(T item)
+	private protected override void releaseInactiveSequenceObjects()
 	{
-		if(base.Remove(item))
+		if (this._seqend.Document != null &&
+			this._seqend.Document.IsLeasedCadObject(this._seqend))
 		{
-			this.OnSeqendRemoved?.Invoke(this, new CollectionChangedEventArgs(this._seqend));
+			this._seqend.Document.ReleaseLeasedCadObject(this._seqend);
 		}
+	}
 
-		return true;
+	private protected override void validateInactiveSequenceObjects()
+	{
+		if (this.Count == 0 &&
+			this._seqend.Document != null &&
+			!this._seqend.Document.IsLeasedCadObject(this._seqend))
+		{
+			throw new InvalidOperationException("An inactive sequence end lost its lease.");
+		}
 	}
 }

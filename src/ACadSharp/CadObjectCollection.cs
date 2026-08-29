@@ -30,7 +30,7 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <summary>
 	/// Gets the number of elements that are contained in the collection.
 	/// </summary>
-	public int Count { get { return this._entries.Count; } }
+	public int Count { get { return this._orderedEntries.Count; } }
 
 	/// <summary>
 	/// Owner of the collection.
@@ -38,6 +38,9 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	public CadObject Owner { get; }
 
 	protected readonly HashSet<T> _entries = new HashSet<T>();
+	protected readonly List<T> _orderedEntries = new List<T>();
+
+	private ReversibleReplacement _activeReplacement;
 
 	/// <summary>
 	/// Default constructor for a <see cref="CadObjectCollection{T}"/> with it's owner assigned.
@@ -56,6 +59,7 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <exception cref="ArgumentNullException"></exception>
 	public virtual void Add(T item)
 	{
+		this.ensureNoActiveReplacement();
 		if (item is null) throw new ArgumentNullException(nameof(item));
 
 		if (item.Owner != null)
@@ -64,10 +68,16 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 		if (this._entries.Contains(item))
 			throw new ArgumentException($"Item {item.GetType().FullName} is already in the collection", nameof(item));
 
+		int previousCount = this.Count;
 		this._entries.Add(item);
+		this._orderedEntries.Add(item);
 		item.Owner = this.Owner;
 
 		OnAdd?.Invoke(this, new CollectionChangedEventArgs(item));
+		this.onCountChanged(
+			previousCount,
+			CollectionIdentityMode.Normal,
+			CollectionIdentityMode.Normal);
 	}
 
 	/// <summary>
@@ -81,8 +91,9 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// storage are O(N) for N distinct items.
 	/// </remarks>
 	/// <param name="items">Distinct detached items to add.</param>
-	public void AddRange(IEnumerable<T> items)
+	public virtual void AddRange(IEnumerable<T> items)
 	{
+		this.ensureNoActiveReplacement();
 		if (items is null)
 			throw new ArgumentNullException(nameof(items));
 
@@ -100,10 +111,12 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 			addition.Add(item);
 		}
 
+		int previousCount = this.Count;
 		foreach (T item in addition)
 		{
 			if (!this._entries.Add(item))
 				throw new InvalidOperationException("A preflighted item could not be added to the collection.");
+			this._orderedEntries.Add(item);
 			item.Owner = this.Owner;
 		}
 
@@ -114,6 +127,11 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 				this.OnAdd.Invoke(this, new CollectionChangedEventArgs(item));
 			}
 		}
+
+		this.onCountChanged(
+			previousCount,
+			CollectionIdentityMode.Normal,
+			CollectionIdentityMode.Normal);
 	}
 
 	/// <summary>
@@ -132,8 +150,9 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <see langword="true"/> when the complete batch was removed; otherwise,
 	/// <see langword="false"/> when a preflight subscriber cancelled removal.
 	/// </returns>
-	public bool TryRemoveRange(IEnumerable<T> items)
+	public virtual bool TryRemoveRange(IEnumerable<T> items)
 	{
+		this.ensureNoActiveReplacement();
 		if (items is null)
 			throw new ArgumentNullException(nameof(items));
 
@@ -170,12 +189,14 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 				throw new InvalidOperationException("The collection changed during removal preflight.");
 		}
 
+		int previousCount = this.Count;
 		foreach (T item in removal)
 		{
 			if (!this._entries.Remove(item))
 				throw new InvalidOperationException("A preflighted item could not be removed from the collection.");
 			item.Owner = null;
 		}
+		this._orderedEntries.RemoveAll(item => unique.Contains(item));
 
 		if (this.OnRemove != null)
 		{
@@ -185,6 +206,11 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 			}
 		}
 
+		this.onCountChanged(
+			previousCount,
+			CollectionIdentityMode.Normal,
+			CollectionIdentityMode.Normal);
+
 		return true;
 	}
 
@@ -193,7 +219,8 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// </summary>
 	public void Clear()
 	{
-		Queue<T> q = new(this._entries.ToList());
+		this.ensureNoActiveReplacement();
+		Queue<T> q = new(this._orderedEntries);
 		while (q.TryDequeue(out T entry))
 		{
 			this.Remove(entry);
@@ -203,13 +230,13 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <inheritdoc/>
 	public IEnumerator<T> GetEnumerator()
 	{
-		return this._entries.GetEnumerator();
+		return this._orderedEntries.GetEnumerator();
 	}
 
 	/// <inheritdoc/>
 	IEnumerator IEnumerable.GetEnumerator()
 	{
-		return this._entries.GetEnumerator();
+		return this._orderedEntries.GetEnumerator();
 	}
 
 	/// <summary>
@@ -221,6 +248,7 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	/// <returns>true if the item was successfully removed; otherwise, false.</returns>
 	public virtual bool Remove(T item)
 	{
+		this.ensureNoActiveReplacement();
 		if (this.OnBeforeRemove != null)
 		{
 			CollectionChangedEventArgs args = new(item);
@@ -231,14 +259,20 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 			}
 		}
 
+		int previousCount = this.Count;
 		if (!this._entries.Remove(item))
 		{
 			return false;
 		}
 
+		this._orderedEntries.Remove(item);
 		item.Owner = null;
 
 		OnRemove?.Invoke(this, new CollectionChangedEventArgs(item));
+		this.onCountChanged(
+			previousCount,
+			CollectionIdentityMode.Normal,
+			CollectionIdentityMode.Normal);
 
 		return true;
 	}
@@ -247,7 +281,279 @@ public class CadObjectCollection<T> : IObservableCadCollection<T>
 	{
 		get
 		{
-			return this._entries.ElementAtOrDefault(index);
+			return this._orderedEntries.ElementAtOrDefault(index);
+		}
+	}
+
+	/// <summary>
+	/// Prepares one exact, reversible replacement of this collection's ordered
+	/// contents.
+	/// </summary>
+	/// <remarks>
+	/// The replacement may retain current items and add detached items. Removed
+	/// document objects retain their handles in an inactive lease until the
+	/// replacement is reverted or released. Only one replacement may own a
+	/// collection at a time. Creation and each transition use O(C + R) work and
+	/// storage for C current and R replacement items.
+	/// </remarks>
+	public ReversibleReplacement CreateReversibleReplacement(
+		IEnumerable<T> replacement)
+	{
+		this.ensureNoActiveReplacement();
+		ReversibleReplacement plan = new ReversibleReplacement(this, replacement);
+		this._activeReplacement = plan;
+		return plan;
+	}
+
+	private void ensureNoActiveReplacement()
+	{
+		if (this._activeReplacement != null)
+		{
+			throw new InvalidOperationException(
+				"The collection is owned by an active reversible replacement.");
+		}
+	}
+
+	private bool transition(
+		ReversibleReplacement plan,
+		T[] expected,
+		T[] target,
+		T[] removal,
+		T[] addition,
+		ReplacementState targetState)
+	{
+		if (!ReferenceEquals(this._activeReplacement, plan))
+			throw new InvalidOperationException("The replacement no longer owns this collection.");
+		this.validateSequence(expected);
+		this.validateTransitionItems(removal, addition);
+
+		if (this.OnBeforeRemove != null)
+		{
+			foreach (T item in removal)
+			{
+				CollectionChangedEventArgs args = new CollectionChangedEventArgs(item);
+				this.OnBeforeRemove.Invoke(this, args);
+				if (args.Cancel)
+					return false;
+			}
+		}
+
+		this.validateSequence(expected);
+		this.validateTransitionItems(removal, addition);
+		int previousCount = this.Count;
+		foreach (T item in removal)
+		{
+			if (!this._entries.Remove(item))
+				throw new InvalidOperationException("A replacement removal could not be applied.");
+			item.Owner = null;
+		}
+		foreach (T item in addition)
+		{
+			if (!this._entries.Add(item))
+				throw new InvalidOperationException("A replacement addition could not be applied.");
+			item.Owner = this.Owner;
+		}
+		this._orderedEntries.Clear();
+		this._orderedEntries.AddRange(target);
+		plan._state = targetState;
+
+		if (this.OnRemove != null)
+		{
+			foreach (T item in removal)
+			{
+				this.OnRemove.Invoke(
+					this,
+					new CollectionChangedEventArgs(
+						item,
+						CollectionIdentityMode.Lease));
+			}
+		}
+		if (this.OnAdd != null)
+		{
+			foreach (T item in addition)
+			{
+				CollectionIdentityMode mode = item.Document == null
+					? CollectionIdentityMode.Normal
+					: CollectionIdentityMode.Restore;
+				this.OnAdd.Invoke(
+					this,
+					new CollectionChangedEventArgs(item, mode));
+			}
+		}
+		this.onCountChanged(
+			previousCount,
+			CollectionIdentityMode.Lease,
+			CollectionIdentityMode.Restore);
+		return true;
+	}
+
+	private void validateSequence(T[] expected)
+	{
+		if (expected.Length != this._orderedEntries.Count)
+			throw new InvalidOperationException("The collection count changed outside its replacement.");
+		for (int i = 0; i < expected.Length; i++)
+		{
+			if (!ReferenceEquals(expected[i], this._orderedEntries[i]))
+				throw new InvalidOperationException("The collection order changed outside its replacement.");
+		}
+	}
+
+	private void validateTransitionItems(T[] removal, T[] addition)
+	{
+		foreach (T item in removal)
+		{
+			if (!ReferenceEquals(item.Owner, this.Owner) || !this._entries.Contains(item))
+				throw new InvalidOperationException("A replacement removal no longer belongs to this collection.");
+		}
+		foreach (T item in addition)
+		{
+			if (item.Owner != null || this._entries.Contains(item))
+				throw new InvalidOperationException("A replacement addition is no longer inactive.");
+			if (item.Document != null && !item.Document.IsLeasedCadObject(item))
+				throw new InvalidOperationException("A replacement addition has an invalid document lease.");
+		}
+	}
+
+	private protected virtual void onCountChanged(
+		int previousCount,
+		CollectionIdentityMode removedMode,
+		CollectionIdentityMode addedMode)
+	{
+	}
+
+	private protected virtual void releaseInactiveSequenceObjects()
+	{
+	}
+
+	private protected virtual void validateInactiveSequenceObjects()
+	{
+	}
+
+	internal enum ReplacementState : byte
+	{
+		New,
+		Applied,
+		Reverted,
+		Released,
+	}
+
+	/// <summary>
+	/// Owns one bounded reversible ordered-content replacement until
+	/// <see cref="Release"/> permanently unregisters its inactive side.
+	/// </summary>
+	public sealed class ReversibleReplacement
+	{
+		private readonly CadObjectCollection<T> _collection;
+		private readonly T[] _original;
+		private readonly T[] _replacement;
+		private readonly T[] _removedOriginal;
+		private readonly T[] _addedReplacement;
+		internal ReplacementState _state;
+
+		/// <summary>Gets the number of items in the original collection.</summary>
+		public int OriginalCount { get { return this._original.Length; } }
+
+		/// <summary>Gets the number of items in the replacement collection.</summary>
+		public int ReplacementCount { get { return this._replacement.Length; } }
+
+		/// <summary>Gets whether the replacement contents are currently active.</summary>
+		public bool IsApplied { get { return this._state == ReplacementState.Applied; } }
+
+		internal ReversibleReplacement(
+			CadObjectCollection<T> collection,
+			IEnumerable<T> replacement)
+		{
+			if (replacement == null)
+				throw new ArgumentNullException(nameof(replacement));
+
+			this._collection = collection;
+			this._original = collection._orderedEntries.ToArray();
+			this._replacement = replacement.ToArray();
+			HashSet<T> original = new HashSet<T>(this._original);
+			HashSet<T> target = new HashSet<T>();
+			foreach (T item in this._replacement)
+			{
+				if (item == null)
+					throw new ArgumentException("A replacement cannot contain null items.", nameof(replacement));
+				if (!target.Add(item))
+					throw new ArgumentException("A replacement cannot contain duplicate items.", nameof(replacement));
+				if (item is Objects.CadDictionary)
+					throw new NotSupportedException("Reversible replacement does not support CAD dictionaries.");
+				if (original.Contains(item))
+				{
+					if (!ReferenceEquals(item.Owner, collection.Owner))
+						throw new ArgumentException("A retained replacement item has a different owner.", nameof(replacement));
+				}
+				else if (item.Owner != null || item.Document != null || item.Handle != 0)
+				{
+					throw new ArgumentException("Every new replacement item must be fully detached.", nameof(replacement));
+				}
+			}
+
+			this._removedOriginal = this._original.Where(item => !target.Contains(item)).ToArray();
+			this._addedReplacement = this._replacement.Where(item => !original.Contains(item)).ToArray();
+		}
+
+		/// <summary>Applies the replacement for the first time or after a revert.</summary>
+		public bool TryApply()
+		{
+			if (this._state != ReplacementState.New && this._state != ReplacementState.Reverted)
+				throw new InvalidOperationException("Only a new or reverted replacement can be applied.");
+			return this._collection.transition(
+				this,
+				this._original,
+				this._replacement,
+				this._removedOriginal,
+				this._addedReplacement,
+				ReplacementState.Applied);
+		}
+
+		/// <summary>Restores the exact original ordered contents and handles.</summary>
+		public bool TryRevert()
+		{
+			if (this._state != ReplacementState.Applied)
+				throw new InvalidOperationException("Only an applied replacement can be reverted.");
+			return this._collection.transition(
+				this,
+				this._replacement,
+				this._original,
+				this._addedReplacement,
+				this._removedOriginal,
+				ReplacementState.Reverted);
+		}
+
+		/// <summary>
+		/// Releases the inactive side and unlocks the collection. The replacement
+		/// cannot be used again.
+		/// </summary>
+		public void Release()
+		{
+			if (this._state == ReplacementState.Released)
+				return;
+			if (!ReferenceEquals(this._collection._activeReplacement, this))
+				throw new InvalidOperationException("The replacement no longer owns this collection.");
+
+			T[] inactive = this._state == ReplacementState.Applied
+				? this._removedOriginal
+				: this._state == ReplacementState.Reverted
+					? this._addedReplacement
+					: Array.Empty<T>();
+			foreach (T item in inactive)
+			{
+				if (item.Document != null && !item.Document.IsLeasedCadObject(item))
+					throw new InvalidOperationException("An inactive replacement item lost its lease.");
+			}
+			this._collection.validateInactiveSequenceObjects();
+			foreach (T item in inactive)
+			{
+				if (item.Document != null)
+				{
+					item.Document.ReleaseLeasedCadObject(item);
+				}
+			}
+			this._collection.releaseInactiveSequenceObjects();
+			this._collection._activeReplacement = null;
+			this._state = ReplacementState.Released;
 		}
 	}
 }

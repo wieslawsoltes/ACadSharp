@@ -2,8 +2,17 @@
 
 namespace ACadSharp;
 
+internal enum CollectionIdentityMode : byte
+{
+	Normal,
+	Lease,
+	Restore,
+}
+
 public class CollectionChangedEventArgs : EventArgs
 {
+	internal CollectionIdentityMode IdentityMode { get; }
+
 	/// <summary>
 	/// Gets or sets a value indicating whether the current operation should be canceled.
 	/// </summary>
@@ -22,7 +31,15 @@ public class CollectionChangedEventArgs : EventArgs
 	/// </summary>
 	/// <param name="item">The item that is being added or removed from the collection.</param>
 	public CollectionChangedEventArgs(CadObject item)
+		: this(item, CollectionIdentityMode.Normal)
+	{
+	}
+
+	internal CollectionChangedEventArgs(
+		CadObject item,
+		CollectionIdentityMode identityMode)
 	{
 		this.Item = item;
+		this.IdentityMode = identityMode;
 	}
 }

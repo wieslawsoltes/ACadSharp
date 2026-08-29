@@ -214,6 +214,7 @@ public class CadDocument : IHandledCadObject
 
 	//Contains all the objects in the document
 	private readonly Dictionary<ulong, IHandledCadObject> _cadObjects = new Dictionary<ulong, IHandledCadObject>();
+	private readonly Dictionary<ulong, CadObject> _leasedCadObjects = new Dictionary<ulong, CadObject>();
 
 	private CadDictionary _rootDictionary = null;
 
@@ -415,6 +416,11 @@ public class CadDocument : IHandledCadObject
 	/// </summary>
 	public void RestoreHandles()
 	{
+		if (this._leasedCadObjects.Count > 0)
+		{
+			throw new InvalidOperationException(
+				"Handles cannot be reassigned while reversible collection replacements are active.");
+		}
 		var source = new List<IHandledCadObject>(this._cadObjects.Values);
 		this._cadObjects.Clear();
 		this.Header.HandleSeed = 0;
@@ -651,7 +657,9 @@ public class CadDocument : IHandledCadObject
 			throw new ArgumentException($"The item with handle {cadObject.Handle} is already assigned to a document");
 		}
 
-		if (cadObject.Handle == 0 || this._cadObjects.ContainsKey(cadObject.Handle))
+		if (cadObject.Handle == 0 ||
+			this._cadObjects.ContainsKey(cadObject.Handle) ||
+			this._leasedCadObjects.ContainsKey(cadObject.Handle))
 		{
 			var nextHandle = this.Header.HandleSeed;
 
@@ -761,6 +769,56 @@ public class CadDocument : IHandledCadObject
 		cadObject.UnassignDocument();
 	}
 
+	internal bool IsLeasedCadObject(CadObject cadObject)
+	{
+		return cadObject != null &&
+			cadObject.Handle != 0 &&
+			this._leasedCadObjects.TryGetValue(cadObject.Handle, out CadObject leased) &&
+			ReferenceEquals(leased, cadObject);
+	}
+
+	internal void LeaseCadObject(CadObject cadObject)
+	{
+		if (cadObject == null ||
+			!ReferenceEquals(cadObject.Document, this) ||
+			cadObject.Handle == 0 ||
+			!this._cadObjects.TryGetValue(cadObject.Handle, out IHandledCadObject current) ||
+			!ReferenceEquals(current, cadObject))
+		{
+			throw new InvalidOperationException("Only an active document object can be leased.");
+		}
+
+		this._cadObjects.Remove(cadObject.Handle);
+		this._leasedCadObjects.Add(cadObject.Handle, cadObject);
+	}
+
+	internal void RestoreLeasedCadObject(CadObject cadObject)
+	{
+		if (cadObject == null ||
+			!ReferenceEquals(cadObject.Document, this) ||
+			cadObject.Handle == 0 ||
+			!this._leasedCadObjects.TryGetValue(cadObject.Handle, out CadObject leased) ||
+			!ReferenceEquals(leased, cadObject) ||
+			this._cadObjects.ContainsKey(cadObject.Handle))
+		{
+			throw new InvalidOperationException("Only an inactive leased object can be restored.");
+		}
+
+		this._leasedCadObjects.Remove(cadObject.Handle);
+		this._cadObjects.Add(cadObject.Handle, cadObject);
+	}
+
+	internal void ReleaseLeasedCadObject(CadObject cadObject)
+	{
+		if (!this.IsLeasedCadObject(cadObject))
+		{
+			throw new InvalidOperationException("Only an inactive leased object can be released.");
+		}
+
+		this._leasedCadObjects.Remove(cadObject.Handle);
+		cadObject.UnassignDocument();
+	}
+
 	internal void UnregisterCollection<T>(IObservableCadCollection<T> collection)
 			where T : CadObject
 	{
@@ -812,6 +870,11 @@ public class CadDocument : IHandledCadObject
 
 	private void onAdd(object sender, CollectionChangedEventArgs e)
 	{
+		if (e.IdentityMode == CollectionIdentityMode.Restore)
+		{
+			this.RestoreLeasedCadObject(e.Item);
+			return;
+		}
 		if (e.Item is CadDictionary dictionary)
 		{
 			this.RegisterCollection(dictionary);
@@ -824,6 +887,11 @@ public class CadDocument : IHandledCadObject
 
 	private void onRemove(object sender, CollectionChangedEventArgs e)
 	{
+		if (e.IdentityMode == CollectionIdentityMode.Lease)
+		{
+			this.LeaseCadObject(e.Item);
+			return;
+		}
 		if (e.Item is CadDictionary dictionary)
 		{
 			this.UnregisterCollection(dictionary);

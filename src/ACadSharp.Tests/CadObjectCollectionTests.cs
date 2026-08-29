@@ -1,6 +1,7 @@
 using ACadSharp.Entities;
 using CSMath;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace ACadSharp.Tests
@@ -120,6 +121,172 @@ namespace ACadSharp.Tests
 				document.Entities.TryRemoveRange(new[] { attached, detached }));
 			Assert.Equal(0, preflightCount);
 			Assert.Single(document.Entities);
+		}
+
+		[Fact]
+		public void CollectionsRetainExplicitInsertionOrder()
+		{
+			CadDocument document = new CadDocument();
+			Line first = new Line(XYZ.Zero, XYZ.AxisX);
+			Line second = new Line(XYZ.AxisY, XYZ.AxisY + XYZ.AxisX);
+			Line third = new Line(XYZ.AxisZ, XYZ.AxisZ + XYZ.AxisX);
+			Line fourth = new Line(XYZ.AxisX, XYZ.AxisY);
+
+			document.Entities.AddRange(new[] { first, second, third });
+			Assert.True(document.Entities.Remove(second));
+			document.Entities.Add(fourth);
+
+			Assert.Equal(new[] { first, third, fourth }, document.Entities.ToArray());
+			Assert.Same(first, document.Entities[0]);
+			Assert.Same(third, document.Entities[1]);
+			Assert.Same(fourth, document.Entities[2]);
+		}
+
+		[Fact]
+		public void SeqendTracksOnlyEmptyNonEmptyTransitions()
+		{
+			CadDocument document = new CadDocument();
+			Insert insert = new Insert();
+			document.Entities.Add(insert);
+			AttributeEntity first = new AttributeEntity { Tag = "FIRST" };
+			AttributeEntity second = new AttributeEntity { Tag = "SECOND" };
+
+			insert.Attributes.AddRange(new[] { first, second });
+
+			Seqend seqend = insert.Attributes.Seqend;
+			ulong seqendHandle = seqend.Handle;
+			Assert.NotEqual(0UL, seqendHandle);
+			Assert.Same(seqend, document.GetCadObject<Seqend>(seqendHandle));
+
+			Assert.True(insert.Attributes.Remove(first));
+			Assert.Same(seqend, insert.Attributes.Seqend);
+			Assert.Same(seqend, document.GetCadObject<Seqend>(seqendHandle));
+
+			Assert.True(insert.Attributes.Remove(second));
+			Assert.Null(insert.Attributes.Seqend);
+			Assert.Null(document.GetCadObject<Seqend>(seqendHandle));
+			Assert.Null(seqend.Document);
+			Assert.Equal(0UL, seqend.Handle);
+		}
+
+		[Fact]
+		public void ReversibleReplacementPreservesOrderIdentityAndHandles()
+		{
+			CadDocument document = new CadDocument();
+			Insert insert = new Insert();
+			AttributeEntity first = new AttributeEntity { Tag = "FIRST", Value = "1" };
+			AttributeEntity retained = new AttributeEntity { Tag = "RETAINED", Value = "2" };
+			AttributeEntity third = new AttributeEntity { Tag = "THIRD", Value = "3" };
+			insert.Attributes.AddRange(new[] { first, retained, third });
+			document.Entities.Add(insert);
+			ulong firstHandle = first.Handle;
+			ulong retainedHandle = retained.Handle;
+			ulong thirdHandle = third.Handle;
+			AttributeEntity added = new AttributeEntity { Tag = "ADDED", Value = "4" };
+			CadObjectCollection<AttributeEntity>.ReversibleReplacement replacement =
+				insert.Attributes.CreateReversibleReplacement(new[] { added, retained });
+
+			Assert.Throws<InvalidOperationException>(() =>
+				insert.Attributes.Add(new AttributeEntity()));
+			Assert.True(replacement.TryApply());
+			ulong addedHandle = added.Handle;
+			Assert.NotEqual(0UL, addedHandle);
+			Assert.Equal(new[] { added, retained }, insert.Attributes.ToArray());
+			Assert.Null(document.GetCadObject<AttributeEntity>(firstHandle));
+			Assert.Null(document.GetCadObject<AttributeEntity>(thirdHandle));
+			Assert.Same(document, first.Document);
+			Assert.Same(document, third.Document);
+			Assert.Equal(firstHandle, first.Handle);
+			Assert.Equal(thirdHandle, third.Handle);
+			Assert.Throws<InvalidOperationException>(() => document.RestoreHandles());
+
+			Assert.True(replacement.TryRevert());
+			Assert.Equal(new[] { first, retained, third }, insert.Attributes.ToArray());
+			Assert.Same(first, document.GetCadObject<AttributeEntity>(firstHandle));
+			Assert.Same(retained, document.GetCadObject<AttributeEntity>(retainedHandle));
+			Assert.Same(third, document.GetCadObject<AttributeEntity>(thirdHandle));
+			Assert.Null(document.GetCadObject<AttributeEntity>(addedHandle));
+			Assert.Same(document, added.Document);
+			Assert.Equal(addedHandle, added.Handle);
+
+			Assert.True(replacement.TryApply());
+			Assert.Equal(addedHandle, added.Handle);
+			Assert.Same(added, document.GetCadObject<AttributeEntity>(addedHandle));
+			replacement.Release();
+
+			Assert.Null(first.Document);
+			Assert.Null(third.Document);
+			Assert.Equal(0UL, first.Handle);
+			Assert.Equal(0UL, third.Handle);
+			insert.Attributes.Add(new AttributeEntity { Tag = "AFTER_RELEASE" });
+			Assert.Equal(3, insert.Attributes.Count);
+		}
+
+		[Fact]
+		public void EmptyReplacementLeasesAndRestoresSeqend()
+		{
+			CadDocument document = new CadDocument();
+			Insert insert = new Insert();
+			AttributeEntity attribute = new AttributeEntity { Tag = "ONLY" };
+			insert.Attributes.Add(attribute);
+			document.Entities.Add(insert);
+			Seqend seqend = insert.Attributes.Seqend;
+			ulong attributeHandle = attribute.Handle;
+			ulong seqendHandle = seqend.Handle;
+			CadObjectCollection<AttributeEntity>.ReversibleReplacement replacement =
+				insert.Attributes.CreateReversibleReplacement(Array.Empty<AttributeEntity>());
+
+			Assert.True(replacement.TryApply());
+			Assert.Empty(insert.Attributes);
+			Assert.Null(document.GetCadObject<AttributeEntity>(attributeHandle));
+			Assert.Null(document.GetCadObject<Seqend>(seqendHandle));
+			Assert.Equal(attributeHandle, attribute.Handle);
+			Assert.Equal(seqendHandle, seqend.Handle);
+
+			Assert.True(replacement.TryRevert());
+			Assert.Same(attribute, Assert.Single(insert.Attributes));
+			Assert.Same(seqend, insert.Attributes.Seqend);
+			Assert.Same(attribute, document.GetCadObject<AttributeEntity>(attributeHandle));
+			Assert.Same(seqend, document.GetCadObject<Seqend>(seqendHandle));
+
+			Assert.True(replacement.TryApply());
+			replacement.Release();
+			Assert.Null(attribute.Document);
+			Assert.Null(seqend.Document);
+			Assert.Equal(0UL, attribute.Handle);
+			Assert.Equal(0UL, seqend.Handle);
+
+			AttributeEntity later = new AttributeEntity { Tag = "LATER" };
+			insert.Attributes.Add(later);
+			Assert.NotEqual(0UL, insert.Attributes.Seqend.Handle);
+			Assert.Same(insert.Attributes.Seqend, document.GetCadObject<Seqend>(
+				insert.Attributes.Seqend.Handle));
+		}
+
+		[Fact]
+		public void ReplacementCancellationLeavesCollectionAndLeaseStateUntouched()
+		{
+			CadDocument document = new CadDocument();
+			Line first = new Line(XYZ.Zero, XYZ.AxisX);
+			Line second = new Line(XYZ.AxisY, XYZ.AxisY + XYZ.AxisX);
+			document.Entities.AddRange(new[] { first, second });
+			Line added = new Line(XYZ.AxisZ, XYZ.AxisZ + XYZ.AxisX);
+			CadObjectCollection<Entity>.ReversibleReplacement replacement =
+				document.Entities.CreateReversibleReplacement(new Entity[] { first, added });
+			document.Entities.OnBeforeRemove += (_, args) =>
+			{
+				if (ReferenceEquals(args.Item, second))
+					args.Cancel = true;
+			};
+
+			Assert.False(replacement.TryApply());
+			Assert.Equal(new Entity[] { first, second }, document.Entities.ToArray());
+			Assert.Null(added.Owner);
+			Assert.Null(added.Document);
+			Assert.Equal(0UL, added.Handle);
+			replacement.Release();
+			document.Entities.Add(added);
+			Assert.Equal(3, document.Entities.Count);
 		}
 	}
 }

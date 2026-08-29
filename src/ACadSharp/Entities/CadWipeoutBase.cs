@@ -235,7 +235,7 @@ public abstract class CadWipeoutBase : Entity
 	{
 		bool useInsideClip = this.ClippingState &&
 			this.Flags.HasFlag(ImageDisplayFlags.UseClippingBoundary) &&
-			this.ClipMode == ClipMode.Inside;
+			this.ClipMode == ClipMode.Outside;
 		if (useInsideClip && this.ClipBoundaryVertices.Count < 2)
 		{
 			return BoundingBox.Null;

@@ -68,7 +68,7 @@ public class WipeoutTests
 		wipeout.ClipBoundaryVertices.Clear();
 		wipeout.ClipBoundaryVertices.Add(new XY(0.5, 0.5));
 		wipeout.ClipBoundaryVertices.Add(new XY(2.5, 3.5));
-		wipeout.ClipMode = ClipMode.Inside;
+		wipeout.ClipMode = ClipMode.Outside;
 
 		BoundingBox bounds = wipeout.GetBoundingBox();
 
@@ -85,7 +85,7 @@ public class WipeoutTests
 			VVector = new XYZ(0, 3, 0),
 			Size = new XY(10, 20),
 			ClippingState = true,
-			ClipMode = ClipMode.Inside,
+			ClipMode = ClipMode.Outside,
 		};
 		wipeout.ClipBoundaryVertices.Add(new XY(-0.5, -0.5));
 		wipeout.ClipBoundaryVertices.Add(new XY(9.5, 19.5));

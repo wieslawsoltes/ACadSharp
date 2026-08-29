@@ -237,6 +237,11 @@ public class Insert : Entity, IOrientable
 
 		foreach (var item in block.AttributeDefinitions)
 		{
+			if (isConstant(item))
+			{
+				continue;
+			}
+
 			var att = new AttributeEntity(item);
 
 			Transform transform = this.GetTransform();
@@ -410,20 +415,40 @@ public class Insert : Entity, IOrientable
 	/// </remarks>
 	public void UpdateAttributes()
 	{
-		var atts = this.Attributes.ToArray();
-
-		foreach (AttributeEntity att in atts)
+		var missingByTag = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		foreach (AttributeDefinition definition in this.Block.AttributeDefinitions)
 		{
-			//Tags are not unique, is it needed? check how the different applications link the atts
-			if (!this.Block.AttributeDefinitions.Select(d => d.Tag).Contains(att.Tag))
+			if (isConstant(definition))
+			{
+				continue;
+			}
+
+			string tag = definition.Tag ?? string.Empty;
+			missingByTag.TryGetValue(tag, out int count);
+			missingByTag[tag] = checked(count + 1);
+		}
+
+		foreach (AttributeEntity att in this.Attributes.ToArray())
+		{
+			string tag = att.Tag ?? string.Empty;
+			if (!missingByTag.TryGetValue(tag, out int count) || count == 0)
 			{
 				this.Attributes.Remove(att);
+				continue;
 			}
+
+			missingByTag[tag] = count - 1;
 		}
 
 		foreach (AttributeDefinition attdef in this.Block.AttributeDefinitions)
 		{
-			if (!this.Attributes.Select(d => d.Tag).Contains(attdef.Tag))
+			if (isConstant(attdef))
+			{
+				continue;
+			}
+
+			string tag = attdef.Tag ?? string.Empty;
+			if (missingByTag.TryGetValue(tag, out int count) && count > 0)
 			{
 				AttributeEntity att = new AttributeEntity(attdef);
 
@@ -431,8 +456,15 @@ public class Insert : Entity, IOrientable
 				att.ApplyTransform(transform);
 
 				this.Attributes.Add(att);
+				missingByTag[tag] = count - 1;
 			}
 		}
+	}
+
+	private static bool isConstant(AttributeDefinition definition)
+	{
+		return (definition.Flags & AttributeFlags.Constant) != 0 ||
+			definition.AttributeType == AttributeType.ConstantMultiLine;
 	}
 
 	internal override void AssignDocument(CadDocument doc)

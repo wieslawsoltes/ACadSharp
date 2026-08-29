@@ -836,6 +836,14 @@ public class CadDocument : IHandledCadObject
 
 	private void onLayersRemoveRange(object sender, LayerCollectionChangedEventArgs e)
 	{
+		Layer defaultLayer = this.Layers[Layer.DefaultName];
+		foreach (Entity entity in this.GetCadObjects<Entity>())
+		{
+			if (e.Contains(entity.Layer))
+			{
+				entity.Layer = defaultLayer;
+			}
+		}
 		foreach (Layer layer in e.Layers.Span)
 		{
 			this.RemoveCadObject(layer);

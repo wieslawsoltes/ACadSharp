@@ -2,7 +2,6 @@
 using ACadSharp.Entities.ProxyGraphics;
 using ACadSharp.Objects;
 using ACadSharp.Tables;
-using ACadSharp.Tables.Collections;
 using CSMath;
 using System;
 using System.Collections.Generic;
@@ -280,7 +279,6 @@ public abstract class Entity : CadObject, IEntity
 		this._lineType = CadObject.updateCollection(this.LineType, doc.LineTypes);
 
 		doc.Layers.OnRemove += this.tableOnRemove;
-		doc.Layers.OnRemoveRange += this.layersOnRemoveRange;
 		doc.LineTypes.OnRemove += this.tableOnRemove;
 
 		//TODO: Ensure the event is set after the document is read or modified
@@ -290,7 +288,6 @@ public abstract class Entity : CadObject, IEntity
 	internal override void UnassignDocument()
 	{
 		this.Document.Layers.OnRemove -= this.tableOnRemove;
-		this.Document.Layers.OnRemoveRange -= this.layersOnRemoveRange;
 		this.Document.LineTypes.OnRemove -= this.tableOnRemove;
 
 		this.Document.Materials?.OnRemove -= this.tableOnRemove;
@@ -357,14 +354,6 @@ public abstract class Entity : CadObject, IEntity
 		if (e.Item.Equals(this.Material))
 		{
 			this.Material = null;
-		}
-	}
-
-	private void layersOnRemoveRange(object sender, LayerCollectionChangedEventArgs e)
-	{
-		if (e.Contains(this.Layer))
-		{
-			this.Layer = this.Document.Layers[Layer.DefaultName];
 		}
 	}
 

@@ -1871,6 +1871,13 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			this._writer.WriteBitDouble(m4.M23);
 			this._writer.WriteBitDouble(m4.M33);
 		}
+		else
+		{
+			// The reader and the DWG contract always carry the second content
+			// discriminator after HasTextContents is false. Omitting the false
+			// HasContentsBlock bit shifts every following context field.
+			this._writer.WriteBit(false);
+		}
 		//END IF Has contents block
 		//END IF Has text contents
 

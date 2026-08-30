@@ -610,6 +610,119 @@ public partial class MultiLeader : Entity, IDxfClassDefined
 	/// <inheritdoc/>
 	public override void ApplyTransform(Transform transform)
 	{
+		if (transform == null)
+		{
+			throw new ArgumentNullException(nameof(transform));
+		}
+
+		XYZ origin = transform.ApplyTransform(XYZ.Zero, false);
+		XYZ transformVector(XYZ vector) =>
+			(transform.ApplyTransform(vector, false) - origin);
+		XYZ transformUnitVector(XYZ vector)
+		{
+			XYZ result = transformVector(vector);
+			return result.GetLength() > MathHelper.Epsilon
+				? result.Normalize()
+				: vector;
+		}
+
+		double xScale = transformVector(XYZ.AxisX).GetLength();
+		if (double.IsNaN(xScale) || double.IsInfinity(xScale) ||
+			xScale <= MathHelper.Epsilon)
+		{
+			throw new ArgumentException(
+				"MULTILEADER transformation must preserve a finite non-zero X scale.",
+				nameof(transform));
+		}
+
+		MultiLeaderObjectContextData context = this._contextData;
+		context.ContentBasePoint = transform.ApplyTransform(context.ContentBasePoint);
+		context.BasePoint = transform.ApplyTransform(context.BasePoint);
+		context.TextLocation = transform.ApplyTransform(context.TextLocation);
+		context.BlockContentLocation = transform.ApplyTransform(context.BlockContentLocation);
+		context.BaseDirection = transformUnitVector(context.BaseDirection);
+		context.BaseVertical = transformUnitVector(context.BaseVertical);
+		context.Direction = transformUnitVector(context.Direction);
+		if (!context.TextNormal.IsZero())
+		{
+			context.TextNormal = this.transformNormal(transform, context.TextNormal);
+		}
+		if (!context.BlockContentNormal.IsZero())
+		{
+			context.BlockContentNormal = this.transformNormal(
+				transform,
+				context.BlockContentNormal);
+		}
+		context.ArrowheadSize *= xScale;
+		context.LandingGap *= xScale;
+		context.TextHeight *= xScale;
+		context.BoundaryWidth *= xScale;
+		context.BoundaryHeight *= xScale;
+		context.ColumnWidth *= xScale;
+		context.ColumnGutter *= xScale;
+		for (int index = 0; index < context.ColumnSizes.Count; index++)
+		{
+			context.ColumnSizes[index] *= xScale;
+		}
+		if (context.HasContentsBlock)
+		{
+			context.TransformationMatrix =
+				transform.Matrix * context.TransformationMatrix;
+		}
+
+		foreach (MultiLeaderObjectContextData.LeaderRoot root in context.LeaderRoots)
+		{
+			XYZ connection = root.ConnectionPoint;
+			XYZ landingVector = root.Direction * root.LandingDistance;
+			root.ConnectionPoint = transform.ApplyTransform(connection);
+			XYZ transformedLanding = transformVector(landingVector);
+			root.LandingDistance = transformedLanding.GetLength();
+			root.Direction = root.LandingDistance > MathHelper.Epsilon
+				? transformedLanding / root.LandingDistance
+				: transformUnitVector(root.Direction);
+
+			var rootBreaks = new List<MultiLeaderObjectContextData.StartEndPointPair>(
+				root.BreakStartEndPointsPairs.Count);
+			foreach (MultiLeaderObjectContextData.StartEndPointPair pair in
+				root.BreakStartEndPointsPairs)
+			{
+				rootBreaks.Add(new MultiLeaderObjectContextData.StartEndPointPair(
+					transform.ApplyTransform(pair.StartPoint),
+					transform.ApplyTransform(pair.EndPoint)));
+			}
+			root.BreakStartEndPointsPairs.Clear();
+			foreach (MultiLeaderObjectContextData.StartEndPointPair pair in rootBreaks)
+			{
+				root.BreakStartEndPointsPairs.Add(pair);
+			}
+
+			foreach (MultiLeaderObjectContextData.LeaderLine line in root.Lines)
+			{
+				for (int index = 0; index < line.Points.Count; index++)
+				{
+					line.Points[index] = transform.ApplyTransform(line.Points[index]);
+				}
+				line.ArrowheadSize *= xScale;
+				var lineBreaks = new List<MultiLeaderObjectContextData.StartEndPointPair>(
+					line.StartEndPoints.Count);
+				foreach (MultiLeaderObjectContextData.StartEndPointPair pair in
+					line.StartEndPoints)
+				{
+					lineBreaks.Add(new MultiLeaderObjectContextData.StartEndPointPair(
+						transform.ApplyTransform(pair.StartPoint),
+						transform.ApplyTransform(pair.EndPoint)));
+				}
+				line.StartEndPoints.Clear();
+				foreach (MultiLeaderObjectContextData.StartEndPointPair pair in lineBreaks)
+				{
+					line.StartEndPoints.Add(pair);
+				}
+			}
+		}
+
+		this.ArrowheadSize *= xScale;
+		this.LandingDistance *= xScale;
+		this.BlockContentScale *= new XYZ(xScale, xScale, xScale);
 	}
 
 	/// <inheritdoc/>

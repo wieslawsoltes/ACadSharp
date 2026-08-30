@@ -127,5 +127,26 @@ namespace ACadSharp.Tests.IO.DXF
 				restored.GridFlags);
 			Assert.Equal(17, restored.MinorGridLinesPerMajorGridLine);
 		}
+
+		[Theory]
+		[InlineData(ACadVersion.AC1015)]
+		[InlineData(ACadVersion.AC1021)]
+		[InlineData(ACadVersion.AC1032)]
+		public void ActiveViewportIsometricSnapSettingsRoundTrip(ACadVersion version)
+		{
+			CadDocument doc = new CadDocument(version);
+			VPort active = doc.VPorts[VPort.DefaultName];
+			active.IsometricSnap = true;
+			active.SnapIsoPair = 2;
+			using MemoryStream stream = new MemoryStream();
+
+			DxfWriter.Write(stream, doc, false);
+			using MemoryStream input = new MemoryStream(stream.ToArray());
+			CadDocument read = DxfReader.Read(input);
+			VPort restored = read.VPorts[VPort.DefaultName];
+
+			Assert.True(restored.IsometricSnap);
+			Assert.Equal(2, restored.SnapIsoPair);
+		}
 	}
 }

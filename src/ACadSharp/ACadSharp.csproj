@@ -1,17 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0;net10.0;net48;netstandard2.1;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ProGpuForkPackage)' != 'true'">net8.0;net9.0;net10.0;net48;netstandard2.1;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ProGpuForkPackage)' == 'true'">net10.0</TargetFrameworks>
 		<Authors>DomCr</Authors>
-		<PackageId>ACadSharp</PackageId>
+		<PackageId>ACadSharp.ProGPU</PackageId>
 		<PackageTags>C# Dwg Dxf</PackageTags>
-		<RepositoryUrl>https://github.com/DomCR/ACadSharp</RepositoryUrl>
+		<RepositoryUrl>https://github.com/wieslawsoltes/ACadSharp</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryType>git</RepositoryType>
-		<PackageProjectUrl>https://github.com/DomCR/ACadSharp</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/wieslawsoltes/ACadSharp</PackageProjectUrl>
 		<Copyright>Copyright (c) 2026 Albert Domenech</Copyright>
 		<Description>C# library to read/write cad files like dxf/dwg.</Description>
+		<PackageReleaseNotes Condition="'$(ProGpuForkPackage)' == 'true'">ProGPU-reviewed ACadSharp feature branch used by the pinned ProGPU.CAD source and package dependency.</PackageReleaseNotes>
 		<GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">True</GeneratePackageOnBuild>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<PropertyGroup>

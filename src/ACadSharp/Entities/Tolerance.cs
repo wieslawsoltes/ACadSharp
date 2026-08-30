@@ -20,7 +20,7 @@ public class Tolerance : Entity, IOrientable
 	/// X-axis direction vector (in WCS)
 	/// </summary>
 	[DxfCodeValue(11, 21, 31)]
-	public XYZ Direction { get; set; }
+	public XYZ Direction { get; set; } = XYZ.AxisX;
 
 	/// <summary>
 	/// Insertion point (in WCS)
@@ -78,7 +78,7 @@ public class Tolerance : Entity, IOrientable
 	public override void ApplyTransform(Transform transform)
 	{
 		this.Normal = this.transformNormal(transform, this.Normal);
-		this.Direction = transform.ApplyRotation(this.Direction);
+		this.Direction = transform.ApplyRotation(this.Direction).Normalize();
 		this.InsertionPoint = transform.ApplyTransform(this.InsertionPoint);
 	}
 

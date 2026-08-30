@@ -16,6 +16,7 @@ namespace ACadSharp.Tests.Header
 			Assert.True(header.CurrentLayer.Name == Layer.DefaultName);
 			Assert.True(header.CurrentLayer.Handle == 0);
 			Assert.Null(header.CurrentLayer.Owner);
+			Assert.Equal(Types.Units.AngularDirection.CounterClockWise, header.AngularDirection);
 		}
 
 		[Fact]

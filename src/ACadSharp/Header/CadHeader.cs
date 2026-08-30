@@ -20,7 +20,7 @@ namespace ACadSharp.Header
 		/// <remarks>
 		/// System variable ANGBASE
 		/// </remarks>
-		[CadSystemVariable("$ANGBASE", 50)]
+		[CadSystemVariable(DxfReferenceType.IsAngle, "$ANGBASE", 50)]
 		public double AngleBase { get; set; } = 0.0d;
 
 		/// <summary>
@@ -30,7 +30,7 @@ namespace ACadSharp.Header
 		/// System variable ANGDIR.
 		/// </remarks>
 		[CadSystemVariable("$ANGDIR", 70)]
-		public AngularDirection AngularDirection { get; set; } = AngularDirection.ClockWise;
+		public AngularDirection AngularDirection { get; set; } = AngularDirection.CounterClockWise;
 
 		/// <summary>
 		/// Sets units for angles.

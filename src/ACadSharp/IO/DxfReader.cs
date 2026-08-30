@@ -250,7 +250,9 @@ namespace ACadSharp.IO
 						break;
 					}
 
-					parameters[i] = this._reader.Value;
+					parameters[i] = data.ReferenceType.HasFlag(DxfReferenceType.IsAngle)
+						? this._reader.ValueAsAngle
+						: this._reader.Value;
 				}
 
 				try

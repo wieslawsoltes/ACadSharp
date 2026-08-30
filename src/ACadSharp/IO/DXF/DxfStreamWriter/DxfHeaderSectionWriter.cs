@@ -1,5 +1,6 @@
 ﻿using ACadSharp.Header;
 using ACadSharp.IO.DXF.DxfStreamWriter;
+using CSMath;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -51,6 +52,8 @@ namespace ACadSharp.IO.DXF
 
 					if (value == null)
 						continue;
+					if (item.Value.ReferenceType.HasFlag(DxfReferenceType.IsAngle))
+						value = MathHelper.RadToDeg((double)value);
 
 					this._writer.Write((DxfCode)csv, value);
 				}

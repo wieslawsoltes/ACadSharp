@@ -71,6 +71,7 @@ public class DxfWriterConfiguration : CadWriterConfiguration
 		"$LUNITS",
 		"$LUPREC",
 		"$MIRRTEXT",
+		"$ORTHOMODE",
 		"$EXTNAMES",
 		"$INSBASE",
 		"$INSUNITS",

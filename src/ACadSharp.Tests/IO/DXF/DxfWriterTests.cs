@@ -148,5 +148,22 @@ namespace ACadSharp.Tests.IO.DXF
 			Assert.True(restored.IsometricSnap);
 			Assert.Equal(2, restored.SnapIsoPair);
 		}
+
+		[Theory]
+		[InlineData(ACadVersion.AC1015)]
+		[InlineData(ACadVersion.AC1021)]
+		[InlineData(ACadVersion.AC1032)]
+		public void OrthoModeRoundTrips(ACadVersion version)
+		{
+			CadDocument doc = new CadDocument(version);
+			doc.Header.OrthoMode = true;
+			using MemoryStream stream = new MemoryStream();
+
+			DxfWriter.Write(stream, doc, false);
+			using MemoryStream input = new MemoryStream(stream.ToArray());
+			CadDocument read = DxfReader.Read(input);
+
+			Assert.True(read.Header.OrthoMode);
+		}
 	}
 }

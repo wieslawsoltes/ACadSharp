@@ -22,6 +22,10 @@ public class DxfLayoutPlotSettingsTests
 		model.PaperWidth = 210;
 		model.PaperHeight = 297;
 		model.PaperRotation = PlotRotation.Degrees90;
+		model.NumeratorScale = 7;
+		model.DenominatorScale = 13;
+		model.ScaledFit = ScaledType._6;
+		model.StandardScale = 1.0 / 96.0;
 		model.PaperImageOriginX = 12.5;
 		model.PaperImageOriginY = 34.5;
 		using MemoryStream output = new MemoryStream();
@@ -37,6 +41,10 @@ public class DxfLayoutPlotSettingsTests
 		Assert.Equal(210, actual.PaperWidth);
 		Assert.Equal(297, actual.PaperHeight);
 		Assert.Equal(PlotRotation.Degrees90, actual.PaperRotation);
+		Assert.Equal(7, actual.NumeratorScale);
+		Assert.Equal(13, actual.DenominatorScale);
+		Assert.Equal(ScaledType._6, actual.ScaledFit);
+		Assert.Equal(1.0 / 96.0, actual.StandardScale, 15);
 		Assert.Equal(new XY(12.5, 34.5), actual.PaperImageOrigin);
 		Assert.Equal(12.5, actual.PaperImageOriginX);
 		Assert.Equal(34.5, actual.PaperImageOriginY);

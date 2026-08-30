@@ -622,7 +622,7 @@ internal class DxfObjectsSectionWriter : DxfSectionWriterBase
 		this._writer.Write(76, (short)plot.ShadePlotMode, map);
 		this._writer.Write(77, (short)plot.ShadePlotResolutionMode, map);
 		this._writer.Write(78, plot.ShadePlotDPI, map);
-		this._writer.Write(147, plot.PrintScale, map);
+		this._writer.Write(147, plot.StandardScale, map);
 
 		this._writer.Write(148, plot.PaperImageOrigin.X, map);
 		this._writer.Write(149, plot.PaperImageOrigin.Y, map);

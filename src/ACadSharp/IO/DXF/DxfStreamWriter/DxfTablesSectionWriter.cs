@@ -382,6 +382,12 @@ namespace ACadSharp.IO.DXF
 
 			this._writer.Write(75, vport.SnapOn ? (short)1 : (short)0);
 			this._writer.Write(76, vport.ShowGrid ? (short)1 : (short)0);
+
+			if (this.Version >= ACadVersion.AC1021)
+			{
+				this._writer.Write(60, (short)vport.GridFlags);
+				this._writer.Write(61, vport.MinorGridLinesPerMajorGridLine);
+			}
 		}
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using ACadSharp.Entities;
 using ACadSharp.IO;
+using ACadSharp.Tables;
 using ACadSharp.Tests.Common;
+using CSMath;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
@@ -98,6 +100,32 @@ namespace ACadSharp.Tests.IO.DXF
 				wr.OnNotification += this.onNotification;
 				wr.Write();
 			}
+		}
+
+		[Theory]
+		[InlineData(ACadVersion.AC1021)]
+		[InlineData(ACadVersion.AC1032)]
+		public void ActiveViewportGridDisplaySettingsRoundTrip(ACadVersion version)
+		{
+			CadDocument doc = new CadDocument(version);
+			VPort active = doc.VPorts[VPort.DefaultName];
+			active.ShowGrid = false;
+			active.GridSpacing = new XY(2.5, 7.25);
+			active.GridFlags = GridFlags._1 | GridFlags._2 | GridFlags._3;
+			active.MinorGridLinesPerMajorGridLine = 17;
+			using MemoryStream stream = new MemoryStream();
+
+			DxfWriter.Write(stream, doc, false);
+			using MemoryStream input = new MemoryStream(stream.ToArray());
+			CadDocument read = DxfReader.Read(input);
+			VPort restored = read.VPorts[VPort.DefaultName];
+
+			Assert.False(restored.ShowGrid);
+			Assert.Equal(new XY(2.5, 7.25), restored.GridSpacing);
+			Assert.Equal(
+				GridFlags._1 | GridFlags._2 | GridFlags._3,
+				restored.GridFlags);
+			Assert.Equal(17, restored.MinorGridLinesPerMajorGridLine);
 		}
 	}
 }

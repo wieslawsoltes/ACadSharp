@@ -155,6 +155,60 @@ public class Leader : Entity, IOrientable
 
 	private DimensionStyle _style = DimensionStyle.Default;
 
+	/// <summary>
+	/// Associates this leader with an annotation entity and updates the persisted creation type.
+	/// </summary>
+	/// <param name="annotation">An <see cref="MText"/>, <see cref="Tolerance"/>, or <see cref="Insert"/> entity.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="annotation"/> is null.</exception>
+	/// <exception cref="ArgumentException"><paramref name="annotation"/> is not a supported annotation type.</exception>
+	/// <exception cref="InvalidOperationException">The leader and annotation belong to different documents.</exception>
+	public void AttachAnnotation(Entity annotation)
+	{
+		if (annotation == null)
+		{
+			throw new ArgumentNullException(nameof(annotation));
+		}
+
+		LeaderCreationType creationType;
+		if (annotation is MText)
+		{
+			creationType = LeaderCreationType.CreatedWithTextAnnotation;
+		}
+		else if (annotation is Tolerance)
+		{
+			creationType = LeaderCreationType.CreatedWithToleranceAnnotation;
+		}
+		else if (annotation is Insert)
+		{
+			creationType = LeaderCreationType.CreatedWithBlockReferenceAnnotation;
+		}
+		else
+		{
+			throw new ArgumentException(
+				"A leader annotation must be an MTEXT, TOLERANCE, or INSERT entity.",
+				nameof(annotation));
+		}
+
+		if (this.Document != null && annotation.Document != null &&
+			!ReferenceEquals(this.Document, annotation.Document))
+		{
+			throw new InvalidOperationException(
+				"A leader and its annotation must belong to the same document.");
+		}
+
+		this.AssociatedAnnotation = annotation;
+		this.CreationType = creationType;
+	}
+
+	/// <summary>
+	/// Removes the associated annotation and updates the persisted creation type.
+	/// </summary>
+	public void DetachAnnotation()
+	{
+		this.AssociatedAnnotation = null;
+		this.CreationType = LeaderCreationType.CreatedWithoutAnnotation;
+	}
+
 	/// <inheritdoc/>
 	public override void ApplyTransform(Transform transform)
 	{

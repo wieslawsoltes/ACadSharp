@@ -1752,6 +1752,9 @@ internal abstract class DxfSectionReaderBase
 			case 331:
 				tmp.FrozenLayerHandles.Add(this._reader.ValueAsHandle);
 				return true;
+			case 340:
+				tmp.BoundaryHandle = this._reader.ValueAsHandle;
+				return true;
 			case 348:
 				tmp.VisualStyleHandle = this._reader.ValueAsHandle;
 				return true;

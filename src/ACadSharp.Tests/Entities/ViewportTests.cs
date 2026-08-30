@@ -1,13 +1,51 @@
 ﻿using ACadSharp.Entities;
+using ACadSharp.IO;
 using ACadSharp.Tests.Common;
 using CSMath;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace ACadSharp.Tests.Entities
 {
 	public class ViewportTests : CommonEntityTests<Viewport>
 	{
+		[Fact]
+		public void DxfRoundTripPreservesClippingBoundaryReference()
+		{
+			CadDocument document = new CadDocument();
+			var boundary = new LwPolyline
+			{
+				Flags = LwPolylineFlags.Closed,
+			};
+			boundary.Vertices.Add(new LwPolyline.Vertex(0, 0));
+			boundary.Vertices.Add(new LwPolyline.Vertex(10, 0));
+			boundary.Vertices.Add(new LwPolyline.Vertex(0, 10));
+			document.PaperSpace.Entities.Add(boundary);
+			document.PaperSpace.Entities.Add(new Viewport
+			{
+				Center = new XYZ(5, 5, 0),
+				Width = 10,
+				Height = 10,
+				ViewHeight = 10,
+				Boundary = boundary,
+				Status = ViewportStatusFlags.NonRectangularClipping,
+			});
+			using var stream = new MemoryStream();
+
+			DxfWriter.Write(stream, document);
+			using var written = new MemoryStream(stream.ToArray());
+			CadDocument restored = DxfReader.Read(written);
+
+			Viewport viewport = restored.PaperSpace.Entities
+				.OfType<Viewport>()
+				.Single(item => !item.RepresentsPaper);
+			LwPolyline restoredBoundary = Assert.Single(
+				restored.PaperSpace.Entities.OfType<LwPolyline>());
+			Assert.Same(restoredBoundary, viewport.Boundary);
+		}
+
 		[Fact]
 		public override void GetBoundingBoxTest()
 		{

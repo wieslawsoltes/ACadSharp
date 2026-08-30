@@ -39,7 +39,7 @@ public partial class TableEntity : Insert, IDxfClassDefined
 	/// Horizontal direction vector
 	/// </summary>
 	[DxfCodeValue(11, 21, 31)]
-	public XYZ HorizontalDirection { get; set; }
+	public XYZ HorizontalDirection { get; set; } = XYZ.AxisX;
 
 	/// <inheritdoc/>
 	public override string ObjectName => DxfFileToken.EntityTable;
@@ -137,6 +137,13 @@ public partial class TableEntity : Insert, IDxfClassDefined
 		TableEntity clone = (TableEntity)base.Clone();
 
 		return clone;
+	}
+
+	/// <inheritdoc/>
+	public override void ApplyTransform(Transform transform)
+	{
+		base.ApplyTransform(transform);
+		this.HorizontalDirection = transform.ApplyRotation(this.HorizontalDirection).Normalize();
 	}
 
 	/// <inheritdoc/>

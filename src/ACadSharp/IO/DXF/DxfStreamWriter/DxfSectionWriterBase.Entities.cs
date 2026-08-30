@@ -256,6 +256,11 @@ internal abstract partial class DxfSectionWriterBase
 		this._writer.Write(281, image.Brightness, map);
 		this._writer.Write(282, image.Contrast, map);
 		this._writer.Write(283, image.Fade, map);
+		if (image is RasterImage)
+		{
+			// IMAGE group 290 persists outside (0) versus inside (1) clipping.
+			this._writer.Write(290, image.ClipMode == ClipMode.Inside, map);
+		}
 
 		if (image.DefinitionReactor != null)
 		{

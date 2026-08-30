@@ -1533,6 +1533,11 @@ internal abstract class DxfSectionReaderBase
 
 		switch (this._reader.Code)
 		{
+			case 290 when wipeout is RasterImage:
+				wipeout.ClipMode = this._reader.ValueAsBool
+					? ClipMode.Inside
+					: ClipMode.Outside;
+				return true;
 			case 71:
 				return true;
 			case 91:

@@ -1,5 +1,6 @@
 using ACadSharp.IO;
 using ACadSharp.Objects;
+using CSMath;
 using System.IO;
 using Xunit;
 
@@ -21,6 +22,8 @@ public class DxfLayoutPlotSettingsTests
 		model.PaperWidth = 210;
 		model.PaperHeight = 297;
 		model.PaperRotation = PlotRotation.Degrees90;
+		model.PaperImageOriginX = 12.5;
+		model.PaperImageOriginY = 34.5;
 		using MemoryStream output = new MemoryStream();
 
 		DxfWriter.Write(output, document, binary);
@@ -34,5 +37,24 @@ public class DxfLayoutPlotSettingsTests
 		Assert.Equal(210, actual.PaperWidth);
 		Assert.Equal(297, actual.PaperHeight);
 		Assert.Equal(PlotRotation.Degrees90, actual.PaperRotation);
+		Assert.Equal(new XY(12.5, 34.5), actual.PaperImageOrigin);
+		Assert.Equal(12.5, actual.PaperImageOriginX);
+		Assert.Equal(34.5, actual.PaperImageOriginY);
+	}
+
+	[Fact]
+	public void PaperImageOriginRepresentationsStaySynchronized()
+	{
+		PlotSettings settings = new PlotSettings();
+
+		settings.PaperImageOrigin = new XY(7.5, 8.5);
+
+		Assert.Equal(7.5, settings.PaperImageOriginX);
+		Assert.Equal(8.5, settings.PaperImageOriginY);
+
+		settings.PaperImageOriginX = 17.5;
+		settings.PaperImageOriginY = 18.5;
+
+		Assert.Equal(new XY(17.5, 18.5), settings.PaperImageOrigin);
 	}
 }

@@ -79,19 +79,31 @@ public class PlotSettings : NonGraphicalObject, IDxfClassDefined
 	/// <summary>
 	/// Paper image origin
 	/// </summary>
-	public XY PaperImageOrigin { get; set; }
+	public XY PaperImageOrigin
+	{
+		get { return this._paperImageOrigin; }
+		set { this._paperImageOrigin = value; }
+	}
 
 	/// <summary>
 	/// Paper image origin: X value
 	/// </summary>
 	[DxfCodeValue(148)]
-	public double PaperImageOriginX { get; set; }
+	public double PaperImageOriginX
+	{
+		get { return this._paperImageOrigin.X; }
+		set { this._paperImageOrigin = new XY(value, this._paperImageOrigin.Y); }
+	}
 
 	/// <summary>
 	/// Paper image origin: Y value
 	/// </summary>
 	[DxfCodeValue(149)]
-	public double PaperImageOriginY { get; set; }
+	public double PaperImageOriginY
+	{
+		get { return this._paperImageOrigin.Y; }
+		set { this._paperImageOrigin = new XY(this._paperImageOrigin.X, value); }
+	}
 
 	/// <summary>
 	/// Plot paper rotation.
@@ -248,6 +260,8 @@ public class PlotSettings : NonGraphicalObject, IDxfClassDefined
 	private double _denominatorScale = 1.0d;
 
 	private double _numeratorScale = 1.0d;
+
+	private XY _paperImageOrigin;
 
 	private short _shadePlotDPI = 300;
 

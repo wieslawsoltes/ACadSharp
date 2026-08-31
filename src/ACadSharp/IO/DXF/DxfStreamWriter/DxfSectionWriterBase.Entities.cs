@@ -784,8 +784,14 @@ internal abstract partial class DxfSectionWriterBase
 		foreach (LwPolyline.Vertex v in polyline.Vertices)
 		{
 			this._writer.Write(10, v.Location);
-			this._writer.Write(40, v.StartWidth);
-			this._writer.Write(41, v.EndWidth);
+			if (v.HasStartWidth)
+			{
+				this._writer.Write(40, v.StartWidth);
+			}
+			if (v.HasEndWidth)
+			{
+				this._writer.Write(41, v.EndWidth);
+			}
 			this._writer.Write(42, v.Bulge);
 		}
 
@@ -1406,8 +1412,14 @@ internal abstract partial class DxfSectionWriterBase
 
 		this._writer.Write(10, v.Location, map);
 
-		this._writer.WriteIfNotDefault(40, v.StartWidth, 0, map);
-		this._writer.WriteIfNotDefault(41, v.EndWidth, 0, map);
+		if (v.HasStartWidth)
+		{
+			this._writer.Write(40, v.StartWidth, map);
+		}
+		if (v.HasEndWidth)
+		{
+			this._writer.Write(41, v.EndWidth, map);
+		}
 		this._writer.WriteIfNotDefault(42, v.Bulge, 0, map);
 
 		this._writer.Write(70, v.Flags, map);

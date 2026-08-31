@@ -23,7 +23,20 @@ public partial class LwPolyline
 		/// Ending width
 		/// </summary>
 		[DxfCodeValue(DxfReferenceType.Optional, 41)]
-		public double EndWidth { get; set; } = 0.0;
+		public double EndWidth
+		{
+			get => this._endWidth;
+			set
+			{
+				this._endWidth = value;
+				this.HasEndWidth = true;
+			}
+		}
+
+		/// <summary>
+		/// Indicates whether an explicit ending width was assigned or read.
+		/// </summary>
+		public bool HasEndWidth { get; private set; }
 
 		/// <summary>
 		/// Vertex flags
@@ -49,7 +62,41 @@ public partial class LwPolyline
 		/// Starting width
 		/// </summary>
 		[DxfCodeValue(DxfReferenceType.Optional, 40)]
-		public double StartWidth { get; set; } = 0.0;
+		public double StartWidth
+		{
+			get => this._startWidth;
+			set
+			{
+				this._startWidth = value;
+				this.HasStartWidth = true;
+			}
+		}
+
+		/// <summary>
+		/// Indicates whether an explicit starting width was assigned or read.
+		/// </summary>
+		public bool HasStartWidth { get; private set; }
+
+		private double _endWidth;
+		private double _startWidth;
+
+		/// <summary>
+		/// Clears the optional ending-width value.
+		/// </summary>
+		public void ClearEndWidth()
+		{
+			this._endWidth = 0.0;
+			this.HasEndWidth = false;
+		}
+
+		/// <summary>
+		/// Clears the optional starting-width value.
+		/// </summary>
+		public void ClearStartWidth()
+		{
+			this._startWidth = 0.0;
+			this.HasStartWidth = false;
+		}
 
 		public Vertex()
 		{ }

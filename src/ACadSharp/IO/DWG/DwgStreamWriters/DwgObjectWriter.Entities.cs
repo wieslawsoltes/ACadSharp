@@ -1232,7 +1232,7 @@ internal partial class DwgObjectWriter : DwgSectionIO
 			{
 				nbulges = true;
 			}
-			if (!ndiffwidth && (item.StartWidth != 0.0 || item.EndWidth != 0.0))
+			if (!ndiffwidth && (item.HasStartWidth || item.HasEndWidth))
 			{
 				ndiffwidth = true;
 			}

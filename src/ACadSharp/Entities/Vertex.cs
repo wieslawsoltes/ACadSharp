@@ -23,7 +23,20 @@ public abstract class Vertex : Entity, IVertex
 	/// Ending width.
 	/// </summary>
 	[DxfCodeValue(DxfReferenceType.Optional, 41)]
-	public double EndWidth { get; set; } = 0.0;
+	public double EndWidth
+	{
+		get => this._endWidth;
+		set
+		{
+			this._endWidth = value;
+			this.HasEndWidth = true;
+		}
+	}
+
+	/// <summary>
+	/// Indicates whether an explicit ending width was assigned or read.
+	/// </summary>
+	public bool HasEndWidth { get; private set; }
 
 	/// <summary>
 	/// Vertex flags.
@@ -52,9 +65,62 @@ public abstract class Vertex : Entity, IVertex
 	/// Starting width
 	/// </summary>
 	[DxfCodeValue(DxfReferenceType.Optional, 40)]
-	public double StartWidth { get; set; } = 0.0;
+	public double StartWidth
+	{
+		get => this._startWidth;
+		set
+		{
+			this._startWidth = value;
+			this.HasStartWidth = true;
+		}
+	}
+
+	/// <summary>
+	/// Indicates whether an explicit starting width was assigned or read.
+	/// </summary>
+	public bool HasStartWidth { get; private set; }
 
 	protected VertexFlags _flags;
+	private double _endWidth;
+	private double _startWidth;
+
+	/// <summary>
+	/// Clears the optional ending-width value so a legacy polyline vertex can
+	/// inherit its owning entity's default.
+	/// </summary>
+	public void ClearEndWidth()
+	{
+		this._endWidth = 0.0;
+		this.HasEndWidth = false;
+	}
+
+	/// <summary>
+	/// Clears the optional starting-width value so a legacy polyline vertex can
+	/// inherit its owning entity's default.
+	/// </summary>
+	public void ClearStartWidth()
+	{
+		this._startWidth = 0.0;
+		this.HasStartWidth = false;
+	}
+
+	internal void CopyWidthStateFrom(Vertex source)
+	{
+		this._startWidth = source._startWidth;
+		this._endWidth = source._endWidth;
+		this.HasStartWidth = source.HasStartWidth;
+		this.HasEndWidth = source.HasEndWidth;
+	}
+
+	internal void SetDwgWidthState(double startWidth, double endWidth)
+	{
+		this._startWidth = startWidth;
+		this._endWidth = endWidth;
+		// Legacy DWG stores a zero pair for inherited entity defaults. A
+		// nonzero member makes the encoded pair an explicit segment profile.
+		this.HasStartWidth = startWidth != 0.0 || endWidth != 0.0;
+		this.HasEndWidth = this.HasStartWidth;
+	}
 
 	/// <summary>
 	/// Default constructor.

@@ -5,6 +5,7 @@ using ACadSharp.Tests.Common;
 using CSMath;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -175,6 +176,83 @@ namespace ACadSharp.Tests.IO.DXF
 			Assert.Equal(2.5, restored.StartWidth);
 			Assert.Equal(3.5, restored.EndWidth);
 			Assert.Equal(4.5, restored.Thickness);
+		}
+
+		[Fact]
+		public void LightweightWidthPresenceDistinguishesConstantAndExplicitZero()
+		{
+			CadDocument doc = new CadDocument(ACadVersion.AC1032);
+			var constant = new LwPolyline { ConstantWidth = 3.0 };
+			var inherited = new LwPolyline.Vertex(0, 0)
+			{
+				StartWidth = 7.0,
+				EndWidth = 8.0,
+			};
+			inherited.ClearStartWidth();
+			inherited.ClearEndWidth();
+			constant.Vertices.Add(inherited);
+			constant.Vertices.Add(new LwPolyline.Vertex(10, 0));
+			var explicitZero = new LwPolyline { ConstantWidth = 4.0 };
+			explicitZero.Vertices.Add(new LwPolyline.Vertex(0, 2)
+			{
+				StartWidth = 0.0,
+				EndWidth = 2.0,
+			});
+			explicitZero.Vertices.Add(new LwPolyline.Vertex(10, 2));
+			doc.Entities.Add(constant);
+			doc.Entities.Add(explicitZero);
+			using MemoryStream stream = new MemoryStream();
+
+			DxfWriter.Write(stream, doc, false);
+			using MemoryStream input = new MemoryStream(stream.ToArray());
+			CadDocument read = DxfReader.Read(input);
+			LwPolyline[] restored = read.Entities.OfType<LwPolyline>().ToArray();
+
+			Assert.Equal(2, restored.Length);
+			Assert.False(restored[0].Vertices[0].HasStartWidth);
+			Assert.False(restored[0].Vertices[0].HasEndWidth);
+			Assert.True(restored[1].Vertices[0].HasStartWidth);
+			Assert.True(restored[1].Vertices[0].HasEndWidth);
+			Assert.Equal(0.0, restored[1].Vertices[0].StartWidth);
+			Assert.Equal(2.0, restored[1].Vertices[0].EndWidth);
+		}
+
+		[Fact]
+		public void LegacyWidthPresencePreservesOmittedDefaultAndTaperToZero()
+		{
+			CadDocument doc = new CadDocument(ACadVersion.AC1032);
+			var polyline = new Polyline2D
+			{
+				StartWidth = 3.0,
+				EndWidth = 3.0,
+			};
+			polyline.Vertices.Add(new Vertex2D(XYZ.Zero)
+			{
+				StartWidth = 0.0,
+				EndWidth = 2.0,
+			});
+			var inherited = new Vertex2D(new XYZ(10, 0, 0))
+			{
+				StartWidth = 7.0,
+				EndWidth = 8.0,
+			};
+			inherited.ClearStartWidth();
+			inherited.ClearEndWidth();
+			polyline.Vertices.Add(inherited);
+			doc.Entities.Add(polyline);
+			using MemoryStream stream = new MemoryStream();
+
+			DxfWriter.Write(stream, doc, false);
+			using MemoryStream input = new MemoryStream(stream.ToArray());
+			CadDocument read = DxfReader.Read(input);
+			Polyline2D restored = Assert.IsType<Polyline2D>(Assert.Single(read.Entities));
+
+			Assert.True(restored.Vertices[0].HasStartWidth);
+			Assert.True(restored.Vertices[0].HasEndWidth);
+			Assert.Equal(0.0, restored.Vertices[0].StartWidth);
+			Assert.Equal(2.0, restored.Vertices[0].EndWidth);
+			Assert.False(restored.Vertices[1].HasStartWidth);
+			Assert.False(restored.Vertices[1].HasEndWidth);
 		}
 
 		[Theory]

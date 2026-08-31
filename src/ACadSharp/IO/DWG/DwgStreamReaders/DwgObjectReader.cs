@@ -6339,14 +6339,12 @@ namespace ACadSharp.IO.DWG
 			double width = this._objectReader.ReadBitDouble();
 			if (width < 0.0)
 			{
-				vertex.StartWidth = -width;
-				vertex.EndWidth = -width;
+				vertex.SetDwgWidthState(-width, -width);
 			}
 			else
 			{
-				vertex.StartWidth = width;
 				//End width BD 41 Not present if the start width is < 0.0; see above.
-				vertex.EndWidth = this._objectReader.ReadBitDouble();
+				vertex.SetDwgWidthState(width, this._objectReader.ReadBitDouble());
 			}
 
 			//Bulge BD 42

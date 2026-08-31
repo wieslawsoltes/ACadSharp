@@ -33,8 +33,7 @@ namespace ACadSharp.IO.Templates
 			Vertex placeholder = this.CadObject as Vertex;
 
 			vertex.Location = placeholder.Location;
-			vertex.StartWidth = placeholder.StartWidth;
-			vertex.EndWidth = placeholder.EndWidth;
+			vertex.CopyWidthStateFrom(placeholder);
 			vertex.Bulge = placeholder.Bulge;
 			vertex.Flags = placeholder.Flags;
 			vertex.CurveTangent = placeholder.CurveTangent;

@@ -153,6 +153,34 @@ namespace ACadSharp.Tests.IO.DXF
 		[InlineData(ACadVersion.AC1015)]
 		[InlineData(ACadVersion.AC1021)]
 		[InlineData(ACadVersion.AC1032)]
+		public void Polyline2DDefaultsAndThicknessRoundTrip(ACadVersion version)
+		{
+			CadDocument doc = new CadDocument(version);
+			var polyline = new Polyline2D
+			{
+				StartWidth = 2.5,
+				EndWidth = 3.5,
+				Thickness = 4.5,
+			};
+			polyline.Vertices.Add(new Vertex2D(XYZ.Zero));
+			polyline.Vertices.Add(new Vertex2D(new XYZ(10, 0, 0)));
+			doc.Entities.Add(polyline);
+			using MemoryStream stream = new MemoryStream();
+
+			DxfWriter.Write(stream, doc, false);
+			using MemoryStream input = new MemoryStream(stream.ToArray());
+			CadDocument read = DxfReader.Read(input);
+			Polyline2D restored = Assert.IsType<Polyline2D>(Assert.Single(read.Entities));
+
+			Assert.Equal(2.5, restored.StartWidth);
+			Assert.Equal(3.5, restored.EndWidth);
+			Assert.Equal(4.5, restored.Thickness);
+		}
+
+		[Theory]
+		[InlineData(ACadVersion.AC1015)]
+		[InlineData(ACadVersion.AC1021)]
+		[InlineData(ACadVersion.AC1032)]
 		public void OrthoModeRoundTrips(ACadVersion version)
 		{
 			CadDocument doc = new CadDocument(version);

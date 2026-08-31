@@ -1154,6 +1154,13 @@ internal abstract partial class DxfSectionWriterBase
 		this._writer.Write(DxfCode.YCoordinate, 0);
 		this._writer.Write(DxfCode.ZCoordinate, polyline.Elevation);
 
+		if (polyline is Polyline2D polyline2D)
+		{
+			this._writer.WriteIfNotDefault(39, polyline2D.Thickness, 0, map);
+			this._writer.WriteIfNotDefault(40, polyline2D.StartWidth, 0, map);
+			this._writer.WriteIfNotDefault(41, polyline2D.EndWidth, 0, map);
+		}
+
 		this._writer.Write(70, (short)polyline.Flags, map);
 		this._writer.Write(75, (short)polyline.SmoothSurface, map);
 

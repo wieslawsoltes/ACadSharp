@@ -271,5 +271,22 @@ namespace ACadSharp.Tests.IO.DXF
 
 			Assert.True(read.Header.OrthoMode);
 		}
+
+		[Theory]
+		[InlineData(ACadVersion.AC1015)]
+		[InlineData(ACadVersion.AC1021)]
+		[InlineData(ACadVersion.AC1032)]
+		public void PolylineWidthDefaultRoundTrips(ACadVersion version)
+		{
+			CadDocument doc = new CadDocument(version);
+			doc.Header.PolylineWidthDefault = 2.75;
+			using MemoryStream stream = new MemoryStream();
+
+			DxfWriter.Write(stream, doc, false);
+			using MemoryStream input = new MemoryStream(stream.ToArray());
+			CadDocument read = DxfReader.Read(input);
+
+			Assert.Equal(2.75, read.Header.PolylineWidthDefault);
+		}
 	}
 }

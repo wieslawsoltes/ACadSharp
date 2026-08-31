@@ -81,6 +81,7 @@ public class DxfWriterConfiguration : CadWriterConfiguration
 		"$PDMODE",
 		"$PDSIZE",
 		"$PLINEGEN",
+		"$PLINEWID",
 		"$PSLTSCALE",
 		"$SPLINESEGS",
 		"$SURFU",

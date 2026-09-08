@@ -526,7 +526,33 @@ internal abstract partial class DxfSectionWriterBase
 			this._writer.Write(10, spoint);
 		}
 
-		//TODO: Implement HatchGradientPattern
+		HatchGradientPattern gradient = hatch.GradientColor;
+		if (gradient != null && gradient.Enabled)
+		{
+			if (this.Version < ACadVersion.AC1018)
+			{
+				throw new NotSupportedException("Gradient HATCH output requires DXF AC1018 or newer.");
+			}
+			// Autodesk HATCH DXF groups 450-470 carry the authored gradient,
+			// including both final colors even for the one-color dialog mode.
+			this._writer.Write(450, 1);
+			this._writer.Write(451, 0);
+			this._writer.Write(460, gradient.Angle);
+			this._writer.Write(461, gradient.Shift);
+			this._writer.Write(452, gradient.IsSingleColorGradient ? 1 : 0);
+			this._writer.Write(462, gradient.ColorTint);
+			this._writer.Write(453, gradient.Colors.Count);
+			foreach (GradientColor stop in gradient.Colors)
+			{
+				this._writer.Write(463, stop.Value);
+				this._writer.Write(63, stop.Color.GetApproxIndex());
+				if (stop.Color.IsTrueColor)
+				{
+					this._writer.WriteTrueColor(421, stop.Color);
+				}
+			}
+			this._writer.Write(470, string.IsNullOrEmpty(gradient.Name) ? "LINEAR" : gradient.Name);
+		}
 	}
 
 	private void writeHatchBoundaryPathEdge(Hatch.BoundaryPath.Edge edge)

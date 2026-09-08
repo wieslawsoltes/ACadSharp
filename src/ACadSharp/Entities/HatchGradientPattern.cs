@@ -74,7 +74,7 @@ namespace ACadSharp.Entities
 		{
 			HatchGradientPattern clone = (HatchGradientPattern)this.MemberwiseClone();
 
-			clone.Colors.Clear();
+			clone.Colors = new List<GradientColor>(this.Colors.Count);
 			foreach (var item in this.Colors)
 			{
 				clone.Colors.Add(item.Clone());

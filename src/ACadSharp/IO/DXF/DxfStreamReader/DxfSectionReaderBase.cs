@@ -982,9 +982,8 @@ internal abstract class DxfSectionReaderBase
 				GradientColor colorByRgb = hatch.GradientColor.Colors.LastOrDefault();
 				if (colorByRgb != null)
 				{
-					//TODO: Hatch assign color by true color
-					//TODO: Is always duplicated by 63, is it needed??
-					//colorByRgb.Color = new Color(this._reader.LastValueAsShort);
+					int rgb = this._reader.ValueAsInt;
+					colorByRgb.Color = new Color((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
 				}
 				return true;
 			case 470:

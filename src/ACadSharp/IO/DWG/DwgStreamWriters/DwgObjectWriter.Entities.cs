@@ -2216,30 +2216,38 @@ internal partial class DwgObjectWriter : DwgSectionIO
 	private void writeSpline(Spline spline)
 	{
 		int scenario;
+		bool hasExplicitControls = spline.ControlPoints.Count != 0;
+		SplineFlags1 storedFlags = spline.Flags1;
+		KnotParametrization storedParameterization = hasExplicitControls
+			? KnotParametrization.Custom : spline.KnotParametrization;
+		if (hasExplicitControls && spline.FitPoints.Count != 0)
+		{
+			this.notify($"SPLINE {spline.Handle:X}: DWG preserves explicit controls/knots; its control-point record does not retain fit-point authoring data.", NotificationType.Warning);
+		}
 		//R2013+:
 		if (this.R2013Plus)
 		{
 			//The scenario flag becomes 1 if the knot parameter is Custom or has no fit data, otherwise 2.
-			if (spline.KnotParametrization == KnotParametrization.Custom || spline.FitPoints.Count == 0)
+			if (storedParameterization == KnotParametrization.Custom || spline.FitPoints.Count == 0)
 			{
 				scenario = 1;
 				//If scenario is 1, the spline flags must not have the UseKnotParameter bit set or the file will be corrupt
-				spline.Flags1 &= ~SplineFlags1.UseKnotParameter;
+				storedFlags &= ~(SplineFlags1.UseKnotParameter | SplineFlags1.MethodFitPoints);
 			}
 			else
 			{
 				scenario = 2;
 				//If scenario is 2, the spline flags must have the MethodFitPoints and UseKnotParameter bits set or the file will be corrupt
-				spline.Flags1 |= SplineFlags1.MethodFitPoints | SplineFlags1.UseKnotParameter;
+				storedFlags |= SplineFlags1.MethodFitPoints | SplineFlags1.UseKnotParameter;
 			}
 
 			this._writer.WriteBitLong(scenario);
-			this._writer.WriteBitLong((int)spline.Flags1);
-			this._writer.WriteBitLong((int)spline.KnotParametrization);
+			this._writer.WriteBitLong((int)storedFlags);
+			this._writer.WriteBitLong((int)storedParameterization);
 		}
 		else
 		{
-			scenario = (spline.FitPoints.Count <= 0) ? 1 : 2;
+			scenario = (hasExplicitControls || spline.FitPoints.Count <= 0) ? 1 : 2;
 			if (scenario == 2 && spline.KnotParametrization != 0)
 			{
 				scenario = 1;

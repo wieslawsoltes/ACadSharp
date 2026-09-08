@@ -198,6 +198,49 @@ public class Spline : Entity, IOrientable
 	/// <inheritdoc/>
 	public Spline() : base() { }
 
+	/// <summary>
+	/// Gets the exact Bézier controls of an open, two-fit-point uniform cubic
+	/// with explicit endpoint derivatives and no existing control representation.
+	/// </summary>
+	/// <remarks>
+	/// The parameter interval is [0,1], with knots [0,0,0,0,1,1,1,1].
+	/// Tangent magnitudes are preserved. This fixed-work, allocation-free query
+	/// does not modify the spline and returns false for other fit systems or
+	/// nonfinite inputs/results. All outputs are zero on failure.
+	/// </remarks>
+	public bool TryGetFitPointCubicBezier(out XYZ start, out XYZ firstControl, out XYZ secondControl, out XYZ end)
+	{
+		start = firstControl = secondControl = end = XYZ.Zero;
+		if (this.Degree != 3 || this.ControlPoints.Count != 0 || this.Knots.Count != 0 ||
+			this.Weights.Count != 0 || this.FitPoints.Count != 2 ||
+			this.IsClosed || this.IsPeriodic || this.KnotParametrization != KnotParametrization.Uniform ||
+			double.IsNaN(this.FitTolerance) || double.IsInfinity(this.FitTolerance) || this.FitTolerance < 0 ||
+			this.StartTangent == XYZ.Zero || this.EndTangent == XYZ.Zero ||
+			!isFiniteFitPoint(this.FitPoints[0]) || !isFiniteFitPoint(this.FitPoints[1]) ||
+			!isFiniteFitPoint(this.StartTangent) || !isFiniteFitPoint(this.EndTangent))
+		{
+			return false;
+		}
+
+		// C'(0) = 3(P1-P0), C'(1) = 3(P3-P2) for a unit-interval cubic.
+		XYZ first = this.FitPoints[0] + this.StartTangent / 3.0;
+		XYZ second = this.FitPoints[1] - this.EndTangent / 3.0;
+		if (!isFiniteFitPoint(first) || !isFiniteFitPoint(second))
+		{
+			return false;
+		}
+		start = this.FitPoints[0];
+		firstControl = first;
+		secondControl = second;
+		end = this.FitPoints[1];
+		return true;
+	}
+
+	private static bool isFiniteFitPoint(XYZ point) =>
+		!double.IsNaN(point.X) && !double.IsInfinity(point.X) &&
+		!double.IsNaN(point.Y) && !double.IsInfinity(point.Y) &&
+		!double.IsNaN(point.Z) && !double.IsInfinity(point.Z);
+
 	/// <inheritdoc/>
 	public override void ApplyTransform(Transform transform)
 	{

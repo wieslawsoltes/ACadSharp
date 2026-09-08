@@ -1290,6 +1290,8 @@ internal abstract partial class DxfSectionWriterBase
 
 	private void writeSpline(Spline spline)
 	{
+		bool fittedCubic = spline.TryGetFitPointCubicBezier(
+			out XYZ start, out XYZ firstControl, out XYZ secondControl, out XYZ end);
 		DxfClassMap map = DxfClassMap.Create<Spline>();
 
 		this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.Spline);
@@ -1301,8 +1303,8 @@ internal abstract partial class DxfSectionWriterBase
 
 		this._writer.Write(70, (short)spline.Flags, map);
 		this._writer.Write(71, (short)spline.Degree, map);
-		this._writer.Write(72, (short)spline.Knots.Count, map);
-		this._writer.Write(73, (short)spline.ControlPoints.Count, map);
+		this._writer.Write(72, fittedCubic ? (short)8 : (short)spline.Knots.Count, map);
+		this._writer.Write(73, fittedCubic ? (short)4 : (short)spline.ControlPoints.Count, map);
 
 		if (spline.FitPoints.Any())
 		{
@@ -1322,6 +1324,11 @@ internal abstract partial class DxfSectionWriterBase
 			this._writer.Write(13, spline.EndTangent, map);
 		}
 
+		if (fittedCubic)
+		{
+			for (int i = 0; i < 8; i++)
+				this._writer.Write(40, i < 4 ? 0.0 : 1.0, map);
+		}
 		foreach (double knot in spline.Knots)
 		{
 			this._writer.Write(40, knot, map);
@@ -1333,6 +1340,13 @@ internal abstract partial class DxfSectionWriterBase
 		foreach (var cp in spline.ControlPoints)
 		{
 			this._writer.Write(10, cp, map);
+		}
+		if (fittedCubic)
+		{
+			this._writer.Write(10, start, map);
+			this._writer.Write(10, firstControl, map);
+			this._writer.Write(10, secondControl, map);
+			this._writer.Write(10, end, map);
 		}
 		foreach (var fp in spline.FitPoints)
 		{

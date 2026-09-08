@@ -203,8 +203,10 @@ public class Spline : Entity, IOrientable
 	{
 		this.Normal = this.transformNormal(transform, this.Normal);
 
-		this.StartTangent = transform.ApplyTransform(this.StartTangent);
-		this.EndTangent = transform.ApplyTransform(this.EndTangent);
+		// Derivatives use the linear part of the affine map, including scale.
+		// A homogeneous zero excludes translation without cancellation at large origins.
+		this.StartTangent = transformTangent(transform.Matrix, this.StartTangent);
+		this.EndTangent = transformTangent(transform.Matrix, this.EndTangent);
 
 		for (int i = 0; i < this.ControlPoints.Count; i++)
 		{
@@ -215,6 +217,12 @@ public class Spline : Entity, IOrientable
 		{
 			this.FitPoints[i] = transform.ApplyTransform(this.FitPoints[i]);
 		}
+	}
+
+	private static XYZ transformTangent(Matrix4 matrix, XYZ tangent)
+	{
+		XYZM direction = matrix * new XYZM(tangent.X, tangent.Y, tangent.Z, 0);
+		return new XYZ(direction.X, direction.Y, direction.Z);
 	}
 
 	/// <inheritdoc/>

@@ -8,6 +8,37 @@ namespace ACadSharp.Tests.Entities
 {
 	public class SplineTests : CommonEntityTests<Spline>
 	{
+		[Theory]
+		[InlineData(100.0)]
+		[InlineData(1e20)]
+		public void TranslationPreservesEndpointDerivativeAndMissingTangent(double distance)
+		{
+			var spline = new Spline { StartTangent = new XYZ(3, -6, 9), EndTangent = XYZ.Zero };
+			spline.FitPoints.Add(XYZ.Zero);
+			spline.ApplyTranslation(new XYZ(distance, distance, distance));
+			Assert.Equal(new XYZ(3, -6, 9), spline.StartTangent);
+			Assert.Equal(XYZ.Zero, spline.EndTangent);
+			Assert.Equal(new XYZ(distance, distance, distance), spline.FitPoints[0]);
+		}
+
+		[Fact]
+		public void PivotedNonuniformScaleTransformsDerivativesWithoutPivotDisplacement()
+		{
+			var spline = new Spline { StartTangent = new XYZ(3, -6, 9), EndTangent = new XYZ(-2, 4, 1) };
+			spline.ApplyScaling(new XYZ(2, 3, -4), new XYZ(100, -20, 30));
+			Assert.Equal(new XYZ(6, -18, -36), spline.StartTangent);
+			Assert.Equal(new XYZ(-4, 12, -4), spline.EndTangent);
+		}
+
+		[Fact]
+		public void RotationPreservesTangentMagnitude()
+		{
+			var spline = new Spline { StartTangent = new XYZ(3, -6, 9), EndTangent = XYZ.Zero };
+			spline.ApplyRotation(XYZ.AxisZ, System.Math.PI / 2);
+			AssertUtils.AreEqual(new XYZ(6, 3, 9), spline.StartTangent);
+			Assert.Equal(XYZ.Zero, spline.EndTangent);
+		}
+
 		[Fact]
 		public override void GetBoundingBoxTest()
 		{

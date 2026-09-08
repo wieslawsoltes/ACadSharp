@@ -629,25 +629,48 @@ public class CadDocument : IHandledCadObject
 	/// Updates the image definition reactors for all raster images in the current collection.
 	/// </summary>
 	/// <remarks>
-	/// This method removes existing <see cref="ImageDefinitionReactor"/> instances from the document
-	/// and creates new reactors for each <see cref="RasterImage"/>. The new reactors are associated with their
-	/// corresponding image definitions and added to the document.
+	/// Keeps valid image reactors and their handles, creates missing reactors, and
+	/// removes obsolete reactors and image-definition backlinks. Unrelated persistent
+	/// reactors are preserved. Work is O(N + R) for N document objects and R definition
+	/// backlinks; temporary storage is O(I + D) for I images/reactors and D definitions.
 	/// </remarks>
 	public void UpdateImageReactors()
 	{
 		var reactors = this._cadObjects.Values.OfType<ImageDefinitionReactor>().ToList();
-		foreach (var item in reactors)
-		{
-			this._cadObjects.Remove(item.Handle);
-		}
-
 		var rasterImages = this._cadObjects.Values.OfType<RasterImage>().ToList();
+		var definitions = this._cadObjects.Values.OfType<ImageDefinition>().ToList();
 		foreach (RasterImage image in rasterImages)
 		{
-			image.DefinitionReactor = new ImageDefinitionReactor(image);
-			this.AddCadObject(image.DefinitionReactor);
-			image.Definition.AddReactor(image.DefinitionReactor);
+			if (image.Definition == null)
+				throw new InvalidOperationException($"Raster image {image.Handle:X} has no image definition.");
 		}
+
+		var active = new HashSet<ImageDefinitionReactor>();
+		foreach (ImageDefinition definition in definitions)
+			definition.RemoveImageDefinitionReactors();
+
+		foreach (RasterImage image in rasterImages)
+		{
+			ImageDefinitionReactor reactor = image.DefinitionReactor;
+			// Readers may resolve the image-owned reactor before it is registered
+			// in the document. Adopt that owned object, retaining its file handle.
+			if (reactor != null && reactor.Document == null && reactor.Owner == image &&
+				!this._cadObjects.ContainsKey(reactor.Handle))
+				this.AddCadObject(reactor);
+			if (reactor == null || reactor.Document != this || reactor.Owner != image ||
+				!this._cadObjects.TryGetValue(reactor.Handle, out IHandledCadObject registered) || registered != reactor)
+			{
+				reactor = new ImageDefinitionReactor(image);
+				image.DefinitionReactor = reactor;
+				this.AddCadObject(reactor);
+			}
+			reactor.Image = image;
+			active.Add(reactor);
+			image.Definition.AddReactor(reactor);
+		}
+		foreach (ImageDefinitionReactor reactor in reactors)
+			if (!active.Contains(reactor))
+				this.RemoveCadObject(reactor);
 	}
 
 	internal void AddCadObject(CadObject cadObject)

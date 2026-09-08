@@ -213,6 +213,11 @@ public abstract class CadObject : IHandledCadObject
 		return this._reactors.Remove(reactor);
 	}
 
+	// Rebuild image-definition backlinks in linear time without removing other
+	// persistent reactor kinds or repeatedly shifting a shared definition's list.
+	internal void RemoveImageDefinitionReactors() =>
+		this._reactors.RemoveAll(reactor => reactor is ImageDefinitionReactor);
+
 	/// <inheritdoc/>
 	public override string ToString()
 	{

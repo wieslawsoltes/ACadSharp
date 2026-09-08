@@ -272,13 +272,20 @@ internal abstract partial class DxfSectionWriterBase
 
 		if (image.ClipType == ClipType.Polygonal)
 		{
-			this._writer.Write(91, image.ClipBoundaryVertices.Count + 1, map);
+			int count = image.ClipBoundaryVertices.Count;
+			bool appendClosure = image.ClipBoundaryVertices[0] != image.ClipBoundaryVertices[count - 1];
+			this._writer.Write(91, count + (appendClosure ? 1 : 0), map);
 			foreach (XY bv in image.ClipBoundaryVertices)
 			{
 				this._writer.Write(14, bv, map);
 			}
 
-			this._writer.Write(14, image.ClipBoundaryVertices.First(), map);
+			// Reader-owned polygons may already contain the closing vertex.
+			// Preserve that representation without growing it on every round trip.
+			if (appendClosure)
+			{
+				this._writer.Write(14, image.ClipBoundaryVertices[0], map);
+			}
 		}
 		else
 		{

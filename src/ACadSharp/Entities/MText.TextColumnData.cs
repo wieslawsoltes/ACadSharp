@@ -47,11 +47,13 @@ namespace ACadSharp.Entities
 			/// Column heights.
 			/// </summary>
 			[DxfCodeValue(46)]
-			public List<double> Heights { get; } = new List<double>();
+			public List<double> Heights { get; private set; } = new List<double>();
 
 			public TextColumnData Clone()
 			{
-				return this.MemberwiseClone() as TextColumnData;
+				var clone = (TextColumnData)this.MemberwiseClone();
+				clone.Heights = new List<double>(this.Heights);
+				return clone;
 			}
 		}
 	}

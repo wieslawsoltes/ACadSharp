@@ -89,7 +89,7 @@
 
 
   <h1 id="ACadSharp_CadDocument" data-uid="ACadSharp.CadDocument" class="text-break">
-Class CadDocument  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L24"><i class="bi bi-code-slash"></i></a>
+Class CadDocument  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L23"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -241,7 +241,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_AppIds" data-uid="ACadSharp.CadDocument.AppIds">
   AppIds
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L29"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L28"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>The collection of all registered applications in the drawing.</p>
@@ -273,7 +273,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_BlockRecords" data-uid="ACadSharp.CadDocument.BlockRecords">
   BlockRecords
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L34"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L33"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>The collection of all block records in the drawing.</p>
@@ -305,7 +305,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_Classes" data-uid="ACadSharp.CadDocument.Classes">
   Classes
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L39"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L38"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Dxf classes defined in this document.</p>
@@ -337,7 +337,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_Colors" data-uid="ACadSharp.CadDocument.Colors">
   Colors
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L47"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L46"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>The collection of all book colors in the drawing.</p>
@@ -372,7 +372,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_DataStorage" data-uid="ACadSharp.CadDocument.DataStorage">
   DataStorage
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L52"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L51"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>The data stored in the Prototype1b header section. This primarily contains ACIS and thumbnail data</p>
@@ -380,7 +380,8 @@ exist in the root dictionary.</p>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public DataStorage DataStorage { get; set; }</code></pre>
+    <pre><code class="lang-csharp hljs">[Obsolete(&quot;This property is obsolete and will be removed in future versions.&quot;)]
+public DataStorage DataStorage { get; set; }</code></pre>
   </div>
 
 
@@ -1394,42 +1395,11 @@ exist in the root dictionary.</p>
 
 
 
-  <a id="ACadSharp_CadDocument_IsValid_" data-uid="ACadSharp.CadDocument.IsValid*"></a>
-
-  <h3 id="ACadSharp_CadDocument_IsValid" data-uid="ACadSharp.CadDocument.IsValid">
-  IsValid()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L393"><i class="bi bi-code-slash"></i></a>
-  </h3>
-
-  <div class="markdown level1 summary"></div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public bool IsValid()</code></pre>
-  </div>
-
-
-  <h4 class="section">Returns</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
-
-
-
   <a id="ACadSharp_CadDocument_RestoreHandles_" data-uid="ACadSharp.CadDocument.RestoreHandles*"></a>
 
   <h3 id="ACadSharp_CadDocument_RestoreHandles" data-uid="ACadSharp.CadDocument.RestoreHandles">
   RestoreHandles()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L401"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L396"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Reassign all the handles in the document to avoid the variable <a class="xref" href="ACadSharp.Header.CadHeader.html#ACadSharp_Header_CadHeader_HandleSeed">HandleSeed</a> to grow past its limit.</p>
@@ -1456,7 +1426,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_SetCurrent__1___0_" data-uid="ACadSharp.CadDocument.SetCurrent``1(``0)">
   SetCurrent&lt;T&gt;(T)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L428"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L423"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>This method sets the current configurable object of the specified type in the document's configuration.</p>
@@ -1498,7 +1468,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_ToString" data-uid="ACadSharp.CadDocument.ToString">
   ToString()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L478"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L473"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Returns a string that represents the current object.</p>
@@ -1531,7 +1501,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_TryGetCadObject__1_System_UInt64___0__" data-uid="ACadSharp.CadDocument.TryGetCadObject``1(System.UInt64,``0@)">
   TryGetCadObject&lt;T&gt;(ulong, out T)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L490"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L485"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets an object in the document by it's handle</p>
@@ -1575,7 +1545,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_UpdateCollections_System_Boolean_System_Boolean_" data-uid="ACadSharp.CadDocument.UpdateCollections(System.Boolean,System.Boolean)">
   UpdateCollections(bool, bool)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L511"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L506"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Updates the collections in the document and link them to it's dictionary.</p>
@@ -1609,7 +1579,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_UpdateDxfClasses_System_Boolean_" data-uid="ACadSharp.CadDocument.UpdateDxfClasses(System.Boolean)">
   UpdateDxfClasses(bool)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L588"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L583"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Updates the <a class="xref" href="ACadSharp.Classes.DxfClass.html">DxfClass</a> in the document and their instance count.</p>
@@ -1642,7 +1612,7 @@ exist in the root dictionary.</p>
 
   <h3 id="ACadSharp_CadDocument_UpdateImageReactors" data-uid="ACadSharp.CadDocument.UpdateImageReactors">
   UpdateImageReactors()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L615"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L610"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Updates the image definition reactors for all raster images in the current collection.</p>
@@ -1674,7 +1644,7 @@ corresponding image definitions and added to the document.</p>
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L24" class="edit-link">Edit this page</a>
+          <a href="https://github.com/wieslawsoltes/ACadSharp/blob/master/src/ACadSharp/CadDocument.cs/#L23" class="edit-link">Edit this page</a>
         </div>
 
 

@@ -1,4 +1,5 @@
 {
+  "docfx_version": "2.81.0+ba844df625370a6bd7c1ecab0d0ec4d1d9128ac4",
   "source_base_path": "D:/a/ACadSharp/ACadSharp/docs",
   "xrefmap": "xrefmap.yml",
   "files": [
@@ -404,6 +405,34 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.DataStorage.SchemaRecordFlags.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.DataStorage.SchemaRecordFlags.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.DataStorage.SchemaRecordFlags",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.DataStorage.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.DataStorage.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.DataStorage",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/ACadSharp.DwgPreview.PreviewType.yml",
       "output": {
         ".html": {
@@ -572,30 +601,58 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/ACadSharp.Entities.AecObjects.Wall.yml",
+      "source_relative_path": "api/ACadSharp.Entities.AecEntities.AecEntity.yml",
       "output": {
         ".html": {
-          "relative_path": "api/ACadSharp.Entities.AecObjects.Wall.html"
+          "relative_path": "api/ACadSharp.Entities.AecEntities.AecEntity.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "ACadSharp.Entities.AecObjects.Wall",
-      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.AecObjects.Wall.yml\" sourcestartlinenumber=\"1\">Represents an AEC (Architecture, Engineering and Construction) Wall entity.</p>\n"
+      "Title": "ACadSharp.Entities.AecEntities.AecEntity",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.AecEntities.AecEntity.yml\" sourcestartlinenumber=\"1\">Represents an AEC (Architecture, Engineering and Construction) entity.</p>\n"
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/ACadSharp.Entities.AecObjects.yml",
+      "source_relative_path": "api/ACadSharp.Entities.AecEntities.Wall.yml",
       "output": {
         ".html": {
-          "relative_path": "api/ACadSharp.Entities.AecObjects.html"
+          "relative_path": "api/ACadSharp.Entities.AecEntities.Wall.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "ACadSharp.Entities.AecObjects",
+      "Title": "ACadSharp.Entities.AecEntities.Wall",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.AecEntities.Wall.yml\" sourcestartlinenumber=\"1\">Represents a wall entity in an AEC context.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.AecEntities.WallJustification.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.AecEntities.WallJustification.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.AecEntities.WallJustification",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.AecEntities.WallJustification.yml\" sourcestartlinenumber=\"1\">Defines the justification of a wall.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.AecEntities.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.AecEntities.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.AecEntities",
       "Summary": null
     },
     {
@@ -1003,6 +1060,20 @@
       "IsMRef": true,
       "Title": "ACadSharp.Entities.Entity",
       "Summary": "<p sourcefile=\"api/ACadSharp.Entities.Entity.yml\" sourcestartlinenumber=\"1\">The standard class for a basic CAD entity or a graphical object.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.ExtrudedSurface.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.ExtrudedSurface.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.ExtrudedSurface",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.ExtrudedSurface.yml\" sourcestartlinenumber=\"1\">Represents an <xref href=\"ACadSharp.Entities.ExtrudedSurface\" data-throw-if-not-resolved=\"false\"></xref> entity.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -1454,6 +1525,20 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.LoftedSurface.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.LoftedSurface.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.LoftedSurface",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.LoftedSurface.yml\" sourcestartlinenumber=\"1\">Represents a <xref href=\"ACadSharp.Entities.LoftedSurface\" data-throw-if-not-resolved=\"false\"></xref> entity.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/ACadSharp.Entities.LwPolyline.Vertex.yml",
       "output": {
         ".html": {
@@ -1548,7 +1633,7 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "ACadSharp.Entities.MLineFlags",
-      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.MLineFlags.yml\" sourcestartlinenumber=\"1\">Flags (bit-coded values)</p>\n"
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.MLineFlags.yml\" sourcestartlinenumber=\"1\">Flags (bit-coded values).</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -1776,6 +1861,20 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.NurbSurface.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.NurbSurface.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.NurbSurface",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.NurbSurface.yml\" sourcestartlinenumber=\"1\">Represents a <xref href=\"ACadSharp.Entities.NurbSurface\" data-throw-if-not-resolved=\"false\"></xref> entity.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/ACadSharp.Entities.Ole2Frame.yml",
       "output": {
         ".html": {
@@ -1815,6 +1914,20 @@
       "IsMRef": true,
       "Title": "ACadSharp.Entities.PdfUnderlay",
       "Summary": "<p sourcefile=\"api/ACadSharp.Entities.PdfUnderlay.yml\" sourcestartlinenumber=\"1\">Represents a <xref href=\"ACadSharp.Entities.PdfUnderlay\" data-throw-if-not-resolved=\"false\"></xref> entity.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.PlaneSurface.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.PlaneSurface.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.PlaneSurface",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.PlaneSurface.yml\" sourcestartlinenumber=\"1\">Represents a <xref href=\"ACadSharp.Entities.PlaneSurface\" data-throw-if-not-resolved=\"false\"></xref> entity.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -2658,6 +2771,20 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.RevolvedSurface.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.RevolvedSurface.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.RevolvedSurface",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.RevolvedSurface.yml\" sourcestartlinenumber=\"1\">Represents a <xref href=\"ACadSharp.Entities.RevolvedSurface\" data-throw-if-not-resolved=\"false\"></xref> entity.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/ACadSharp.Entities.Seqend.yml",
       "output": {
         ".html": {
@@ -2781,6 +2908,34 @@
       "IsMRef": true,
       "Title": "ACadSharp.Entities.SplineFlags1",
       "Summary": "<p sourcefile=\"api/ACadSharp.Entities.SplineFlags1.yml\" sourcestartlinenumber=\"1\">Defines the spline flags1.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.Surface.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.Surface.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.Surface",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.Surface.yml\" sourcestartlinenumber=\"1\">Represents a <xref href=\"ACadSharp.Entities.Surface\" data-throw-if-not-resolved=\"false\"></xref> entity.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Entities.SweptSurface.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Entities.SweptSurface.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Entities.SweptSurface",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Entities.SweptSurface.yml\" sourcestartlinenumber=\"1\">Represents a <xref href=\"ACadSharp.Entities.SweptSurface\" data-throw-if-not-resolved=\"false\"></xref> entity.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -5948,6 +6103,20 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Objects.MultiLeaderObjectContextData.BreakInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Objects.MultiLeaderObjectContextData.BreakInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Objects.MultiLeaderObjectContextData.BreakInfo",
+      "Summary": "<p sourcefile=\"api/ACadSharp.Objects.MultiLeaderObjectContextData.BreakInfo.yml\" sourcestartlinenumber=\"1\">Information about a break in a <xref href=\"ACadSharp.Objects.MultiLeaderObjectContextData\" data-throw-if-not-resolved=\"false\"></xref> object.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/ACadSharp.Objects.MultiLeaderObjectContextData.LeaderLine.yml",
       "output": {
         ".html": {
@@ -5958,7 +6127,7 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "ACadSharp.Objects.MultiLeaderObjectContextData.LeaderLine",
-      "Summary": "<p sourcefile=\"api/ACadSharp.Objects.MultiLeaderObjectContextData.LeaderLine.yml\" sourcestartlinenumber=\"1\">Represents a leader line</p>\n"
+      "Summary": "<p sourcefile=\"api/ACadSharp.Objects.MultiLeaderObjectContextData.LeaderLine.yml\" sourcestartlinenumber=\"1\">Represents a leader line of a <xref href=\"ACadSharp.Objects.MultiLeaderObjectContextData\" data-throw-if-not-resolved=\"false\"></xref> object.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -6746,20 +6915,6 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/ACadSharp.Prototype1b.DataField.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/ACadSharp.Prototype1b.DataField.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "ACadSharp.Prototype1b.DataField",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/ACadSharp.Prototype1b.DataHeader.yml",
       "output": {
         ".html": {
@@ -7050,6 +7205,20 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "ACadSharp.Prototype1b.Segments.Blob01",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/ACadSharp.Prototype1b.Segments.DataField.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/ACadSharp.Prototype1b.Segments.DataField.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "ACadSharp.Prototype1b.Segments.DataField",
       "Summary": null
     },
     {
